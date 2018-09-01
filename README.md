@@ -9,7 +9,7 @@ You must create a Discord bot. There is a guide for this [here](https://discordj
 
 Once you have a bot you will need to (optionally) set up a callback url in the oauth page of: `<your_url>/api/discord/callback` for the web ui to work.
 
-With that in place you'll want to record your Client ID, Client Secret, and Bot Token
+With that in place you'll want to record your Client Secret and Bot Token
 
 You will then need to invite the bot to your server (use the 'bot' page to create a url)
 
@@ -17,7 +17,7 @@ You will then need to invite the bot to your server (use the 'bot' page to creat
 
 ```
 docker build -t discord-soundboard .
-docker run -e TOKEN=<Bot Token> -e CLIENT_ID=<Client ID> -e CLIENT_SECRET=<Client secret> -e CALLBACK_HOST=http://localhost:3000 -p 3000:3000 discord-soundboard
+docker run -e TOKEN=<Bot Token> -e CLIENT_SECRET=<Client secret> -p 3000:3000 discord-soundboard
 
 ```
 

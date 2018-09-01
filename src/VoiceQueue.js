@@ -1,3 +1,4 @@
+const fs = require('fs');
 class VoiceQueue {
   constructor(channel) {
     this.channel = channel;
@@ -7,7 +8,7 @@ class VoiceQueue {
   }
 
   log(message) {
-    console.log(`${this.channel.name}: ${message}`);
+    console.log(`${this.channel.guild.name} (${this.channel.name}): ${message}`);
   }
 
   add(file) {
@@ -15,8 +16,8 @@ class VoiceQueue {
       return;
     }
 
-    if (playQueue.length > 2) {
-      this.log(`Too many requests in queue: ${playQueue.length}`);
+    if (this.playQueue.length > 2) {
+      this.log(`Too many requests in queue: ${this.playQueue.length}`);
       return;
     }
 
@@ -51,12 +52,13 @@ class VoiceQueue {
     }
 
     this.playing = true;
-    const file = playQueue.pop();
+    const file = this.playQueue.pop();
 
     if (!file) {
       this.log("Queue empty");
       this.playing = false;
       setTimeout(() => this.disconnect(), 3000);
+      return;
     }
 
     this.channel.join()
@@ -80,4 +82,4 @@ class VoiceQueue {
   }
 }
 
-export default VoiceChannel;
+module.exports = VoiceQueue

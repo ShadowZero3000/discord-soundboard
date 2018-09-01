@@ -1,5 +1,4 @@
-import VoiceQueue from 'VoiceQueue.js';
-
+const VoiceQueue = require('./VoiceQueue.js');
 const Discord = require('discord.js');
 const fs = require('fs');
 const request = require('request');
@@ -10,7 +9,7 @@ const path = require('path');
 const app = express()
 const cookieParser = require('cookie-parser');
 
-configFile = path.join(__dirname,'config/config.json');
+const configFile = path.join(__dirname,'config/config.json');
 
 // TODO: Once all the admin stuff is in a class, this can probably be auto-generated
 const ADMIN_ACTIONS = {
@@ -33,7 +32,9 @@ nconf.argv()
       enabled: false,
       clip: 'sensors'
     },
-    adminList: {}
+    adminList: {},
+    PORT: 3000,
+    WEBSERVER_ENABLED: 'true'
   });
 
 function saveConfig(key, value) {
@@ -306,6 +307,8 @@ discord.on('message', message => {
     }
 
     // Admin area - Keep Out!
+    // POTENTIAL PROBLEM: If you haven't joined a voice channel, some admin commands might not work
+    // Will have to ensure that we add check logic lower down
     const parameters = command.match(/(\b[\w,]+)/g);
     if (parameters[0] in Object.keys(ADMIN_ACTIONS) && auth_check(message, parameters[0])) {
         ADMIN_ACTIONS[parameters.shift()](message, parameters);
@@ -322,15 +325,15 @@ discord.on('message', message => {
 
   const keyword = matches[1];
 
-  if (keyword in Object.keys(files)) {
-    get_queue(vc).add(files[keyword]);
+  if (Object.keys(files).indexOf(keyword) > -1) {
+    get_queue(voiceChannel).add(files[keyword]);
     return;
   }
 
   if (keyword == 'random') {
     const parameters = matches[2].match(/(\b[\w,]+)/g);
 
-    if (!parameters[0]) {
+    if (!parameters) {
       const clip = select_random(Object.keys(files));
       get_queue(voiceChannel).add(files[clip]);
       return;
@@ -338,23 +341,25 @@ discord.on('message', message => {
 
     const filenames = Object.keys(files).filter(key => key.includes(parameters[0]));
     const clip = select_random(filenames);
-    get_queue(vc).add(files[clip]);
+    get_queue(voiceChannel).add(files[clip]);
+    return;
   }
 
-  // Err.. shouldn't get here?
+  // Err.. They asked for something we don't have
   console.log(`Unrecognized command: ${messageText}`);
 });
 
 discord.login(token).then(session => {
   //TODO: Make the join noise configurable and optional
   //TODO: Make this not choke if you provide an invalid admin_id or aren't in a channel
-  startup = nconf.get('startup');
+  var startup = nconf.get('startup');
   discord.fetchApplication().then(obj => {
+    nconf.set('CLIENT_ID', obj.id); //Overrides environment variables
+    var startup = nconf.get('startup');
     adminList[obj.owner.id] = {
       'access': Object.keys(ADMIN_ACTIONS),
       'immune': true
     };
-
     if (startup.enabled) {
       get_queue(get_vc_from_userid(obj.owner.id))
         .add(files[startup.clip]);
@@ -372,7 +377,9 @@ process.on('SIGINT', () => {
   });
 
   discord.destroy();
-  server.close();
+  if (nconf.get('WEBSERVER_ENABLED')) {
+    server.close();
+  }
   process.exit();
 });
 
@@ -383,7 +390,9 @@ process.on('SIGTERM', () => {
   });
 
   discord.destroy();
-  server.close();
+  if (nconf.get('WEBSERVER_ENABLED')) {
+    server.close();
+  }
   process.exit();
 });
 
@@ -429,10 +438,10 @@ app.get('/play/:clip', (req, res) => {
       const queue = get_queue(get_vc_from_userid(userid));
       if (queue) {
         queue.add(files[req.params.clip]);
-        res.status(200).end();
+        return res.status(200).end();
       }
 
-      res.status(404).send("Couldn't find a voice channel for user");
+      return res.status(404).send("Couldn't find a voice channel for user");
     })
     .auth(null, null, true, accesstoken);
   }
@@ -458,9 +467,10 @@ app.get('/random/:clip', (req, res) => {
         const clip = select_random(filenames);
         queue.add(files[clip]);
         res.status(200).end();
+        return;
       }
 
-      res.status(404).send("Couldn't find a voice channel for user");
+      return res.status(404).send("Couldn't find a voice channel for user");
     })
     .auth(null, null, true, accesstoken);
   }
@@ -471,3 +481,7 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'public'));
 
 app.use('/api/discord', require('./api'));
+
+if (nconf.get('WEBSERVER_ENABLED')) {
+  var server = app.listen(nconf.get('PORT'), () => console.log(`Web UI available on port ${nconf.get('PORT')}!`))
+}
