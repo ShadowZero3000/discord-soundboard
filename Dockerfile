@@ -8,8 +8,10 @@ COPY package.json /node/
 
 RUN cd /node && npm install
 
-COPY index.js /node/
 COPY Audio/sensors--MW2_Sensors_Online.m4a /node/Uploads/
+COPY config/ /node/config/
+COPY index.js api.js /node/
+COPY public/ /node/public/
 
 WORKDIR /node
 

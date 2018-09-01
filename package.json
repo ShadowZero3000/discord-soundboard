@@ -4,8 +4,14 @@
   "description": "SparrowBot for Discord",
   "main": "index.js",
   "dependencies": {
+    "btoa": "^1.2.1",
+    "cookie-parser": "^1.4.3",
     "discord.js": "^11.4.2",
+    "express": "^4.16.0",
+    "nconf": "^0.10.0",
+    "node-fetch": "^2.2.0",
     "node-opus": "^0.3.0",
+    "pug": "^2.0.3",
     "request": "^2.88.0"
   },
   "devDependencies": {},
