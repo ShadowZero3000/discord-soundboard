@@ -10,7 +10,7 @@ RUN cd /node && npm install
 
 COPY Audio/sensors--MW2_Sensors_Online.m4a /node/Uploads/
 COPY config/ /node/config/
-COPY index.js api.js /node/
+COPY src/ /node/
 COPY public/ /node/public/
 
 WORKDIR /node

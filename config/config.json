@@ -1,6 +1,6 @@
 {
-	"startup": {
-		"clip": "sensors",
-		"enabled": true
-	}
+  "startup": {
+    "clip": "sensors",
+    "enabled": true
+  }
 }
