@@ -371,11 +371,7 @@ console.log("Let the fun begin!");
 
 // Make sure we handle exiting properly (SIGTERM might not be needed)
 process.on('SIGINT', () => {
-  // Leave all voice channels
-  Object.keys(queues).forEach(queue => {
-    queues[queue].disconnect(true);
-  });
-
+  console.log("Shutting down from SIGINT");
   discord.destroy();
   if (nconf.get('WEBSERVER_ENABLED')) {
     server.close();
@@ -384,11 +380,7 @@ process.on('SIGINT', () => {
 });
 
 process.on('SIGTERM', () => {
-  // Leave all voice channels
-  Object.keys(queues).forEach(queue => {
-    queues[queue].disconnect(true);
-  });
-
+  console.log("Shutting down from SIGTERM");
   discord.destroy();
   if (nconf.get('WEBSERVER_ENABLED')) {
     server.close();
@@ -414,6 +406,10 @@ app.get('/clips', (req, res) => {
     .map(key => key.match(/^([a-z]+)[0-9]+$/))
     .filter(match => !!match)
     .map(match => match[1])
+    .filter((element,pos,arr) => {
+      // Unique filter
+      return arr.indexOf(element) == pos;
+    })
     .sort();
 
   res.status(200).render("clips", {
@@ -483,5 +479,6 @@ app.set('views', path.join(__dirname, 'public'));
 app.use('/api/discord', require('./api'));
 
 if (nconf.get('WEBSERVER_ENABLED')) {
+  app.enable('trust proxy');
   var server = app.listen(nconf.get('PORT'), () => console.log(`Web UI available on port ${nconf.get('PORT')}!`))
 }

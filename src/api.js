@@ -6,8 +6,7 @@ const nconf = require('nconf');
 
 const CLIENT_SECRET = nconf.get('CLIENT_SECRET');
 function get_redirect(req) {
-  const proto = 'http' + (req.secure ? 's':'') + '://'
-  return encodeURIComponent(`${proto}${req.headers.host}/api/discord/callback`);
+  return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
 }
 router.get('/login', (req, res) => {
   const redirect = get_redirect(req);
