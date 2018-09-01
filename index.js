@@ -33,8 +33,6 @@ function saveConfig() {
 }
 
 var token = nconf.get('TOKEN');
-var global_admin_id = nconf.get('GLOBAL_ADMIN'); //process.env.GLOBAL_ADMIN;
-// TODO: Allow config from file instead of requiring env vars
 
 // Often seems to break with sub 1-second mp3's
 var bot = new Discord.Client();
@@ -272,10 +270,7 @@ adminWords = {
   //TODO: Rename!
 }
 adminList = nconf.get('adminList');
-adminList[global_admin_id] = {
-    'access': Object.keys(adminWords), //['remove','add', 'silence', 'unsilence', 'accessadd', 'accessdel'],
-    'immune': true
-  }
+
 bot.on('message', message => {
   var messageText = message.content.toLowerCase();
   // Keeping this block of code in case I want to return to having it just camp in channel
@@ -339,9 +334,15 @@ bot.login(token).then(session=>{
   //TODO: Make the join noise configurable and optional
   //TODO: Make this not choke if you provide an invalid admin_id or aren't in a channel
   startup = nconf.get('startup');
-  if (startup.enabled) {
-    get_queue(get_vc_from_userid(global_admin_id)).add(files[startup.clip]);
-  }
+  bot.fetchApplication().then(obj=>{
+    adminList[obj.owner.id] = {
+      'access': Object.keys(adminWords),
+      'immune': true
+    }
+    if (startup.enabled) {
+      get_queue(get_vc_from_userid(obj.owner.id)).add(files[startup.clip]);
+    }
+  })
 });
 
 console.log("Let the fun begin!");

@@ -17,7 +17,7 @@ You will then need to invite the bot to your server (use the 'bot' page to creat
 
 ```
 docker build -t discord-soundboard .
-docker run -e TOKEN=<Bot Token> -e GLOBAL_ADMIN=<Your user id. Will remove this soon.> -e CLIENT_ID=<Client ID> -e CLIENT_SECRET=<Client secret> -e CALLBACK_HOST=http://localhost:3000 -p 3000:3000 discord-soundboard
+docker run -e TOKEN=<Bot Token> -e CLIENT_ID=<Client ID> -e CLIENT_SECRET=<Client secret> -e CALLBACK_HOST=http://localhost:3000 -p 3000:3000 discord-soundboard
 
 ```
 
