@@ -68,13 +68,12 @@ items.forEach(item => {
 /////////////////END INITIALIZATION
 
 function botHelp() {
-  return
-`I'm a bot!
-You can ask me to make sounds by saying one of the following:
-\`!${Object.keys(files).sort().join('`, `!')}\`
-----
-Admins can also use:
-\`!soundboard ${Object.keys(ADMIN_ACTIONS).sort().join('`, `!soundboard ')}\``;
+  return `I'm a bot!\n` +
+    `You can ask me to make sounds by saying one of the following:\n` +
+    `\`!${Object.keys(files).sort().join('`, `!')}\`\n` +
+    '----\n' +
+    'Admins can also use:\n'  +
+    `\`!soundboard ${Object.keys(ADMIN_ACTIONS).sort().join('`, `!soundboard ')}\``;
 }
 
 // TODO: Move all the admin stuff into its own class/file
@@ -84,7 +83,7 @@ function auth_check(message, access) {
 }
 
 function add_clip(message, params) {
-  if (!params) {
+  if (!params.length > 0) {
     return;
   }
 
@@ -93,7 +92,7 @@ function add_clip(message, params) {
     message.reply(`${prefix} is a bad short name`);
   }
 
-  if (message.attachments) {
+  if (message.attachments.first()) {
     // Only check the first attachment
     const a = message.attachments.first();
     const filename = `./Uploads/${prefix}--${a.filename}`;
@@ -103,11 +102,13 @@ function add_clip(message, params) {
 
     files[prefix] = filename;
     message.reply(`!${prefix} is now available`);
+  } else {
+    message.reply(`You need to attach a file`);
   }
 }
 
 function remove_clip(message, params) {
-  if (!params || !(params[0] in Object.keys(files))) {
+  if (!params.length > 0 || !(params[0] in Object.keys(files))) {
     return;
   }
 
@@ -148,21 +149,21 @@ function unsilence(message, params) {
   }
 }
 
-function get_user(message) {
+function get_discord_user(message, username) {
   return message.channel.guild.members.find(a => {
     return a.user['username'].toLowerCase() == username.toLowerCase();
   });
 }
 
 function access_add(message, params) {
-  if (!params) {
+  if (!params.length > 0) {
     message.reply("Not enough details to add access");
     return;
   }
 
   const username = params[0];
   let access = params[1];
-  const discord_user = get_user(message);
+  const discord_user = get_discord_user(message, username);
 
   if (discord_user && access) {
     console.log(`Updating: ${username} with ${access}`);
@@ -183,14 +184,14 @@ function access_add(message, params) {
 }
 
 function access_remove(message, params) {
-  if (!params) {
+  if (!params.length > 0) {
     message.reply("Not enough details to remove access");
     return;
   }
 
   const username = params[0];
   const access = params[1];
-  const discord_user = get_user(message);
+  const discord_user = get_discord_user(message, username);
 
   if (discord_user && access && adminList[discord_user.user.id]) {
     const user = adminList[discord_user.user.id];
@@ -210,15 +211,17 @@ function access_remove(message, params) {
 }
 
 function access_show(message, params) {
-  if (!params) {
+  if (!params.length > 0) {
     message.reply("Not enough details to show access");
     return;
   }
 
   const username = params[0];
-  const discord_user = get_user(message);
+  const discord_user = get_discord_user(message, username);
   if (discord_user && adminList[discord_user.user.id]) {
     print_access(message, username, discord_user.user.id);
+  } else {
+    message.reply(`${username} does not presently have any admin permissions`)
   }
 }
 
@@ -295,7 +298,7 @@ discord.on('message', message => {
 
     const command = matches[2];
     if (!command || command.includes("help")) {
-      message.reply(botHelp());
+      return message.reply(botHelp());
     }
 
     if (command.includes("leave")) {
@@ -304,14 +307,16 @@ discord.on('message', message => {
       if (voiceChannel) {
         voiceChannel.leave();
       }
+      return;
     }
 
     // Admin area - Keep Out!
     // POTENTIAL PROBLEM: If you haven't joined a voice channel, some admin commands might not work
     // Will have to ensure that we add check logic lower down
     const parameters = command.match(/(\b[\w,]+)/g);
-    if (parameters[0] in Object.keys(ADMIN_ACTIONS) && auth_check(message, parameters[0])) {
-        ADMIN_ACTIONS[parameters.shift()](message, parameters);
+    if (Object.keys(ADMIN_ACTIONS).indexOf(parameters[0]) > -1
+         && auth_check(message, parameters[0])) {
+      return ADMIN_ACTIONS[parameters.shift()](message, parameters);
     }
 
     return;
