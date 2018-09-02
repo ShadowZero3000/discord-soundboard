@@ -1,4 +1,5 @@
 const fs = require('fs');
+
 class VoiceQueue {
   constructor(channel) {
     this.channel = channel;
