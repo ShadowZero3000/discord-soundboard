@@ -1,5 +1,5 @@
 const fs = require('fs');
-
+const log = require('./logger.js').errorLog;
 class VoiceQueue {
   constructor(channel) {
     this.channel = channel;
@@ -8,8 +8,8 @@ class VoiceQueue {
     this.silenced = false;
   }
 
-  log(message) {
-    console.log(`${this.channel.guild.name} (${this.channel.name}): ${message}`);
+  log(message, level='verbose') {
+    log[level](`${this.channel.guild.name} (${this.channel.name}): ${message}`);
   }
 
   add(file) {
@@ -18,7 +18,7 @@ class VoiceQueue {
     }
 
     if (this.playQueue.length > 2) {
-      this.log(`Too many requests in queue: ${this.playQueue.length}`);
+      this.log(`Too many requests in queue: ${this.playQueue.length}`, 'error');
       return;
     }
 

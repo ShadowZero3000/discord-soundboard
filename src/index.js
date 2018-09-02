@@ -9,6 +9,8 @@ const path = require('path');
 const app = express()
 const cookieParser = require('cookie-parser');
 
+const log = require('./logger.js').errorLog;
+
 const configFile = path.join(__dirname,'config/config.json');
 
 // TODO: Once all the admin stuff is in a class, this can probably be auto-generated
@@ -38,7 +40,7 @@ nconf.argv()
   });
 
 function saveConfig(key, value) {
-  console.log(`Saving config key: ${key}, value: ${value}`);
+  log.debug(`Saving config key: ${key}, value: ${value}`);
   nconf.set(key, value);
   nconf.save(err => {
     fs.readFile(configFile, (err, data) => {
@@ -97,7 +99,7 @@ function add_clip(message, params) {
     const a = message.attachments.first();
     const filename = `./Uploads/${prefix}--${a.filename}`;
 
-    console.log(`Writing attachment to file: ${filename}`);
+    log.debug(`Writing attachment to file: ${filename}`);
     request(a.url).pipe(fs.createWriteStream(filename));
 
     files[prefix] = filename;
@@ -113,16 +115,16 @@ function remove_clip(message, params) {
   }
 
   const clipName = params[0];
-  console.log(`Deleting: ${files[clipName]}`);
+  log.debug(`Deleting: ${files[clipName]}`);
 
   fs.unlink(files[clipName], err => {
     if (err) {
-      console.log(err);
+      log.debug(err);
       return;
     }
 
     delete files[clipName];
-    console.log("Deleted successfully");
+    log.debug("Deleted successfully");
     message.reply(`${clipName} removed`);
   });
 }
@@ -166,15 +168,15 @@ function access_add(message, params) {
   const discord_user = get_discord_user(message, username);
 
   if (discord_user && access) {
-    console.log(`Updating: ${username} with ${access}`);
+    log.debug(`Updating: ${username} with ${access}`);
     access = access.split(',').map(operation => operation.trim());
     const userId = discord_user.user.id;
 
     if (!(userId in adminList)) {
-      console.log("New user")
+      log.debug("New user")
       adminList[userId] = {'access': access, 'immune': false};
     } else {
-      console.log("Additional permissions")
+      log.debug("Additional permissions")
       adminList[userId]['access'] = [...access, ...adminList[userId]['access']];
     }
 
@@ -238,8 +240,17 @@ function print_access(message, user, id) {
 
 function get_vc_from_userid(user_id) {
   const user = discord.users.get(user_id);
+  // log.debug(`User:${user_id}`)
+  // log.debug(user)
+  // discord.guilds.forEach(guild =>{
+  //   log.debug('-----')
+  //   log.debug(`Guild: ${guild.name} ${guild.id}`)
+  //   guild.sync();
+  //   log.debug(guild.channels);
+  // })
   const activeGuild = discord.guilds.find(guild => guild._rawVoiceStates.get(user_id));
-
+  //log.debug('Active guild:')
+  //log.debug(activeGuild)
   if (user && activeGuild) {
     return activeGuild.members.get(user_id).voiceChannel;
   }
@@ -351,7 +362,7 @@ discord.on('message', message => {
   }
 
   // Err.. They asked for something we don't have
-  console.log(`Unrecognized command: ${messageText}`);
+  log.debug(`Unrecognized command: ${messageText}`);
 });
 
 discord.login(token).then(session => {
@@ -372,11 +383,11 @@ discord.login(token).then(session => {
   })
 });
 
-console.log("Let the fun begin!");
+log.debug("Let the fun begin!");
 
 // Make sure we handle exiting properly (SIGTERM might not be needed)
 process.on('SIGINT', () => {
-  console.log("Shutting down from SIGINT");
+  log.debug("Shutting down from SIGINT");
   discord.destroy();
   if (nconf.get('WEBSERVER_ENABLED')) {
     server.close();
@@ -385,7 +396,7 @@ process.on('SIGINT', () => {
 });
 
 process.on('SIGTERM', () => {
-  console.log("Shutting down from SIGTERM");
+  log.debug("Shutting down from SIGTERM");
   discord.destroy();
   if (nconf.get('WEBSERVER_ENABLED')) {
     server.close();
@@ -405,6 +416,7 @@ app.get('/version', (req, res) => {
 });
 
 app.use('/js', express.static('public/js'));
+app.use('/logs', express.static('logs'));
 
 app.get('/clips', (req, res) => {
   const randomList = Object.keys(files)
@@ -430,12 +442,16 @@ app.get('/play/:clip', (req, res) => {
       'Authorization': 'Bearer ' + accesstoken
     }
 
+    log.debug(`Got request to play: ${req.params.clip}`);
+
     request.get('https://discordapp.com/api/users/@me', (err, r, body) => {
       if (err) {
         return res.redirect(`/`);
       }
 
       const userid = JSON.parse(body).id;
+      log.debug(`User requesting: ${userid}`);
+      log.debug(get_vc_from_userid(userid));
       const queue = get_queue(get_vc_from_userid(userid));
       if (queue) {
         queue.add(files[req.params.clip]);
@@ -454,6 +470,8 @@ app.get('/random/:clip', (req, res) => {
     const headers = {
       'Authorization': 'Bearer ' + accesstoken
     }
+
+    log.debug(`Got request to play random: ${req.params.clip}`);
 
     request.get('https://discordapp.com/api/users/@me', (err, r, body) => {
       if (err) {
@@ -485,5 +503,5 @@ app.use('/api/discord', require('./api'));
 
 if (nconf.get('WEBSERVER_ENABLED')) {
   app.enable('trust proxy');
-  var server = app.listen(nconf.get('PORT'), () => console.log(`Web UI available on port ${nconf.get('PORT')}!`))
+  var server = app.listen(nconf.get('PORT'), () => log.debug(`Web UI available on port ${nconf.get('PORT')}!`))
 }
