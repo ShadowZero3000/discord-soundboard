@@ -239,23 +239,12 @@ function print_access(message, user, id) {
 }
 
 function get_vc_from_userid(user_id) {
-  const user = discord.users.get(user_id);
-  // log.debug(`User:${user_id}`)
-  // log.debug(user)
-  // discord.guilds.forEach(guild =>{
-  //   log.debug('-----')
-  //   log.debug(`Guild: ${guild.name} ${guild.id}`)
-  //   guild.sync();
-  //   log.debug(guild.channels);
-  // })
-  const activeGuild = discord.guilds.find(guild => guild._rawVoiceStates.get(user_id));
-  //log.debug('Active guild:')
-  //log.debug(activeGuild)
-  if (user && activeGuild) {
-    return activeGuild.members.get(user_id).voiceChannel;
-  }
+  log.debug(`Looking for an active voice channel for ${user_id}`);
+  const voiceChannel = discord.guilds.map(guild => guild.members.get(user_id))
+    .find(member => !!member && !!member.voiceChannel);
 
-  return;
+  log.debug(`Found voice channel ${voiceChannel}`);
+  return voiceChannel;
 }
 
 function get_queue(vc) {
@@ -423,7 +412,7 @@ app.get('/clips', (req, res) => {
     .map(key => key.match(/^([a-z]+)[0-9]+$/))
     .filter(match => !!match)
     .map(match => match[1])
-    .filter((element,pos,arr) => {
+    .filter((element, pos, arr) => {
       // Unique filter
       return arr.indexOf(element) == pos;
     })
@@ -458,6 +447,7 @@ app.get('/play/:clip', (req, res) => {
         return res.status(200).end();
       }
 
+      console.log(`Failed to find voice channel for ${user_id}`);
       return res.status(404).send("Couldn't find a voice channel for user");
     })
     .auth(null, null, true, accesstoken);
@@ -485,10 +475,10 @@ app.get('/random/:clip', (req, res) => {
         const filenames = Object.keys(files).filter(key => !!key.match(`${req.params.clip}[0-9]+`));
         const clip = select_random(filenames);
         queue.add(files[clip]);
-        res.status(200).end();
-        return;
+        return res.status(200).end();
       }
 
+      console.log(`Failed to find voice channel for ${user_id}`);
       return res.status(404).send("Couldn't find a voice channel for user");
     })
     .auth(null, null, true, accesstoken);
