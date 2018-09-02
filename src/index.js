@@ -241,8 +241,8 @@ function print_access(message, user, id) {
 function get_vc_from_userid(user_id) {
   log.debug(`Looking for an active voice channel for ${user_id}`);
   const voiceChannel = discord.guilds.map(guild => guild.members.get(user_id))
-    .find(member => !!member && !!member.voiceChannel);
-
+    .find(member => !!member && !!member.voiceChannel)
+    .voiceChannel;
   log.debug(`Found voice channel ${voiceChannel}`);
   return voiceChannel;
 }
@@ -439,15 +439,14 @@ app.get('/play/:clip', (req, res) => {
       }
 
       const userid = JSON.parse(body).id;
-      log.debug(`User requesting: ${userid}`);
-      log.debug(get_vc_from_userid(userid));
       const queue = get_queue(get_vc_from_userid(userid));
       if (queue) {
+        log.debug(get_vc_from_userid(userid))
         queue.add(files[req.params.clip]);
         return res.status(200).end();
       }
 
-      console.log(`Failed to find voice channel for ${user_id}`);
+      log.debug(`Failed to find voice channel for ${user_id}`);
       return res.status(404).send("Couldn't find a voice channel for user");
     })
     .auth(null, null, true, accesstoken);
@@ -478,7 +477,7 @@ app.get('/random/:clip', (req, res) => {
         return res.status(200).end();
       }
 
-      console.log(`Failed to find voice channel for ${user_id}`);
+      log.debug(`Failed to find voice channel for ${user_id}`);
       return res.status(404).send("Couldn't find a voice channel for user");
     })
     .auth(null, null, true, accesstoken);
