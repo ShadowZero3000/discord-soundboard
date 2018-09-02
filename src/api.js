@@ -3,7 +3,7 @@ const btoa = require('btoa');
 const fetch = require('node-fetch');
 const router = express.Router();
 const nconf = require('nconf');
-
+const log = require('./logger.js').errorLog;
 const CLIENT_SECRET = nconf.get('CLIENT_SECRET');
 function get_redirect(req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
