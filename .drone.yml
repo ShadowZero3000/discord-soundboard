@@ -1,0 +1,18 @@
+# image: http://docker.codethat.rocks:5000/discord-soundboard:0.0.10
+# script:
+#   - ./.drone/build.sh
+# deploy:
+#   bash:
+#     script:
+#       - ./drone/deploy.sh
+# notify:
+#   email:
+#     recipients:
+#       - email@example.com
+pipeline:
+  docker:
+    image: plugins/docker
+    registry: docker.codethat.rocks:5000
+    repo: discord-soundboard
+    build_args:
+      - HTTP_PROXY=http://yourproxy.com

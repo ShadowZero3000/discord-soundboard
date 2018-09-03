@@ -19,6 +19,7 @@ class VoiceQueue {
 
     if (this.playQueue.length > 2) {
       this.log(`Too many requests in queue: ${this.playQueue.length}`, 'error');
+      this.play(); // Ensure that the bot is still alive
       return;
     }
 
@@ -43,6 +44,7 @@ class VoiceQueue {
       return;
     }
 
+    this.playQueue = []; // Clear the queue on leaving
     this.log("Leaving");
     this.channel.leave();
   }
