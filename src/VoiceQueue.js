@@ -6,6 +6,7 @@ class VoiceQueue {
     this.playQueue = [];
     this.playing = false;
     this.silenced = false;
+    this.timeout = null;
   }
 
   log(message, level='verbose') {
@@ -50,6 +51,9 @@ class VoiceQueue {
   }
 
   play() {
+    if(this.timeout) {
+      clearTimeout(this.timeout);
+    }
     if (this.playing) {
       return;
     }
@@ -60,7 +64,7 @@ class VoiceQueue {
     if (!file) {
       this.log("Queue empty");
       this.playing = false;
-      setTimeout(() => this.disconnect(), 3000);
+      this.timeout = setTimeout(() => this.disconnect(), 3000);
       return;
     }
 
