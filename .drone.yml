@@ -40,7 +40,8 @@ pipeline:
   rancher:
     image: peloton/drone-rancher
     url: http://rancher.codethat.rocks:8080
-    access_key: superaccesskey
-    secret_key: supersecretkey
+    # access_key: superaccesskey
+    # secret_key: supersecretkey
     service: discordbot/discordbot
     docker_image: registry.codethat.rocks:5000/discord-soundboard
+    confirm: true
