@@ -10,14 +10,13 @@ html
       for file in files
         - var first = file[0].toLowerCase()
         if ( first != firstLetter)
-          | <div class="row">
-          |  <div class="col-12 alert-success font-weight-bold" style="padding-left: 30px"> #{first.toUpperCase()}</div>
-        div(class='col-sm' style='padding:5px')
-          div(class='btn btn-primary', onclick="play('" + file + "')") #{file} #{token}
-        if (first != firstLetter)
+          div(class="row")
+            div(class="col-sm alert-success font-weight-bold" style="padding-left: 30px") #{first.toUpperCase()}
           - firstLetter = first
-          | </div>
-      div(class="row")
+        div(class="row")
+          div(class='col-sm' style='padding:5px')
+            div(class='btn btn-primary', onclick="play('" + file + "')") #{file} #{token}
+      div(class="row alert-success")
         div(class="col-lg") Randoms
       div(class="row")
         for file in randoms
