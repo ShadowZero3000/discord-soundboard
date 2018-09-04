@@ -471,7 +471,6 @@ app.get('/random/:clip', (req, res) => {
       const userid = JSON.parse(body).id;
       const queue = get_queue(get_vc_from_userid(userid));
       if (queue) {
-        queue.add(files[req.params.clip]);
         const filenames = Object.keys(files).filter(key => !!key.match(`${req.params.clip}[0-9]+`));
         const clip = select_random(filenames);
         queue.add(files[clip]);
