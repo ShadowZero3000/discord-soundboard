@@ -6,6 +6,7 @@ class VoiceQueue {
     this.playQueue = [];
     this.playing = false;
     this.silenced = false;
+    this.timeout = null;
   }
 
   log(message, level='verbose') {
@@ -19,6 +20,7 @@ class VoiceQueue {
 
     if (this.playQueue.length > 2) {
       this.log(`Too many requests in queue: ${this.playQueue.length}`, 'error');
+      this.play(); // Ensure that the bot is still alive
       return;
     }
 
@@ -43,11 +45,15 @@ class VoiceQueue {
       return;
     }
 
+    this.playQueue = []; // Clear the queue on leaving
     this.log("Leaving");
     this.channel.leave();
   }
 
   play() {
+    if(this.timeout) {
+      clearTimeout(this.timeout);
+    }
     if (this.playing) {
       return;
     }
@@ -58,7 +64,7 @@ class VoiceQueue {
     if (!file) {
       this.log("Queue empty");
       this.playing = false;
-      setTimeout(() => this.disconnect(), 3000);
+      this.timeout = setTimeout(() => this.disconnect(), 3000);
       return;
     }
 
