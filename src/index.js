@@ -111,6 +111,7 @@ function add_clip(message, params) {
 
 function remove_clip(message, params) {
   if (!params.length > 0 || !(params[0] in Object.keys(files))) {
+    log.debug(`Valid removal not found for: ${params}`)
     return;
   }
 
