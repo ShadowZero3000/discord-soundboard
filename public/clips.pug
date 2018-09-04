@@ -11,18 +11,18 @@ html
         - var first = file[0].toLowerCase()
         if ( first != firstLetter)
           | <div class="row">
-          |   <div class="col-12 alert-success font-weight-bold" style="padding-left: 30px"> #{first.toUpperCase()}</div>
+          |  <div class="col-12 alert-success font-weight-bold" style="padding-left: 30px"> #{first.toUpperCase()}</div>
         div(class='col-sm' style='padding:5px')
           div(class='btn btn-primary', onclick="play('" + file + "')") #{file} #{token}
         if (first != firstLetter)
           - firstLetter = first
           | </div>
-        div(class="row")
-          div(class="col-lg alert-success font-weight-bold") Randoms
-        div(class="row")
-          for file in randoms
-            div(class='col-sm' style='padding:5px')
-              div(class='btn btn-primary', onclick="random('" + file + "')") #{file} #{token}
+      div(class="row")
+        div(class="col-lg") Randoms
+      div(class="row")
+        for file in randoms
+          div(class='col-sm' style='padding:5px')
+            div(class='btn btn-primary', onclick="random('" + file + "')") #{file} #{token}
 
       // Modal for error display
       div(id="error-display" class="modal" tabindex="-1" role="dialog")
