@@ -1,5 +1,5 @@
 const VoiceQueue = require('./VoiceQueue.js');
-const Discord = require('discord.js');
+//const Discord = require('discord.js');
 const fs = require('fs');
 const request = require('request');
 const nconf = require('nconf');
@@ -12,19 +12,6 @@ const cookieParser = require('cookie-parser');
 const log = require('./logger.js').errorLog;
 
 const configFile = path.join(__dirname,'config/config.json');
-
-// TODO: Once all the admin stuff is in a class, this can probably be auto-generated
-const ADMIN_ACTIONS = {
-  'add': add_clip,
-  'silence': silence,
-  'unmute': unsilence,
-  'remove': remove_clip,
-  'permit': access_add,
-  'revoke': access_remove,
-  'access': access_show,
-  'toggle_startup': toggle_startup
-  //TODO: Rename!
-}
 
 nconf.argv()
   .env()
@@ -39,95 +26,31 @@ nconf.argv()
     WEBSERVER_ENABLED: 'true'
   });
 
-function saveConfig(key, value) {
-  log.debug(`Saving config key: ${key}, value: ${value}`);
-  nconf.set(key, value);
-  nconf.save(err => {
-    fs.readFile(configFile, (err, data) => {
-      data = data || {};
-      console.dir(JSON.parse(data.toString()));
-    })
-  });
-}
+var adminUtils = require('./adminUtils.js');
 
-const token = nconf.get('TOKEN');
-const adminList = nconf.get('adminList');
+const DiscordBot = require('./discordbot.js')
+// TODO: Once all the admin stuff is in a class, this can probably be auto-generated
+
+const discord = new DiscordBot(nconf.get('TOKEN')).connect();
+
+// const token = nconf.get('TOKEN');
 
 // Often seems to break with sub 1-second mp3's
-const discord = new Discord.Client();
-const queues = {};
+const queues = require('./utils.js').queues;
 
 // Read the Uploads directory, parse out keywords and file mappings
-const items = fs.readdirSync('./Uploads/');
-const files = {};
-items.forEach(item => {
-  const matches = item.match(/^([^-]+)--(.*)$/);
-  if (matches) {
-    files[matches[1]] = `./Uploads/${matches[0]}`;
-  }
-});
+const files = require('./utils.js').files
 
 /////////////////END INITIALIZATION
 
+// TODO: Move all of this to the discordbot class
 function botHelp() {
   return `I'm a bot!\n` +
     `You can ask me to make sounds by saying one of the following:\n` +
-    `\`!${Object.keys(files).sort().join('`, `!')}\`\n` +
+    `\`${keyWord}${Object.keys(files).sort().join(`\`, \`${keyWord}`)}\`\n` +
     '----\n' +
     'Admins can also use:\n'  +
-    `\`!soundboard ${Object.keys(ADMIN_ACTIONS).sort().join('`, `!soundboard ')}\``;
-}
-
-// TODO: Move all the admin stuff into its own class/file
-function auth_check(message, access) {
-  return (adminList[message.author.id]
-      && adminList[message.author.id]['access'].indexOf(access) > -1);
-}
-
-function add_clip(message, params) {
-  if (!params.length > 0) {
-    return;
-  }
-
-  const prefix = params[0];
-  if (!prefix.match(/^[a-z0-9_]+$/)) {
-    message.reply(`${prefix} is a bad short name`);
-  }
-
-  if (message.attachments.first()) {
-    // Only check the first attachment
-    const a = message.attachments.first();
-    const filename = `./Uploads/${prefix}--${a.filename}`;
-
-    log.debug(`Writing attachment to file: ${filename}`);
-    request(a.url).pipe(fs.createWriteStream(filename));
-
-    files[prefix] = filename;
-    message.reply(`!${prefix} is now available`);
-  } else {
-    message.reply(`You need to attach a file`);
-  }
-}
-
-function remove_clip(message, params) {
-  if (!params.length > 0 || !(params[0] in Object.keys(files))) {
-    log.debug(`Valid removal not found for: ${params}`)
-    return;
-  }
-
-  const clipName = params[0];
-  log.debug(`Deleting: ${files[clipName]}`);
-
-  fs.unlink(files[clipName], err => {
-    if (err) {
-      log.debug(err);
-      return;
-    }
-
-    delete files[clipName];
-    log.debug("Deleted successfully");
-    message.reply(`${clipName} removed`);
-  });
+    `\`!${adminWords[0]} ${adminUtils.get_actions().sort().join(`\`, \`!${adminWords[0]} `)}\``;
 }
 
 function get_voice_channel(message) {
@@ -136,107 +59,6 @@ function get_voice_channel(message) {
   }
 
   message.reply("You don't appear to be in a voice channel!");
-}
-
-function silence(message, params) {
-  const vc = get_voice_channel(message);
-  if (vc) {
-    queues[vc.id].silence();
-  }
-}
-
-function unsilence(message, params) {
-  const vc = get_voice_channel(message);
-  if (vc) {
-    queues[vc.id].unsilence();
-  }
-}
-
-function get_discord_user(message, username) {
-  return message.channel.guild.members.find(a => {
-    return a.user['username'].toLowerCase() == username.toLowerCase();
-  });
-}
-
-function access_add(message, params) {
-  if (!params.length > 0) {
-    message.reply("Not enough details to add access");
-    return;
-  }
-
-  const username = params[0];
-  let access = params[1];
-  const discord_user = get_discord_user(message, username);
-
-  if (discord_user && access) {
-    log.debug(`Updating: ${username} with ${access}`);
-    access = access.split(',').map(operation => operation.trim());
-    const userId = discord_user.user.id;
-
-    if (!(userId in adminList)) {
-      log.debug("New user")
-      adminList[userId] = {'access': access, 'immune': false};
-    } else {
-      log.debug("Additional permissions")
-      adminList[userId]['access'] = [...access, ...adminList[userId]['access']];
-    }
-
-    print_access(message, username, userId);
-    saveConfig('adminList', adminList);
-  }
-}
-
-function access_remove(message, params) {
-  if (!params.length > 0) {
-    message.reply("Not enough details to remove access");
-    return;
-  }
-
-  const username = params[0];
-  const access = params[1];
-  const discord_user = get_discord_user(message, username);
-
-  if (discord_user && access && adminList[discord_user.user.id]) {
-    const user = adminList[discord_user.user.id];
-
-    if (user['immune']) {
-      message.reply(`${username} is immune to revokes`);
-      return;
-    }
-
-    user['access'] = user['access'].filter((value, index, arr) => {
-      return access.split(',').indexOf(value) < 0;
-    });
-
-    print_access(message, username, discord_user.user.id);
-    saveConfig('adminList', adminList);
-  }
-}
-
-function access_show(message, params) {
-  if (!params.length > 0) {
-    message.reply("Not enough details to show access");
-    return;
-  }
-
-  const username = params[0];
-  const discord_user = get_discord_user(message, username);
-  if (discord_user && adminList[discord_user.user.id]) {
-    print_access(message, username, discord_user.user.id);
-  } else {
-    message.reply(`${username} does not presently have any admin permissions`)
-  }
-}
-
-function toggle_startup(message, params) {
-  let startup = nconf.get('startup');
-  startup['enabled'] = !startup['enabled'];
-  saveConfig('startup', startup);
-  message.reply(`Startup audio set: ${startup['enabled']}`);
-}
-
-function print_access(message, user, id) {
-  message.reply(`${user} now has: ${adminList[id]['access'].join(', ')}`);
 }
 
 function get_vc_from_userid(user_id) {
@@ -269,35 +91,37 @@ function select_random(collection) {
   return collection[Math.floor(Math.random() * collection.length)];
 }
 
+// const adminWords = ['bot','soundbot','freddy']
+// const keyWord = '$'
+// For making these variable in the future
+const adminWords = ['sb', 'soundbot']
+const keyInit = '!'
+var keyInit = keyWord;
+if (['$','^','(','['].indexOf(keyInit) > -1) {
+  keyInit = `\\${keyWord}`;
+}
+
+const adminWordRegex = new RegExp(`^!(${adminWords.join('|')})(.*)$`)
+const keyWordRegex = new RegExp(`${keyInit}([a-z0-9_]+)(.*)`)
+
 discord.on('message', message => {
-  const messageText = message.content.toLowerCase();
-  // Keeping this block of code in case I want to return to having it just camp in channel
-  /*if (message.content.toLowerCase() === "bot join") {
-    if (message.member && message.member.voiceChannel){
-      voiceChannel = message.member.voiceChannel;
-      voiceConnection = voiceChannel.join();
-      isJoined = true;
-      message.reply("I'm here to help. For more details, try `bot help`")
-    } else {
-      message.reply("You're not in a voice channel");
-      return;
-    }
-  }
-
-  */
-
-  // TODO: abstract keyword regex for great maintenance!
-  // Also, extract this to an external library - argument parsing sucks.
-  const matches = message.content.toLowerCase().match(/^!(soundboard|sb|[a-z0-9_]+)(.*)$/);
-  if (!matches) {
-    // We aren't being addressed, gtfo!
+  if (message.author.id == nconf.get('CLIENT_ID')) {
+    // Don't talk to yourself
     return;
   }
-
-  if (matches[1].includes("sb") || matches[1].includes("soundboard")) {
-    // Bot command, let's go!
-
-    const command = matches[2];
+  const messageText = message.content.toLowerCase();
+  // TODO: abstract keyword regex for great maintenance!
+  // Also, extract this to an external library - argument parsing sucks.
+  const adminMatches = message.content.toLowerCase().match(adminWordRegex);
+  const keyWordMatches = message.content.toLowerCase().match(keyWordRegex);
+  if (!adminMatches && !keyWordMatches) {
+    // GTFO
+    log.debug("Not a match")
+    return;
+  }
+  if (adminMatches) {
+    log.debug("Admin match");
+    const command = adminMatches[2];
     if (!command || command.includes("help")) {
       return message.reply(botHelp());
     }
@@ -315,13 +139,15 @@ discord.on('message', message => {
     // POTENTIAL PROBLEM: If you haven't joined a voice channel, some admin commands might not work
     // Will have to ensure that we add check logic lower down
     const parameters = command.match(/(\b[\w,]+)/g);
-    if (Object.keys(ADMIN_ACTIONS).indexOf(parameters[0]) > -1
-         && auth_check(message, parameters[0])) {
-      return ADMIN_ACTIONS[parameters.shift()](message, parameters);
+    if (adminUtils.get_actions().indexOf(parameters[0]) > -1
+         && adminUtils.check(message, parameters[0])) {
+      return adminUtils[parameters.shift()](message, parameters);
     }
 
     return;
   }
+  log.debug("Regular match")
+  // If we get here, it wasn't an admin match
 
   // Time for some audio!
   const voiceChannel = get_voice_channel(message);
@@ -329,7 +155,7 @@ discord.on('message', message => {
     return;
   }
 
-  const keyword = matches[1];
+  const keyword = keyWordMatches[1];
 
   if (Object.keys(files).indexOf(keyword) > -1) {
     get_queue(voiceChannel).add(files[keyword]);
@@ -337,7 +163,7 @@ discord.on('message', message => {
   }
 
   if (keyword == 'random') {
-    const parameters = matches[2].match(/(\b[\w,]+)/g);
+    const parameters = keyWordMatches[2].match(/(\b[\w,]+)/g);
 
     if (!parameters) {
       const clip = select_random(Object.keys(files));
@@ -353,24 +179,6 @@ discord.on('message', message => {
 
   // Err.. They asked for something we don't have
   log.debug(`Unrecognized command: ${messageText}`);
-});
-
-discord.login(token).then(session => {
-  //TODO: Make the join noise configurable and optional
-  //TODO: Make this not choke if you provide an invalid admin_id or aren't in a channel
-  var startup = nconf.get('startup');
-  discord.fetchApplication().then(obj => {
-    nconf.set('CLIENT_ID', obj.id); //Overrides environment variables
-    var startup = nconf.get('startup');
-    adminList[obj.owner.id] = {
-      'access': Object.keys(ADMIN_ACTIONS),
-      'immune': true
-    };
-    if (startup.enabled) {
-      get_queue(get_vc_from_userid(obj.owner.id))
-        .add(files[startup.clip]);
-    }
-  })
 });
 
 log.debug("Let the fun begin!");
@@ -471,7 +279,6 @@ app.get('/random/:clip', (req, res) => {
       const userid = JSON.parse(body).id;
       const queue = get_queue(get_vc_from_userid(userid));
       if (queue) {
-        queue.add(files[req.params.clip]);
         const filenames = Object.keys(files).filter(key => !!key.match(`${req.params.clip}[0-9]+`));
         const clip = select_random(filenames);
         queue.add(files[clip]);
