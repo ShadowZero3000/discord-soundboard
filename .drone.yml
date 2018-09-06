@@ -18,16 +18,19 @@ pipeline:
     volumes:
       - /tmp/cache:/cache
 
+  # Dev build
   docker-build:
     image: plugins/docker
     repo: registry.codethat.rocks:5000/discord-soundboard
     registry: registry.codethat.rocks:5000
-    tags: latest
+    tags: dev-${CI_BUILD_NUMBER}
     debug: true
     storage_path: /drone/docker
     # Seems to be required to push to the registry on the same host
     custom_dns: [ 192.168.5.1 ]
     network_mode: host
+
+  # On master, build the tagged version. Ideally replace this with an auto-semver
   get_tags:
     image: golang:1.10.0-alpine
     commands:
@@ -60,8 +63,9 @@ pipeline:
     url: http://rancher.codethat.rocks:8080
     access_key: superaccesskey
     secret_key: supersecretkey
-    service: dev-discordbot/discordbot
-    docker_image: registry.codethat.rocks:5000/discord-soundboard
+    service: dev-discord/discordbot
+    docker_image: "registry.codethat.rocks:5000/discord-soundboard:dev-${CI_BUILD_NUMBER}"
+    start_first: false
     confirm: true
 
   rancher-production:
