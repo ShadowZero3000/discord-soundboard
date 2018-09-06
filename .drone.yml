@@ -18,7 +18,7 @@ pipeline:
     volumes:
       - /tmp/cache:/cache
 
-  docker:
+  docker-build:
     image: plugins/docker
     repo: registry.codethat.rocks:5000/discord-soundboard
     registry: registry.codethat.rocks:5000
@@ -28,6 +28,24 @@ pipeline:
     # Seems to be required to push to the registry on the same host
     custom_dns: [ 192.168.5.1 ]
     network_mode: host
+  get_tags:
+    image: golang:1.10.0-alpine
+    commands:
+      - cat public/version.pug > .tags
+    when:
+      branch: master
+  docker-build-release:
+    image: plugins/docker
+    repo: registry.codethat.rocks:5000/discord-soundboard
+    registry: registry.codethat.rocks:5000
+    default_tags: true
+    debug: true
+    storage_path: /drone/docker
+    # Seems to be required to push to the registry on the same host
+    custom_dns: [ 192.168.5.1 ]
+    network_mode: host
+    when:
+      branch: master
 
   rebuild-cache:
     image: drillster/drone-volume-cache
@@ -37,7 +55,16 @@ pipeline:
     volumes:
       - /tmp/cache:/cache
 
-  rancher:
+  rancher-dev:
+    image: peloton/drone-rancher
+    url: http://rancher.codethat.rocks:8080
+    access_key: superaccesskey
+    secret_key: supersecretkey
+    service: dev-discordbot/discordbot
+    docker_image: registry.codethat.rocks:5000/discord-soundboard
+    confirm: true
+
+  rancher-production:
     image: peloton/drone-rancher
     url: http://rancher.codethat.rocks:8080
     access_key: superaccesskey
@@ -45,3 +72,5 @@ pipeline:
     service: discordbot/discordbot
     docker_image: registry.codethat.rocks:5000/discord-soundboard
     confirm: true
+    when:
+      branch: master

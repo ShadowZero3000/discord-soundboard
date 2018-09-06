@@ -95,7 +95,7 @@ function select_random(collection) {
 // const keyWord = '$'
 // For making these variable in the future
 const adminWords = ['sb', 'soundbot']
-const keyInit = '!'
+const keyWord = '!'
 var keyInit = keyWord;
 if (['$','^','(','['].indexOf(keyInit) > -1) {
   keyInit = `\\${keyWord}`;
