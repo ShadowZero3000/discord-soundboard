@@ -23,7 +23,9 @@ nconf.argv()
     },
     adminList: {},
     PORT: 3000,
-    WEBSERVER_ENABLED: 'true'
+    WEBSERVER_ENABLED: 'true',
+    ADMIN_KEYS: 'sb,soundbot',
+    KEY_SYMBOL: '!'
   });
 
 var adminUtils = require('./adminUtils.js');
@@ -94,8 +96,8 @@ function select_random(collection) {
 // const adminWords = ['bot','soundbot','freddy']
 // const keyWord = '$'
 // For making these variable in the future
-const adminWords = ['sb', 'soundbot']
-const keyWord = '!'
+const adminWords = nconf.get('ADMIN_KEYS').split(',');
+const keyWord = nconf.get('KEY_SYMBOL');
 var keyInit = keyWord;
 if (['$','^','(','['].indexOf(keyInit) > -1) {
   keyInit = `\\${keyWord}`;
