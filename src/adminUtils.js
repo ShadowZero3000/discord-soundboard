@@ -60,7 +60,7 @@ class AdminUtils {
 
   // Public functions
   access(message, params) {
-    _paramCheck(message, params) || return;
+    if (!_paramCheck(message, params)){ return; }
 
     const username = params[0];
     const discord_user = this._get_discord_user(message, username);
@@ -72,7 +72,7 @@ class AdminUtils {
   }
 
   add(message, params) {
-    _paramCheck(message, params) || return;
+    if (!_paramCheck(message, params)){ return; }
 
     const prefix = params[0];
     if (!prefix.match(/^[a-z0-9_]+$/)) {
@@ -95,7 +95,7 @@ class AdminUtils {
   }
 
   grant(message, params) {
-    _paramCheck(message, params) || return;
+    if (!_paramCheck(message, params)){ return; }
 
     const username = params[0];
     let access = params[1];
@@ -125,7 +125,7 @@ class AdminUtils {
   }
 
   remove(message, params) {
-    _paramCheck(message, params) || return;
+    if (!_paramCheck(message, params)){ return; }
     if (!(Object.keys(files).indexOf(params[0]) > -1)) {
       return log.debug(`File not found: ${params}`);
     }
@@ -146,7 +146,7 @@ class AdminUtils {
   }
 
   revoke(message, params) {
-    _paramCheck(message, params) || return;
+    if (!_paramCheck(message, params)){ return; }
 
     const username = params[0];
     const access = params[1];
