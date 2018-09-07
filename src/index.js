@@ -1,5 +1,5 @@
 // Includes
-const discordBot = require('./DiscordBot.js');
+const discordBot = require('./DiscordBot2.js');
 const nconf = require('nconf');
 const path = require('path');
 const webgui = require('./webgui.js');
