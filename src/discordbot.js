@@ -2,8 +2,9 @@
 const Discord = require('discord.js');
 const nconf = require('nconf');
 const adminUtils = require('./adminUtils.js')
-const files = require('./utils.js').files
-const queues = require('./utils.js').queues;
+const utils = require('./utils.js')
+const files = utils.files
+const queues = utils.queues;
 const log = require('./logger.js').errorLog;
 const VoiceQueue = require('./VoiceQueue.js');
 
@@ -54,13 +55,7 @@ class DiscordBot {
 
     return queues[vc.id];
   }
-  selectRandom(collection) {
-    if (!collection.length) {
-      return;
-    }
 
-    return collection[Math.floor(Math.random() * collection.length)];
-  }
   handleAdminMessage(message, command) {
     const commandArray = command.split(' ')
     if (!command || commandArray.indexOf("help") == 0) { // bot help
@@ -99,7 +94,7 @@ class DiscordBot {
 
     if (keyword == 'random') {
       if (!extraArgs) { // Play a random clip if there's no extra args
-        const clip = this.selectRandom(Object.keys(files));
+        const clip = utils.selectRandom(Object.keys(files));
         this.getQueue(voiceChannel).add(files[clip]);
         return;
       }
@@ -107,7 +102,7 @@ class DiscordBot {
       const parameters = extraArgs.trim().split(' '); //.match(/(\b[\w,]+)/g);
 
       const filenames = Object.keys(files).filter(key => key.includes(parameters[0]));
-      const clip = this.selectRandom(filenames);
+      const clip = utils.selectRandom(filenames);
       this.getQueue(voiceChannel).add(files[clip]);
       return;
     }
