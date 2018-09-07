@@ -1,9 +1,9 @@
+const files = require('./utils.js').files
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
 const nconf = require('nconf');
-const files = require('./utils.js').files
-const request = require('request');
 const queues = require('./utils.js').queues;
+const request = require('request');
 
 class AdminUtils {
   getActions() {
@@ -104,7 +104,6 @@ class AdminUtils {
     if (discordUser && access) {
       log.debug(`Updating: ${username} with ${access}`);
       access = access.split(',').map(operation => operation.trim());
-      console.log(access);
       const userId = discordUser.user.id;
 
       if (!(userId in adminList)) {

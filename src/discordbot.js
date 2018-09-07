@@ -1,7 +1,6 @@
-
 const Discord = require('discord.js');
 const nconf = require('nconf');
-const adminUtils = require('./adminUtils.js')
+const adminUtils = require('./AdminUtils.js')
 const utils = require('./utils.js')
 const files = utils.files
 const queues = utils.queues;
@@ -9,21 +8,8 @@ const log = require('./logger.js').errorLog;
 const VoiceQueue = require('./VoiceQueue.js');
 
 class DiscordBot {
-  constructor(token) {
-    this.token = token;
-    this.discord = new Discord.Client();
-  }
-
-  loadConfig() {
-    this.adminWords = nconf.get('ADMIN_KEYS').split(',');
-    this.symbol = nconf.get('KEY_SYMBOL');
-    this.safeSymbol = this.symbol;
-    // Must escape some special regex chars
-    if (['$','^','(','['].indexOf(this.symbol) > -1) {
-      this.safeSymbol = `\\${this.symbol}`;
-    }
-    this.adminWordRegex = new RegExp(`^${this.safeSymbol}(${this.adminWords.join('|')})(.*)$`)
-    this.keyWordRegex = new RegExp(`${this.safeSymbol}([a-z0-9_]+)(.*)`)
+  constructor() {
+    this.client = new Discord.Client();
   }
 
   botHelp() {
@@ -35,12 +21,29 @@ class DiscordBot {
       `\`${this.symbol}${this.adminWords[0]} ${adminUtils.getActions().sort().join(`\`, \`!${this.adminWords[0]} `)}\``;
   }
 
-  getVoiceChannel(message) {
-    if (message.member && message.member.voiceChannel) {
-      return message.member.voiceChannel;
+  configure(token) {
+    this.token = token;
+    this.adminWords = nconf.get('ADMIN_KEYS').split(',');
+    this.symbol = nconf.get('KEY_SYMBOL');
+    this.safeSymbol = this.symbol;
+    // Must escape some special regex chars
+    if (['$','^','(','['].indexOf(this.symbol) > -1) {
+      this.safeSymbol = `\\${this.symbol}`;
     }
-    message.reply("You don't appear to be in a voice channel!");
-    return null;
+    this.adminWordRegex = new RegExp(`^${this.safeSymbol}(${this.adminWords.join('|')})(.*)$`)
+    this.keyWordRegex = new RegExp(`${this.safeSymbol}([a-z0-9_]+)(.*)`)
+  }
+
+  connect() {
+    this.client.on('message', message => {
+      this.handleMessage(message);
+    });
+    this.client.login(this.token).then(session => {
+      this.initialize(session)
+    }).catch(err => {
+      log.debug(`Connection error in DiscordBot: ${err}`)
+    });
+    return this.client;
   }
 
   getQueue(vc) {
@@ -54,6 +57,14 @@ class DiscordBot {
     }
 
     return queues[vc.id];
+  }
+
+  getVoiceChannel(message) {
+    if (message.member && message.member.voiceChannel) {
+      return message.member.voiceChannel;
+    }
+    message.reply("You don't appear to be in a voice channel!");
+    return null;
   }
 
   handleAdminMessage(message, command) {
@@ -130,19 +141,10 @@ class DiscordBot {
     return this.handleKeywordMessage(message, keyWordMatches[1], keyWordMatches[2]);
   }
 
-  getVCFromUserid(userId) {
-    log.debug(`Looking for an active voice channel for ${userId}`);
-    const voiceChannel = this.discord.guilds.map(guild => guild.members.get(userId))
-      .find(member => !!member && !!member.voiceChannel)
-      .voiceChannel;
-    log.debug(`Found voice channel ${voiceChannel}`);
-    return voiceChannel;
-  }
-
   initialize(session) {
     //TODO: Make this not choke if you provide an invalid admin_id or aren't in a channel
     var startup = nconf.get('startup');
-    this.discord.fetchApplication().then(app => {
+    this.client.fetchApplication().then(app => {
       nconf.set('CLIENT_ID', app.id); //Overrides environment variables
       var startup = nconf.get('startup');
       const adminList = nconf.get('adminList');
@@ -152,22 +154,13 @@ class DiscordBot {
       };
       nconf.set('adminList', adminList);
       if (startup.enabled) {
-        this.getQueue(this.getVCFromUserid(app.owner.id))
+        utils.getQueueFromUser(this.client, app.owner.id)
           .add(files[startup.clip]);
       }
+    }).catch(err => {
+      log.debug(`Error fetching application: ${err}`)
     })
   }
-
-  connect() {
-    this.loadConfig();
-    this.discord.on('message', message => {
-      this.handleMessage(message);
-    });
-    this.discord.login(this.token).then(session => {
-      this.initialize(session)
-    });
-    return this.discord;
-  }
 }
-
-module.exports = DiscordBot
+const bot = new DiscordBot();
+module.exports = bot;

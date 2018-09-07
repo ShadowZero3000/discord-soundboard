@@ -1,25 +1,17 @@
-const fs = require('fs');
-const VoiceQueue = require('./VoiceQueue.js');
 const log = require('./logger.js').errorLog;
-const items = fs.readdirSync('./Uploads/');
+const VoiceQueue = require('./VoiceQueue.js');
+
 const files = {};
+const fs = require('fs');
+const items = fs.readdirSync('./Uploads/');
+const queues = {}
+
 items.forEach(item => {
   const matches = item.match(/^([^-]+)--(.*)$/);
   if (matches) {
     files[matches[1]] = `./Uploads/${matches[0]}`;
   }
 });
-
-const queues = {}
-
-function getVCFromUserid(discord, userId) {
-  log.debug(`Looking for an active voice channel for ${userId}`);
-  const voiceChannel = discord.guilds.map(guild => guild.members.get(userId))
-    .find(member => !!member && !!member.voiceChannel)
-    .voiceChannel;
-  log.debug(`Found voice channel ${voiceChannel}`);
-  return voiceChannel;
-}
 
 function getQueueFromUser(discord, userId) {
   const vc = getVCFromUserid(discord, userId);
@@ -33,6 +25,15 @@ function getQueueFromUser(discord, userId) {
   }
 
   return queues[vc.id];
+}
+
+function getVCFromUserid(discord, userId) {
+  log.debug(`Looking for an active voice channel for ${userId}`);
+  const voiceChannel = discord.guilds.map(guild => guild.members.get(userId))
+    .find(member => !!member && !!member.voiceChannel)
+    .voiceChannel;
+  log.debug(`Found voice channel ${voiceChannel}`);
+  return voiceChannel;
 }
 
 function selectRandom(collection) {
