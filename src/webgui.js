@@ -1,6 +1,6 @@
 
 const cookieParser = require('cookie-parser');
-const discord = require('./DiscordBot2.js');
+const discord = require('./DiscordBot.js');
 const express = require('express');
 const log = require('./logger.js').errorLog;
 const path = require('path');
