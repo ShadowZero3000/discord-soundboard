@@ -176,7 +176,7 @@ class AdminUtils {
     }
   }
 
-  toggleStartup(message, params) {
+  togglestartup(message, params) {
     let startup = nconf.get('startup');
     startup['enabled'] = !startup['enabled'];
     this._saveConfig('startup', startup);
