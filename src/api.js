@@ -5,11 +5,11 @@ const router = express.Router();
 const nconf = require('nconf');
 const log = require('./logger.js').errorLog;
 const CLIENT_SECRET = nconf.get('CLIENT_SECRET');
-function get_redirect(req) {
+function getRedirect(req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
 }
 router.get('/login', (req, res) => {
-  const redirect = get_redirect(req);
+  const redirect = getRedirect(req);
   res.redirect(`https://discordapp.com/oauth2/authorize?client_id=${nconf.get('CLIENT_ID')}&scope=identify&response_type=code&redirect_uri=${redirect}`);
 });
 
@@ -17,7 +17,7 @@ router.get('/callback', async (req, res) => {
   if (!req.query.code) {
     throw new Error('NoCodeProvided');
   }
-  const redirect = get_redirect(req); // encodeURIComponent(`${proto}${req.headers.host}/api/discord/callback`);
+  const redirect = getRedirect(req); // encodeURIComponent(`${proto}${req.headers.host}/api/discord/callback`);
 
   const code = req.query.code;
   const credentials = btoa(`${nconf.get('CLIENT_ID')}:${CLIENT_SECRET}`);

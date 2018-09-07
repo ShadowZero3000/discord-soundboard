@@ -6,9 +6,9 @@ const request = require('request');
 const queues = require('./utils.js').queues;
 
 class AdminUtils {
-  get_actions() {
+  getActions() {
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-          .filter(key => ['constructor', 'get_actions', 'check'].indexOf(key) == -1)
+          .filter(key => ['constructor', 'getActions', 'check'].indexOf(key) == -1)
           .filter(key => !key.match('^_.*'));
   }
 
@@ -17,7 +17,7 @@ class AdminUtils {
         && this._admins()[message.author.id]['access'].indexOf(access) > -1);
   }
   // Private functions
-  _print_access(message, user, id) {
+  _printAccess(message, user, id) {
     message.reply(`${user} now has: ${this._admins()[id]['access'].sort().join(', ')}`);
   }
 
@@ -25,14 +25,14 @@ class AdminUtils {
     return nconf.get('adminList');
   }
 
-  _get_voice_channel(message) {
+  _getVoiceChannel(message) {
     if (message.member && message.member.voiceChannel) {
       return message.member.voiceChannel;
     }
 
     message.reply("You don't appear to be in a voice channel!");
   }
-  _get_discord_user(message, username) {
+  _getDiscordUser(message, username) {
     return message.channel.guild.members.find(a => {
       return a.user['username'].toLowerCase() == username.toLowerCase();
     });
@@ -63,9 +63,9 @@ class AdminUtils {
     if (!this._paramCheck(message, params)){ return; }
 
     const username = params[0];
-    const discord_user = this._get_discord_user(message, username);
-    if (discord_user && this._admins()[discord_user.user.id]) {
-      this._print_access(message, username, discord_user.user.id);
+    const discordUser = this._getDiscordUser(message, username);
+    if (discordUser && this._admins()[discordUser.user.id]) {
+      this._printAccess(message, username, discordUser.user.id);
     } else {
       message.reply(`${username} does not presently have any admin permissions`)
     }
@@ -99,13 +99,13 @@ class AdminUtils {
 
     const username = params[0];
     let access = params[1];
-    const discord_user = this._get_discord_user(message, username);
+    const discordUser = this._getDiscordUser(message, username);
     const adminList = this._admins();
-    if (discord_user && access) {
+    if (discordUser && access) {
       log.debug(`Updating: ${username} with ${access}`);
       access = access.split(',').map(operation => operation.trim());
       console.log(access);
-      const userId = discord_user.user.id;
+      const userId = discordUser.user.id;
 
       if (!(userId in adminList)) {
         log.debug("New user")
@@ -120,7 +120,7 @@ class AdminUtils {
       }
 
       this._saveConfig('adminList', adminList);
-      this._print_access(message, username, userId);
+      this._printAccess(message, username, userId);
     }
   }
 
@@ -150,10 +150,10 @@ class AdminUtils {
 
     const username = params[0];
     const access = params[1];
-    const discord_user = this._get_discord_user(message, username);
+    const discordUser = this._getDiscordUser(message, username);
 
-    if (discord_user && access && this._admins()[discord_user.user.id]) {
-      const user = this._admins()[discord_user.user.id];
+    if (discordUser && access && this._admins()[discordUser.user.id]) {
+      const user = this._admins()[discordUser.user.id];
 
       if (user['immune']) {
         message.reply(`${username} is immune to revokes`);
@@ -164,19 +164,19 @@ class AdminUtils {
         return access.split(',').indexOf(value) < 0;
       });
 
-      this._print_access(message, username, discord_user.user.id);
+      this._printAccess(message, username, discordUser.user.id);
       this._saveConfig('adminList', this._admins());
     }
   }
 
   silence(message, params) {
-    const vc = this._get_voice_channel(message);
+    const vc = this._getVoiceChannel(message);
     if (vc && vc.id in queues) {
       queues[vc.id].silence();
     }
   }
 
-  toggle_startup(message, params) {
+  toggleStartup(message, params) {
     let startup = nconf.get('startup');
     startup['enabled'] = !startup['enabled'];
     this._saveConfig('startup', startup);
@@ -184,7 +184,7 @@ class AdminUtils {
   }
 
   unmute(message, params) {
-    const vc = this._get_voice_channel(message);
+    const vc = this._getVoiceChannel(message);
     if (vc && vc.id in queues) {
       queues[vc.id].unsilence();
     }
