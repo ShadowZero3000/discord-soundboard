@@ -38,6 +38,13 @@ class AdminUtils {
     });
   }
 
+  _paramCheck(message, params) {
+    if (!params.length > 0) {
+      message.reply(`${_paramCheck.caller.name} needs more parameters`)
+      return false;
+    }
+    return true;
+  }
   _saveConfig(key, value) {
     log.debug(`Saving config key: ${key}, value: ${value}`);
     nconf.set(key, value);
@@ -53,10 +60,7 @@ class AdminUtils {
 
   // Public functions
   access(message, params) {
-    if (!params.length > 0) {
-      message.reply("Not enough details to show access");
-      return;
-    }
+    _paramCheck(message, params) || return;
 
     const username = params[0];
     const discord_user = this._get_discord_user(message, username);
@@ -68,9 +72,7 @@ class AdminUtils {
   }
 
   add(message, params) {
-    if (!params.length > 0) {
-      return;
-    }
+    _paramCheck(message, params) || return;
 
     const prefix = params[0];
     if (!prefix.match(/^[a-z0-9_]+$/)) {
@@ -86,17 +88,14 @@ class AdminUtils {
       request(a.url).pipe(fs.createWriteStream(filename));
 
       files[prefix] = filename;
-      message.reply(`!${prefix} is now available`);
+      message.reply(`${nconf.get('KEY_SYMBOL')}${prefix} is now available`);
     } else {
       message.reply(`You need to attach a file`);
     }
   }
 
   grant(message, params) {
-    if (!params.length > 0) {
-      message.reply("Not enough details to add access");
-      return;
-    }
+    _paramCheck(message, params) || return;
 
     const username = params[0];
     let access = params[1];
@@ -126,9 +125,9 @@ class AdminUtils {
   }
 
   remove(message, params) {
-    if (!params.length > 0 || !(Object.keys(files).indexOf(params[0]) > -1)) {
-      log.debug(`Valid removal not found for: ${params}`)
-      return;
+    _paramCheck(message, params) || return;
+    if (!(Object.keys(files).indexOf(params[0]) > -1)) {
+      return log.debug(`File not found: ${params}`);
     }
 
     const clipName = params[0];
@@ -147,10 +146,7 @@ class AdminUtils {
   }
 
   revoke(message, params) {
-    if (!params.length > 0) {
-      message.reply("Not enough details to remove access");
-      return;
-    }
+    _paramCheck(message, params) || return;
 
     const username = params[0];
     const access = params[1];
