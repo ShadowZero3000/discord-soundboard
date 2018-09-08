@@ -73,7 +73,7 @@ class VoiceQueue {
       .then(conn => {
         const stream = fs.createReadStream(file);
         this.log(`Playing: ${file}`);
-        const dispatcher = conn.playStream(stream, {type: 'opus'});
+        const dispatcher = conn.play(stream);
         dispatcher.on("end", end => {
           // TODO: send end event to Play Bus
           this.log(`Finished with: ${file}`);

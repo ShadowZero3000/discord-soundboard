@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const discord = require('./DiscordBot.js');
 const express = require('express');
 const log = require('./logger.js').errorLog;
+const accessLog = require('./logger.js').accessLog;
 const path = require('path');
 const request = require('request');
 const utils = require('./utils.js');
@@ -43,7 +44,12 @@ app.get('/clips', (req, res) => {
 });
 
 app.get('/play/:clip', (req, res) => {
-  if (req.params.clip in utils.files && req.cookies.discord_session && req.cookies.discord_session.at) {
+  accessLog.info(`Request received via gui to play: ${req.params.clip}`);
+  if ( !req.cookies.discord_session || !req.cookies.discord_session.at) {
+    accessLog.info(`Invalid session`);
+    return res.status(403).send("Invalid session");
+  }
+  if (req.params.clip in utils.files ) {
     const accesstoken = req.cookies.discord_session.at;
     const headers = {
       'Authorization': 'Bearer ' + accesstoken

@@ -16,8 +16,7 @@ items.forEach(item => {
 function getQueueFromUser(discord, userId) {
   const vc = getVCFromUserid(discord, userId);
   if (!vc) {
-    // TODO: This will misbehave, need to throw?
-    return;
+    throw new Error("No queue found")
   }
 
   if (!queues[vc.id]) {
@@ -29,9 +28,10 @@ function getQueueFromUser(discord, userId) {
 
 function getVCFromUserid(discord, userId) {
   log.debug(`Looking for an active voice channel for ${userId}`);
-  const voiceChannel = discord.guilds.map(guild => guild.members.get(userId))
-    .find(member => !!member && !!member.voiceChannel)
-    .voiceChannel;
+  const voiceChannel =
+    discord.guilds.map(guild => guild.voiceStates.get(userId))
+      .filter(voiceState => voiceState !== undefined)
+      .map(user => user.guild.channels.get(user.channelID))[0];
   log.debug(`Found voice channel ${voiceChannel}`);
   return voiceChannel;
 }

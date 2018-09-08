@@ -4,7 +4,6 @@ const fetch = require('node-fetch');
 const router = express.Router();
 const nconf = require('nconf');
 const log = require('./logger.js').errorLog;
-const CLIENT_SECRET = nconf.get('CLIENT_SECRET');
 function getRedirect(req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
 }
@@ -20,7 +19,7 @@ router.get('/callback', async (req, res) => {
   const redirect = getRedirect(req); // encodeURIComponent(`${proto}${req.headers.host}/api/discord/callback`);
 
   const code = req.query.code;
-  const credentials = btoa(`${nconf.get('CLIENT_ID')}:${CLIENT_SECRET}`);
+  const credentials = btoa(`${nconf.get('CLIENT_ID')}:${nconf.get('CLIENT_SECRET')}`);
   const response = await fetch(`https://discordapp.com/api/oauth2/token?grant_type=authorization_code&code=${code}&redirect_uri=${redirect}`, {
     method: 'POST',
     headers: {
