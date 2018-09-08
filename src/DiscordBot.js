@@ -18,7 +18,9 @@ class DiscordBot {
       `\`${this.symbol}${Object.keys(files).sort().join(`\`, \`${this.symbol}`)}\`\n` +
       '----\n' +
       'Admins can also use:\n'  +
-      `\`${this.symbol}${this.adminWords[0]} ${adminUtils.getActions().sort().join(`\`, \`!${this.adminWords[0]} `)}\``;
+      `\`${this.symbol}${this.adminWords[0]} ` +
+      adminUtils.getActions().sort().join(`\`, \`${this.symbol}${this.adminWords[0]} `) +
+      '`';
   }
 
   configure(token) {
