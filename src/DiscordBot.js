@@ -62,11 +62,11 @@ class DiscordBot {
   }
 
   getVoiceChannel(message) {
-    if (message.member && message.member.voiceChannel) {
-      return message.member.voiceChannel;
+    if (!message.member) {
+      message.reply("You don't appear to be in a voice channel!");
+      return null;
     }
-    message.reply("You don't appear to be in a voice channel!");
-    return null;
+    return utils.getQueueFromUser(this.client, message.member.id).channel;
   }
 
   handleAdminMessage(message, command) {
