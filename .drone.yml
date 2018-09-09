@@ -35,6 +35,7 @@ pipeline:
     image: golang:1.10.0-alpine
     commands:
       - cat public/version.pug > .tags
+      - ls -lah .
     when:
       branch: master
   docker-build-release:
