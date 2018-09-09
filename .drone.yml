@@ -5,6 +5,7 @@
 # we can have it automatically update the version file
 # But that's going to be a push to the master branch, so how to not repeat ourselves
 # will need some thought
+# Can do with: git commit -m "updated README [CI SKIP]"
 pipeline:
   restore-cache:
     image: drillster/drone-volume-cache
@@ -13,8 +14,10 @@ pipeline:
       - /drone/docker
     volumes:
       - /tmp/cache:/cache
+    when:
+      event: [push, tag]
 
-  # Dev build
+  # Dev build. Occurs on non-master/release branches
   docker-build:
     image: plugins/docker
     repo: registry.codethat.rocks:5000/discord-soundboard
@@ -27,7 +30,10 @@ pipeline:
     network_mode: host
     when:
       event: push
+      branch:
+        exclude: [master, release/*]
 
+  # Prod build, Occurs on tags
   docker-build-production:
     image: plugins/docker
     repo: registry.codethat.rocks:5000/discord-soundboard
@@ -39,8 +45,18 @@ pipeline:
     custom_dns: [ 192.168.5.1 ]
     network_mode: host
     when:
-      branch: master
       event: tag
+
+  # Semantic release shenanigans
+  semver-update:
+    image: node:10.9-jessie
+    environment:
+      - GITHUB_TOKEN=${github_token}
+    commands:
+      - npm install semantic-release
+      - npx semantic-release -d --debug
+    when:
+      event: [push]
 
   rebuild-cache:
     image: drillster/drone-volume-cache
@@ -49,7 +65,10 @@ pipeline:
       - /drone/docker
     volumes:
       - /tmp/cache:/cache
+    when:
+      event: [push, tag]
 
+  # Dev deploy. Occurs on non-master/release branches
   rancher-dev:
     image: peloton/drone-rancher
     url: http://rancher.codethat.rocks:8080
@@ -61,7 +80,10 @@ pipeline:
     confirm: true
     when:
       event: push
+      branch:
+        exclude: [master, release/*]
 
+  # Prod deploy, Occurs on tags
   rancher-production:
     image: peloton/drone-rancher
     url: http://rancher.codethat.rocks:8080
@@ -71,5 +93,4 @@ pipeline:
     docker_image: "registry.codethat.rocks:5000/discord-soundboard:${DRONE_TAG}"
     confirm: true
     when:
-      branch: master
       event: tag

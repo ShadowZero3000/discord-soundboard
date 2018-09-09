@@ -1,0 +1,12 @@
+{
+  "release": {
+    "verifyConditions": ["@semantic-release/github"], 
+    "prepare": [{
+      "path": "@semantic-release/exec",
+      "cmd": "echo ${nextRelease.version} > public/version.pug",
+    }],
+    "publish": [],
+    "success": [],
+    "fail": []
+  }  
+}
