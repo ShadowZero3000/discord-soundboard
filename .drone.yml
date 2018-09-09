@@ -41,7 +41,7 @@ pipeline:
     image: plugins/docker
     repo: registry.codethat.rocks:5000/discord-soundboard
     registry: registry.codethat.rocks:5000
-    default_tags: true
+    tags: '0.0.11'
     debug: true
     storage_path: /drone/docker
     # Seems to be required to push to the registry on the same host
