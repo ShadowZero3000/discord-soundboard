@@ -29,16 +29,18 @@ pipeline:
     # Seems to be required to push to the registry on the same host
     custom_dns: [ 192.168.5.1 ]
     network_mode: host
-
+  test_thing:
+    image: golang:1.10.0-alpine
+    commands:
+      - ls -lah .
   # On master, build the tagged version. Ideally replace this with an auto-semver
   get_tags:
     image: golang:1.10.0-alpine
     commands:
       - cat public/version.pug > .tags
-      - ls -lah .
     when:
       branch: master
-  docker-build-release:
+  docker-build-production:
     image: plugins/docker
     repo: registry.codethat.rocks:5000/discord-soundboard
     registry: registry.codethat.rocks:5000
