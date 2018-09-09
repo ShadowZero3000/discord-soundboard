@@ -1,9 +1,11 @@
-const files = require('./utils.js').files
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
 const nconf = require('nconf');
-const queues = require('./utils.js').queues;
 const request = require('request');
+const utils = require('./utils.js');
+
+const files = utils.files
+const queues = utils.queues;
 
 class AdminUtils {
   getActions() {
@@ -25,13 +27,6 @@ class AdminUtils {
     return nconf.get('adminList');
   }
 
-  _getVoiceChannel(message) {
-    if (message.member && message.member.voiceChannel) {
-      return message.member.voiceChannel;
-    }
-
-    message.reply("You don't appear to be in a voice channel!");
-  }
   _getDiscordUser(message, username) {
     return message.channel.guild.members.find(a => {
       return a.user['username'].toLowerCase() == username.toLowerCase();
@@ -59,7 +54,7 @@ class AdminUtils {
   }
 
   // Public functions
-  access(message, params) {
+  access(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
 
     const username = params[0];
@@ -71,14 +66,16 @@ class AdminUtils {
     }
   }
 
-  add(message, params) {
+  add(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
 
     const prefix = params[0];
     if (!prefix.match(/^[a-z0-9_]+$/)) {
-      message.reply(`${prefix} is a bad short name`);
+      return message.reply(`${prefix} is a bad short name`);
     }
-
+    if (Object.keys(files).indexOf(prefix) > -1) {
+      return message.reply("That sound effect already exists");
+    }
     if (message.attachments.first()) {
       // Only check the first attachment
       const a = message.attachments.first();
@@ -88,13 +85,13 @@ class AdminUtils {
       request(a.url).pipe(fs.createWriteStream(filename));
 
       files[prefix] = filename;
-      message.reply(`${nconf.get('KEY_SYMBOL')}${prefix} is now available`);
+      return message.reply(`${nconf.get('KEY_SYMBOL')}${prefix} is now available`);
     } else {
-      message.reply(`You need to attach a file`);
+      return message.reply(`You need to attach a file`);
     }
   }
 
-  grant(message, params) {
+  grant(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
 
     const username = params[0];
@@ -123,7 +120,7 @@ class AdminUtils {
     }
   }
 
-  remove(message, params) {
+  remove(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
     if (!(Object.keys(files).indexOf(params[0]) > -1)) {
       return log.debug(`File not found: ${params}`);
@@ -144,7 +141,27 @@ class AdminUtils {
     });
   }
 
-  revoke(message, params) {
+  rename(discord, message, params) {
+    if (!this._paramCheck(message, params)){ return; }
+    const oldClipName = params[0];
+    const newClipName = params[1];
+    if (!(Object.keys(files).indexOf(oldClipName) > -1)) {
+      message.reply(`Could not find: ${oldClipName}`)
+      return log.debug(`File not found: ${oldClipName}`);
+    }
+    if (!newClipName.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${newClipName} is a bad short name`);
+    }
+    const newFileName = files[oldClipName].replace(oldClipName, newClipName);
+    log.debug(`Renaming: ${files[oldClipName]} to ${newFileName}`);
+    fs.rename(files[oldClipName], newFileName, (err) => {
+      if (err) throw err;
+      log.debug('Rename complete.');
+      message.reply("Rename complete.")
+    });
+  }
+
+  revoke(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
 
     const username = params[0];
@@ -168,25 +185,21 @@ class AdminUtils {
     }
   }
 
-  silence(message, params) {
-    const vc = this._getVoiceChannel(message);
-    if (vc && vc.id in queues) {
-      queues[vc.id].silence();
-    }
+  silence(discord, message, params) {
+    utils.getQueueFromUser(discord, message.member.id).silence();
+    message.reply("Oooooh kaaaaay. I'll go sit in a corner for a while and think about what I did.");
   }
 
-  togglestartup(message, params) {
+  togglestartup(discord, message, params) {
     let startup = nconf.get('startup');
     startup['enabled'] = !startup['enabled'];
     this._saveConfig('startup', startup);
     message.reply(`Startup audio set: ${startup['enabled']}`);
   }
 
-  unmute(message, params) {
-    const vc = this._getVoiceChannel(message);
-    if (vc && vc.id in queues) {
-      queues[vc.id].unsilence();
-    }
+  unmute(discord, message, params) {
+    utils.getQueueFromUser(discord, message.member.id).unsilence();
+    message.reply("Ok, ready to make some noise.");
   }
 }
 

@@ -1,14 +1,10 @@
-# image: http://docker.codethat.rocks:5000/discord-soundboard:0.0.10
-# script:
-#   - ./.drone/build.sh
-# deploy:
-#   bash:
-#     script:
-#       - ./drone/deploy.sh
-# notify:
-#   email:
-#     recipients:
-#       - email@example.com
+# I would like to add https://github.com/semantic-release/semantic-release to the flow
+# Ideally we'd have semantic-release do the tagging (which will trigger another job)
+# So on push to master, run semantic-release, on tag push to prod
+# With a prepare plugin: https://github.com/semantic-release/semantic-release/blob/caribou/docs/usage/plugins.md#prepare-plugin
+# we can have it automatically update the version file
+# But that's going to be a push to the master branch, so how to not repeat ourselves
+# will need some thought
 pipeline:
   restore-cache:
     image: drillster/drone-volume-cache
@@ -29,19 +25,14 @@ pipeline:
     # Seems to be required to push to the registry on the same host
     custom_dns: [ 192.168.5.1 ]
     network_mode: host
-
-  # On master, build the tagged version. Ideally replace this with an auto-semver
-  get_tags:
-    image: golang:1.10.0-alpine
-    commands:
-      - cat public/version.pug > .tags
     when:
-      branch: master
-  docker-build-release:
+      event: push
+
+  docker-build-production:
     image: plugins/docker
     repo: registry.codethat.rocks:5000/discord-soundboard
     registry: registry.codethat.rocks:5000
-    tags: '0.0.11'
+    tags: "${DRONE_TAG}"
     debug: true
     storage_path: /drone/docker
     # Seems to be required to push to the registry on the same host
@@ -49,6 +40,7 @@ pipeline:
     network_mode: host
     when:
       branch: master
+      event: tag
 
   rebuild-cache:
     image: drillster/drone-volume-cache
@@ -67,6 +59,8 @@ pipeline:
     docker_image: "registry.codethat.rocks:5000/discord-soundboard:dev-${CI_BUILD_NUMBER}"
     start_first: false
     confirm: true
+    when:
+      event: push
 
   rancher-production:
     image: peloton/drone-rancher
@@ -74,7 +68,8 @@ pipeline:
     access_key: superaccesskey
     secret_key: supersecretkey
     service: discordbot/discordbot
-    docker_image: registry.codethat.rocks:5000/discord-soundboard:0.0.11
+    docker_image: "registry.codethat.rocks:5000/discord-soundboard:${DRONE_TAG}"
     confirm: true
     when:
       branch: master
+      event: tag
