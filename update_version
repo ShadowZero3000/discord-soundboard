@@ -1,0 +1,5 @@
+#!/bin/bash
+set -eu
+echo "$1" > public/version.pug
+newPackage=$(jq ".version |= \"$1\"" package.json)
+echo "$newPackage" >| package.json

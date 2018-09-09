@@ -1,0 +1,20 @@
+
+{
+  "verifyConditions": ["@semantic-release/changelog", "@semantic-release/github", "@semantic-release/git"],
+  "prepare": [
+    {
+      "path": "@semantic-release/exec",
+      "cmd": "/bin/sh ./update_version ${nextRelease.version}"
+    },{
+      "path": "@semantic-release/changelog",
+      "changelogFile": "CHANGELOG.md"
+    },{
+      "path": "@semantic-release/git",
+      "assets": ["CHANGELOG.md", "package.json", "public/version.pug"]
+    }
+  ],
+  "publish": ["@semantic-release/github"],
+  "success": [],
+  "fail": []
+}
+
