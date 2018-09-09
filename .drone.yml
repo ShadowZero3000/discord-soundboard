@@ -31,12 +31,12 @@ pipeline:
     network_mode: host
 
   # On master, build the tagged version. Ideally replace this with an auto-semver
-  get_tags:
-    image: golang:1.10.0-alpine
-    commands:
-      - cat public/version.pug > .tags
-    when:
-      branch: master
+  # get_tags:
+  #   image: golang:1.10.0-alpine
+  #   commands:
+  #     - cat public/version.pug > .tags
+  #   when:
+  #     branch: master
   docker-build-release:
     image: plugins/docker
     repo: registry.codethat.rocks:5000/discord-soundboard
