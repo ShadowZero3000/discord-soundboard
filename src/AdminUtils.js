@@ -141,6 +141,26 @@ class AdminUtils {
     });
   }
 
+  rename(discord, message, params) {
+    if (!this._paramCheck(message, params)){ return; }
+    const oldClipName = params[0];
+    const newClipName = params[1];
+    if (!(Object.keys(files).indexOf(oldClipName) > -1)) {
+      message.reply(`Could not find: ${oldClipName}`)
+      return log.debug(`File not found: ${oldClipName}`);
+    }
+    if (!newClipName.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${newClipName} is a bad short name`);
+    }
+    const newFileName = files[oldClipName].replace(oldClipName, newClipName);
+    log.debug(`Renaming: ${files[oldClipName]} to ${newFileName}`);
+    fs.rename(files[oldClipName], newFileName, (err) => {
+      if (err) throw err;
+      log.debug('Rename complete.');
+      message.reply("Rename complete.")
+    });
+  }
+
   revoke(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
 
