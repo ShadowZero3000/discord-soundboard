@@ -76,7 +76,7 @@ class DiscordBot {
     }
 
     if (commandArray.indexOf("leave") == 0) { // bot leave
-      const voiceChannel = getVoiceChannel(message);
+      const voiceChannel = this.getVoiceChannel(message);
       if (voiceChannel) {
         voiceChannel.leave();
       }
@@ -87,7 +87,7 @@ class DiscordBot {
     // Will have to ensure that we add check logic lower down
     if (adminUtils.getActions().indexOf(commandArray[0]) > -1
          && adminUtils.check(message, commandArray[0])) {
-      return adminUtils[commandArray.shift()](message, commandArray);
+      return adminUtils[commandArray.shift()](this.client, message, commandArray);
     }
 
     return;
