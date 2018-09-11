@@ -41,7 +41,7 @@ pipeline:
   semver-update:
     image: node:10.9-jessie
     commands:
-      - if echo "$${DRONE_COMMIT_MESSAGE}" | grep "[skip semver]"; then exit 0; fi
+      - if echo "$${DRONE_COMMIT_MESSAGE}" | grep "\[skip semver\]"; then exit 0; fi
       - apt update
       - apt install jq
       - npm install --no-save semantic-release @semantic-release/exec @semantic-release/changelog @semantic-release/git
