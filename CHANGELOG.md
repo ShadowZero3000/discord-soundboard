@@ -1,3 +1,10 @@
+## [0.0.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.3...v0.0.4) (2018-09-11)
+
+
+### Bug Fixes
+
+* **pipeline:** Try not using skip ([f5a62f7](https://github.com/ShadowZero3000/discord-soundboard/commit/f5a62f7))
+
 ## [0.0.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.2...v0.0.3) (2018-09-11)
 
 
