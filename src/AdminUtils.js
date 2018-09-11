@@ -1,10 +1,9 @@
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
 const nconf = require('nconf');
-const request = require('request');
 const utils = require('./utils.js');
 
-const files = utils.files
+const fm = require('./FileManager');
 const queues = utils.queues;
 
 class AdminUtils {
@@ -69,23 +68,21 @@ class AdminUtils {
   add(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
 
-    const prefix = params[0];
-    if (!prefix.match(/^[a-z0-9_]+$/)) {
-      return message.reply(`${prefix} is a bad short name`);
+    const clipName = params[0];
+    const category = params[1] || 'Misc';
+    if (!clipName.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${clipName} is a bad short name`);
     }
-    if (Object.keys(files).indexOf(prefix) > -1) {
+    if (!category.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${category} is a bad category name`);
+    }
+    if (fm.inLibrary(clipName)) {
       return message.reply("That sound effect already exists");
     }
     if (message.attachments.first()) {
       // Only check the first attachment
-      const a = message.attachments.first();
-      const filename = `./Uploads/${prefix}--${a.filename}`;
-
-      log.debug(`Writing attachment to file: ${filename}`);
-      request(a.url).pipe(fs.createWriteStream(filename));
-
-      files[prefix] = filename;
-      return message.reply(`${nconf.get('KEY_SYMBOL')}${prefix} is now available`);
+      fm.create(clipName, category, message.attachments.first());
+      return message.reply(`${nconf.get('KEY_SYMBOL')}${clipName} is now available`);
     } else {
       return message.reply(`You need to attach a file`);
     }
@@ -122,43 +119,30 @@ class AdminUtils {
 
   remove(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
-    if (!(Object.keys(files).indexOf(params[0]) > -1)) {
+    if (!fm.inLibrary(params[0])) {
       return log.debug(`File not found: ${params}`);
     }
 
     const clipName = params[0];
-    log.debug(`Deleting: ${files[clipName]}`);
-
-    fs.unlink(files[clipName], err => {
-      if (err) {
-        log.debug(err);
-        return;
-      }
-
-      delete files[clipName];
-      log.debug("Deleted successfully");
+    if(fm.delete(params[0])) {
       message.reply(`${clipName} removed`);
-    });
+    }
   }
 
   rename(discord, message, params) {
     if (!this._paramCheck(message, params)){ return; }
     const oldClipName = params[0];
     const newClipName = params[1];
-    if (!(Object.keys(files).indexOf(oldClipName) > -1)) {
+    if (!fm.inLibrary(oldClipName)) {
       message.reply(`Could not find: ${oldClipName}`)
       return log.debug(`File not found: ${oldClipName}`);
     }
     if (!newClipName.match(/^[a-z0-9_]+$/)) {
       return message.reply(`${newClipName} is a bad short name`);
     }
-    const newFileName = files[oldClipName].replace(oldClipName, newClipName);
-    log.debug(`Renaming: ${files[oldClipName]} to ${newFileName}`);
-    fs.rename(files[oldClipName], newFileName, (err) => {
-      if (err) throw err;
-      log.debug('Rename complete.');
+    if(fm.rename(oldClipName, newClipName)) {
       message.reply("Rename complete.")
-    });
+    }
   }
 
   revoke(discord, message, params) {
@@ -203,5 +187,4 @@ class AdminUtils {
   }
 }
 
-const adm = new AdminUtils()
-module.exports = adm
+module.exports = new AdminUtils();

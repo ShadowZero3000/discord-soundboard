@@ -7,6 +7,7 @@ const accessLog = require('./logger.js').accessLog;
 const path = require('path');
 const request = require('request');
 const utils = require('./utils.js');
+const fm = require('./FileManager');
 
 const app = express();
 
@@ -27,19 +28,10 @@ app.get('/version', (req, res) => {
 });
 
 app.get('/clips', (req, res) => {
-  const randomList = Object.keys(utils.files)
-    .map(key => key.match(/^([a-z]+)[0-9]+$/))
-    .filter(match => !!match)
-    .map(match => match[1])
-    .filter((element, pos, arr) => {
-      // Unique filter
-      return arr.indexOf(element) == pos;
-    })
-    .sort();
-
   res.status(200).render("clips", {
-    files: Object.keys(utils.files).sort(),
-    randoms: randomList
+    files: fm.getClipList(),
+    randoms: fm.getRandomList(),
+    categories: fm.getCategorizedFiles()
   });
 });
 
@@ -49,7 +41,7 @@ app.get('/play/:clip', (req, res) => {
     accessLog.info(`Invalid session`);
     return res.status(403).send("Invalid session");
   }
-  if (req.params.clip in utils.files ) {
+  if (fm.inLibrary(req.params.clip)) {
     const accesstoken = req.cookies.discord_session.at;
     const headers = {
       'Authorization': 'Bearer ' + accesstoken
@@ -65,7 +57,7 @@ app.get('/play/:clip', (req, res) => {
       const userid = JSON.parse(body).id;
       const queue = utils.getQueueFromUser(discord.client, userid);
       if (queue) {
-        queue.add(utils.files[req.params.clip]);
+        queue.add(req.params.clip);
         return res.status(200).end();
       }
 
@@ -93,9 +85,7 @@ app.get('/random/:clip', (req, res) => {
       const userid = JSON.parse(body).id;
       const queue = utils.getQueueFromUser(discord.client, userid);
       if (queue) {
-        const filenames = Object.keys(utils.files).filter(key => !!key.match(`${req.params.clip}[0-9]+`));
-        const clip = utils.selectRandom(filenames);
-        queue.add(utils.files[clip]);
+        queue.add(fm.random(req.params.clip));
         return res.status(200).end();
       }
 

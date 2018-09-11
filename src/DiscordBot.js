@@ -1,8 +1,9 @@
 const Discord = require('discord.js');
 const nconf = require('nconf');
-const adminUtils = require('./AdminUtils.js')
+const adminUtils = require('./AdminUtils.js');
 const utils = require('./utils.js')
-const files = utils.files
+const fm = require('./FileManager');
+const files = fm.getAll();
 const queues = utils.queues;
 const log = require('./logger.js').errorLog;
 const VoiceQueue = require('./VoiceQueue.js');
@@ -100,23 +101,19 @@ class DiscordBot {
       return;
     }
 
-    if (Object.keys(files).indexOf(keyword) > -1) {
-      this.getQueue(voiceChannel).add(files[keyword]);
+    if (fm.inLibrary(keyword)) {
+      this.getQueue(voiceChannel).add(keyword);
       return;
     }
 
     if (keyword == 'random') {
       if (!extraArgs) { // Play a random clip if there's no extra args
-        const clip = utils.selectRandom(Object.keys(files));
-        this.getQueue(voiceChannel).add(files[clip]);
+        this.getQueue(voiceChannel).add(fm.random());
         return;
       }
 
-      const parameters = extraArgs.trim().split(' '); //.match(/(\b[\w,]+)/g);
-
-      const filenames = Object.keys(files).filter(key => key.includes(parameters[0]));
-      const clip = utils.selectRandom(filenames);
-      this.getQueue(voiceChannel).add(files[clip]);
+      const clip = extraArgs.trim().split(' ')[0]; //.match(/(\b[\w,]+)/g);
+      this.getQueue(voiceChannel).add(fm.random(clip));
       return;
     }
     // Err.. They asked for something we don't have
@@ -157,12 +154,12 @@ class DiscordBot {
       nconf.set('adminList', adminList);
       if (startup.enabled) {
         utils.getQueueFromUser(this.client, app.owner.id)
-          .add(files[startup.clip]);
+          .add(startup.clip);
       }
     }).catch(err => {
       log.debug(`Error fetching application: ${err}`)
     })
   }
 }
-const bot = new DiscordBot();
-module.exports = bot;
+
+module.exports =  new DiscordBot();

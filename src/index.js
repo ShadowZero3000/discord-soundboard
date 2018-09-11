@@ -1,14 +1,8 @@
 // Includes
-const discordBot = require('./DiscordBot.js');
+const discordBot = require('./DiscordBot');
 const nconf = require('nconf');
 const path = require('path');
-const webgui = require('./webgui.js');
-
-// Var definitions
-const log = require('./logger.js').errorLog;
 const configFile = path.join(__dirname,'config/config.json');
-var server = null;
-
 nconf.argv()
   .env()
   .file({file: configFile})
@@ -23,6 +17,12 @@ nconf.argv()
     ADMIN_KEYS: 'sb,soundbot',
     KEY_SYMBOL: '!'
   });
+
+const webgui = require('./webgui.js');
+
+// Var definitions
+const log = require('./logger.js').errorLog;
+var server = null;
 
 // Make sure we handle exiting properly (SIGTERM might not be needed)
 process.on('SIGINT', () => {
