@@ -15,8 +15,12 @@ pipeline:
     volumes:
       - /tmp/cache:/cache
     when:
-      event: push
+      event: [push, tag]
 
+  show environment:
+    image: node:10.9-jessie
+    commands:
+      - env
   # Dev build. Occurs on non-master/release branches
   docker-build:
     image: plugins/docker
@@ -30,11 +34,14 @@ pipeline:
     network_mode: host
     when:
       event: push
+      branch:
+        exclude: [master, release/*]
 
   # Semantic release - Updates versions, changelogs, etc..., and pushes another commit with [skip ci]
   semver-update:
     image: node:10.9-jessie
     commands:
+      - if echo "$${DRONE_COMMIT_MESSAGE}" | grep "[skip semver]"; then exit 0; fi
       - apt update
       - apt install jq
       - npm install --no-save semantic-release @semantic-release/exec @semantic-release/changelog @semantic-release/git
@@ -62,7 +69,7 @@ pipeline:
     custom_dns: [ 192.168.5.1 ]
     network_mode: host
     when:
-      event: push
+      event: tag
       branch:
         include: [master, release/*]
 
@@ -101,6 +108,6 @@ pipeline:
     docker_image: "registry.codethat.rocks:5000/discord-soundboard:${DRONE_TAG}"
     confirm: true
     when:
-      event: push
+      event: tag
       branch:
         include: [master, release/*]
