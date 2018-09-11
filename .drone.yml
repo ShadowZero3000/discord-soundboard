@@ -15,7 +15,7 @@ pipeline:
     volumes:
       - /tmp/cache:/cache
     when:
-      event: [push, tag]
+      event: push
 
   # Dev build. Occurs on non-master/release branches
   docker-build:
@@ -30,24 +30,8 @@ pipeline:
     network_mode: host
     when:
       event: push
-      branch:
-        exclude: [master, release/*]
 
-  # Prod build, Occurs on tags
-  docker-build-production:
-    image: plugins/docker
-    repo: registry.codethat.rocks:5000/discord-soundboard
-    registry: registry.codethat.rocks:5000
-    tags: "${DRONE_TAG}"
-    debug: true
-    storage_path: /drone/docker
-    # Seems to be required to push to the registry on the same host
-    custom_dns: [ 192.168.5.1 ]
-    network_mode: host
-    when:
-      event: tag
-
-  # Semantic release shenanigans
+  # Semantic release - Updates versions, changelogs, etc..., and pushes another commit with [skip ci]
   semver-update:
     image: node:10.9-jessie
     commands:
@@ -61,8 +45,26 @@ pipeline:
       - printf "StrictHostKeyChecking no\nUserKnownHostsFile /dev/null\nHost github.com\nUser ShadowZero3000" > ~/.ssh/config
       - npx semantic-release --debug
     when:
-      event: [push]
+      event: push
+      branch:
+        include: [master, release/*]
     secrets: [ github_ssh_key, github_token ]
+
+  # Prod build - Happens after Semantic release updates changelogs etc...
+  docker-build-production:
+    image: plugins/docker
+    repo: registry.codethat.rocks:5000/discord-soundboard
+    registry: registry.codethat.rocks:5000
+    tags: "${DRONE_TAG}"
+    debug: true
+    storage_path: /drone/docker
+    # Seems to be required to push to the registry on the same host
+    custom_dns: [ 192.168.5.1 ]
+    network_mode: host
+    when:
+      event: push
+      branch:
+        include: [master, release/*]
 
   rebuild-cache:
     image: drillster/drone-volume-cache
@@ -72,7 +74,7 @@ pipeline:
     volumes:
       - /tmp/cache:/cache
     when:
-      event: [push, tag]
+      event: push
 
   # Dev deploy. Occurs on non-master/release branches
   rancher-dev:
@@ -99,4 +101,6 @@ pipeline:
     docker_image: "registry.codethat.rocks:5000/discord-soundboard:${DRONE_TAG}"
     confirm: true
     when:
-      event: tag
+      event: push
+      branch:
+        include: [master, release/*]
