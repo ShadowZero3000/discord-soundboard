@@ -1,3 +1,14 @@
+## [0.0.7](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.6...v0.0.7) (2018-09-13)
+
+
+### Bug Fixes
+
+* **adminutils:** Don't allow users to be granted bogus access (and potentially features added in the future) ([e4d1ba3](https://github.com/ShadowZero3000/discord-soundboard/commit/e4d1ba3))
+* **bugs:** Minor bugs in file management ([dcca158](https://github.com/ShadowZero3000/discord-soundboard/commit/dcca158))
+* **categories:** Add admin functionality for categorizing files (even in bulk) ([88b1084](https://github.com/ShadowZero3000/discord-soundboard/commit/88b1084))
+* **messaging:** Add 'help' options to commands ([07b3c87](https://github.com/ShadowZero3000/discord-soundboard/commit/07b3c87))
+* **messaging:** Add separate messaging for admin access now, based on what permissions a user has ([5bc79c7](https://github.com/ShadowZero3000/discord-soundboard/commit/5bc79c7))
+
 ## [0.0.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.5...v0.0.6) (2018-09-13)
 
 
