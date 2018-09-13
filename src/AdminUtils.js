@@ -63,6 +63,10 @@ class AdminUtils {
 
   // Public functions
   access(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('access <username>: \n' +
+          'Prints what access <username> has.');
+    }
     if (!this._paramCheck(message, params)){ return; }
 
     const username = params[0];
@@ -75,6 +79,11 @@ class AdminUtils {
   }
 
   add(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('add <clip> [category] (with attachment): \n' +
+          'Adds a sound effect with <clip> as its shortcut.\n' +
+          'If provided, will assign to [category]. Defaults to "misc".');
+    }
     if (!this._paramCheck(message, params)){ return; }
 
     const clipName = params[0];
@@ -98,7 +107,11 @@ class AdminUtils {
   }
 
   grant(discord, message, params) {
-    if (!this._paramCheck(message, params)){ return; }
+    if (params[0] == 'help') {
+      return message.reply('grant `<username>` `<permission>`[,`<permission>`...]: \n' +
+          'Gives `<username>` access to `<permission>` feature(s).');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
 
     const username = params[0];
     let access = params[1];
@@ -127,6 +140,10 @@ class AdminUtils {
   }
 
   remove(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('remove `<clip>`: \n' +
+          'Permanently deletes `<clip>` from the soundboard.');
+    }
     if (!this._paramCheck(message, params)){ return; }
     if (!fm.inLibrary(params[0])) {
       return log.debug(`File not found: ${params}`);
@@ -139,7 +156,11 @@ class AdminUtils {
   }
 
   rename(discord, message, params) {
-    if (!this._paramCheck(message, params)){ return; }
+    if (params[0] == 'help') {
+      return message.reply('rename `<clip>` `<new clip name>`: \n' +
+          'Renames `<clip>` to `<new clip name>`.');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
     const oldClipName = params[0];
     const newClipName = params[1];
     if (!fm.inLibrary(oldClipName)) {
@@ -155,7 +176,11 @@ class AdminUtils {
   }
 
   revoke(discord, message, params) {
-    if (!this._paramCheck(message, params)){ return; }
+    if (params[0] == 'help') {
+      return message.reply('revoke `<username>` `<permission>`[,`<permission>`...]: \n' +
+          'Revokes access for `<username>` to `<permission>` feature(s).');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
 
     const username = params[0];
     const access = params[1];
