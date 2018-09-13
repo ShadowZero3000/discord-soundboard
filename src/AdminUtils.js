@@ -114,6 +114,9 @@ class AdminUtils {
     }
     if (!this._paramCheck(message, params, 2)){ return; }
     const category = params.shift();
+    if (!category.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${category} is a bad category name`);
+    }
     params.forEach(clip => {
       if(fm.inLibrary(clip)) {
         fm.rename(clip, clip, category);
@@ -126,24 +129,22 @@ class AdminUtils {
 
   grant(discord, message, params) {
     if (params[0] == 'help') {
-      return message.reply('grant `<username>` `<permission>`[,`<permission>`...]: \n' +
+      return message.reply('grant `<username>` `<permission>` [`<permission>` ...]: \n' +
           'Gives `<username>` access to `<permission>` feature(s).');
     }
     if (!this._paramCheck(message, params, 2)){ return; }
 
-    const username = params[0];
-    let access = params[1];
+    const username = params.shift();
     const discordUser = this._getDiscordUser(message, username);
     const adminList = this._admins();
-    if (discordUser && access) {
-      log.debug(`Updating: ${username} with ${access}`);
+    if (discordUser && params) {
       const validActions = this.getActions();
-      access = access.split(',')
-                .map(operation => operation.trim())
+      const access = params.map(operation => operation.trim())
                 .filter(operation => {
                   return validActions.indexOf(operation) > -1;
                 });
       if (access.length == 0){ return; }
+      log.debug(`Updating: ${username} with ${access}`);
 
       const userId = discordUser.user.id;
 
@@ -170,12 +171,11 @@ class AdminUtils {
           'Permanently deletes `<clip>` from the soundboard.');
     }
     if (!this._paramCheck(message, params)){ return; }
-    if (!fm.inLibrary(params[0])) {
+    const clipName = params[0];
+    if (!fm.inLibrary(clipName)) {
       return log.debug(`File not found: ${params}`);
     }
-
-    const clipName = params[0];
-    if(fm.delete(params[0])) {
+    if(fm.delete(clipName)) {
       message.reply(`${clipName} removed`);
     }
   }
@@ -196,22 +196,21 @@ class AdminUtils {
       return message.reply(`${newClipName} is a bad short name`);
     }
     if(fm.rename(oldClipName, newClipName)) {
-      message.reply("Rename complete.")
+      message.reply(`Rename to ${newClipName} complete.`);
     }
   }
 
   revoke(discord, message, params) {
     if (params[0] == 'help') {
-      return message.reply('revoke `<username>` `<permission>`[,`<permission>`...]: \n' +
+      return message.reply('revoke `<username>` `<permission>` [`<permission>` ...]: \n' +
           'Revokes access for `<username>` to `<permission>` feature(s).');
     }
     if (!this._paramCheck(message, params, 2)){ return; }
 
-    const username = params[0];
-    const access = params[1];
+    const username = params.shift();
     const discordUser = this._getDiscordUser(message, username);
 
-    if (discordUser && access && this._admins()[discordUser.user.id]) {
+    if (discordUser && params && this._admins()[discordUser.user.id]) {
       const user = this._admins()[discordUser.user.id];
 
       if (user['immune']) {
@@ -220,7 +219,7 @@ class AdminUtils {
       }
 
       user['access'] = user['access'].filter((value, index, arr) => {
-        return access.split(',').indexOf(value) < 0;
+        return params.indexOf(value) < 0;
       });
 
       this._printAccess(message, username, discordUser.user.id);

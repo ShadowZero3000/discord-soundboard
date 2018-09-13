@@ -151,12 +151,12 @@ class FileManager {
   }
 
   selectRandom(collection) {
-  if (!collection.length) {
-    return;
-  }
+    if (!collection.length) {
+      return;
+    }
 
-  return collection[Math.floor(Math.random() * collection.length)];
-}
+    return collection[Math.floor(Math.random() * collection.length)];
+  }
 }
 
 module.exports = new FileManager();
