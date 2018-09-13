@@ -24,7 +24,7 @@ pipeline:
   # Dev build. Occurs on non-master/release branches
   docker-build:
     image: plugins/docker
-    repo: registry.codethat.rocks:5000/discord-soundboard
+    repo: registry.codethat.rocks:5000/discord-soundboard/soundboard
     registry: registry.codethat.rocks:5000
     tags: dev-${CI_BUILD_NUMBER}
     debug: true
@@ -60,7 +60,7 @@ pipeline:
   # Prod build - Happens after Semantic release updates changelogs etc...
   docker-build-production:
     image: plugins/docker
-    repo: registry.codethat.rocks:5000/discord-soundboard
+    repo: registry.codethat.rocks:5000/discord-soundboard/soundboard
     registry: registry.codethat.rocks:5000
     tags: "${DRONE_TAG}"
     debug: true
@@ -90,7 +90,7 @@ pipeline:
     access_key: superaccesskey
     secret_key: supersecretkey
     service: dev-discord/discordbot
-    docker_image: "registry.codethat.rocks:5000/discord-soundboard:dev-${CI_BUILD_NUMBER}"
+    docker_image: "registry.codethat.rocks:5000/discord-soundboard/soundboard:dev-${CI_BUILD_NUMBER}"
     start_first: false
     confirm: true
     when:
@@ -105,7 +105,7 @@ pipeline:
     access_key: superaccesskey
     secret_key: supersecretkey
     service: discordbot/discordbot
-    docker_image: "registry.codethat.rocks:5000/discord-soundboard:${DRONE_TAG}"
+    docker_image: "registry.codethat.rocks:5000/discord-soundboard/soundboard:${DRONE_TAG}"
     confirm: true
     when:
       event: tag
