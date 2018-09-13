@@ -16,12 +16,17 @@ class DiscordBot {
   botHelp() {
     return `I'm a bot!\n` +
       `You can ask me to make sounds by saying one of the following:\n` +
-      `\`${this.symbol}${Object.keys(files).sort().join(`\`, \`${this.symbol}`)}\`\n` +
-      '----\n' +
-      'Admins can also use:\n'  +
+      `\`${this.symbol}${Object.keys(files).sort().join(`\`, \`${this.symbol}`)}\`\n`;
+  }
+
+  botAdminHelp(permissions) {
+    if (permissions == []) {
+      return '';
+    }
+    return '----\n' +
+      'As an admin, you can also use:\n'  +
       `\`${this.symbol}${this.adminWords[0]} ` +
-      adminUtils.getActions().sort().join(`\`, \`${this.symbol}${this.adminWords[0]} `) +
-      '`';
+      permissions.join(`\`, \`${this.symbol}${this.adminWords[0]} `) + '`';
   }
 
   configure(token) {
@@ -73,7 +78,8 @@ class DiscordBot {
   handleAdminMessage(message, command) {
     const commandArray = command.split(' ')
     if (!command || commandArray.indexOf("help") == 0) { // bot help
-      return message.reply(this.botHelp());
+      return message.reply(this.botHelp()
+        + this.botAdminHelp(adminUtils.getUserActions(message)));
     }
 
     if (commandArray.indexOf("leave") == 0) { // bot leave

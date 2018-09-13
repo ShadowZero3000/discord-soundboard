@@ -9,14 +9,23 @@ const queues = utils.queues;
 class AdminUtils {
   getActions() {
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-          .filter(key => ['constructor', 'getActions', 'check'].indexOf(key) == -1)
+          .filter(key => ['constructor', 'getActions', 'check', 'getUserActions'].indexOf(key) == -1)
           .filter(key => !key.match('^_.*'));
+  }
+
+  getUserActions(message) {
+    const user = this._admins()[message.author.id];
+    if (!user) {
+      return [];
+    }
+    return user['access'].sort();
   }
 
   check(message, access) {
     return (this._admins()[message.author.id]
         && this._admins()[message.author.id]['access'].indexOf(access) > -1);
   }
+
   // Private functions
   _printAccess(message, user, id) {
     message.reply(`${user} now has: ${this._admins()[id]['access'].sort().join(', ')}`);
