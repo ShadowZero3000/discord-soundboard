@@ -1,8 +1,4 @@
-FROM node:10.9-jessie
-
-RUN echo "deb http://ftp.uk.debian.org/debian jessie-backports main" >> /etc/apt/sources.list.d/backports.list \
- && apt-get update && apt-get install -y ffmpeg \
- && rm -rf /var/lib/apt/lists/*
+FROM registry.codethat.rocks:5000/discord-soundboard/base
 
 COPY package.json /node/
 
