@@ -1,3 +1,10 @@
+## [0.0.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.4...v0.0.5) (2018-09-13)
+
+
+### Bug Fixes
+
+* **build:** Add a base docker image so that rebuilds don't have to re-obtain slow stuff ([3ec6166](https://github.com/ShadowZero3000/discord-soundboard/commit/3ec6166))
+
 ## [0.0.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.3...v0.0.4) (2018-09-11)
 
 
