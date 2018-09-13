@@ -9,29 +9,27 @@
 pipeline:
   restore-cache:
     image: drillster/drone-volume-cache
-    restore: true
+
     mount:
       - /drone/docker
+    restore: true
     volumes:
       - /tmp/cache:/cache
     when:
       event: [push, tag]
 
-  show environment:
-    image: node:10.9-jessie
-    commands:
-      - env
   # Dev build. Occurs on non-master/release branches
   docker-build:
     image: plugins/docker
-    repo: registry.codethat.rocks:5000/discord-soundboard/soundboard
-    registry: registry.codethat.rocks:5000
-    tags: dev-${CI_BUILD_NUMBER}
-    debug: true
-    storage_path: /drone/docker
+
     # Seems to be required to push to the registry on the same host
     custom_dns: [ 192.168.5.1 ]
+    debug: true
     network_mode: host
+    registry: registry.codethat.rocks:5000
+    repo: registry.codethat.rocks:5000/discord-soundboard/soundboard
+    storage_path: /drone/docker
+    tags: dev-${CI_BUILD_NUMBER}
     when:
       event: push
       branch:
@@ -40,6 +38,7 @@ pipeline:
   # Semantic release - Updates versions, changelogs, etc..., and pushes another commit with [skip ci]
   semver-update:
     image: node:10.9-jessie
+
     commands:
       - if echo "$${DRONE_COMMIT_MESSAGE}" | grep "\[skip semver\]"; then exit 0; fi
       - apt update
@@ -51,23 +50,24 @@ pipeline:
       - chmod +x ./update_version
       - printf "StrictHostKeyChecking no\nUserKnownHostsFile /dev/null\nHost github.com\nUser ShadowZero3000" > ~/.ssh/config
       - npx semantic-release --debug
+    secrets: [ github_ssh_key, github_token ]
     when:
       event: push
       branch:
         include: [master, release/*]
-    secrets: [ github_ssh_key, github_token ]
 
   # Prod build - Happens after Semantic release updates changelogs etc...
   docker-build-production:
     image: plugins/docker
-    repo: registry.codethat.rocks:5000/discord-soundboard/soundboard
-    registry: registry.codethat.rocks:5000
-    tags: "${DRONE_TAG}"
-    debug: true
-    storage_path: /drone/docker
+
     # Seems to be required to push to the registry on the same host
     custom_dns: [ 192.168.5.1 ]
+    debug: true
     network_mode: host
+    registry: registry.codethat.rocks:5000
+    repo: registry.codethat.rocks:5000/discord-soundboard/soundboard
+    storage_path: /drone/docker
+    tags: "${DRONE_TAG}"
     when:
       event: tag
       branch:
@@ -75,9 +75,10 @@ pipeline:
 
   rebuild-cache:
     image: drillster/drone-volume-cache
-    rebuild: true
+
     mount:
       - /drone/docker
+    rebuild: true
     volumes:
       - /tmp/cache:/cache
     when:
@@ -86,13 +87,14 @@ pipeline:
   # Dev deploy. Occurs on non-master/release branches
   rancher-dev:
     image: peloton/drone-rancher
-    url: http://rancher.codethat.rocks:8080
+
     access_key: superaccesskey
+    confirm: true
+    docker_image: "registry.codethat.rocks:5000/discord-soundboard/soundboard:dev-${CI_BUILD_NUMBER}"
     secret_key: supersecretkey
     service: dev-discord/discordbot
-    docker_image: "registry.codethat.rocks:5000/discord-soundboard/soundboard:dev-${CI_BUILD_NUMBER}"
     start_first: false
-    confirm: true
+    url: http://rancher.codethat.rocks:8080
     when:
       event: push
       branch:
@@ -101,12 +103,14 @@ pipeline:
   # Prod deploy, Occurs on tags
   rancher-production:
     image: peloton/drone-rancher
-    url: http://rancher.codethat.rocks:8080
+
     access_key: superaccesskey
+    confirm: true
+    docker_image: "registry.codethat.rocks:5000/discord-soundboard/soundboard:${DRONE_TAG}"
     secret_key: supersecretkey
     service: discordbot/discordbot
-    docker_image: "registry.codethat.rocks:5000/discord-soundboard/soundboard:${DRONE_TAG}"
-    confirm: true
+    start_first: false
+    url: http://rancher.codethat.rocks:8080
     when:
       event: tag
       branch:
