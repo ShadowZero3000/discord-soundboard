@@ -1,3 +1,10 @@
+## [0.0.8](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.7...v0.0.8) (2018-09-13)
+
+
+### Bug Fixes
+
+* **sessions:** Automatically refresh your discord session ([29d3335](https://github.com/ShadowZero3000/discord-soundboard/commit/29d3335))
+
 ## [0.0.7](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.6...v0.0.7) (2018-09-13)
 
 
