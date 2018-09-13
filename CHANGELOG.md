@@ -1,3 +1,10 @@
+## [0.0.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.5...v0.0.6) (2018-09-13)
+
+
+### Bug Fixes
+
+* **build:** Fix up the build again ([3763169](https://github.com/ShadowZero3000/discord-soundboard/commit/3763169))
+
 ## [0.0.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.4...v0.0.5) (2018-09-13)
 
 
