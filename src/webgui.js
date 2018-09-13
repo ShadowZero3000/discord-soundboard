@@ -16,7 +16,10 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'public'));
 
 app.get('/', (req, res) => {
-  res.status(200).sendFile(path.join(__dirname, 'public/index.html'));
+  if ( req.cookies.discord_session && req.cookies.discord_session.at) {
+    return res.redirect('/clips');
+  }
+  return res.status(200).sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 app.use('/js', express.static('public/js'));
@@ -26,6 +29,15 @@ app.use('/api/discord', require('./webapi.js'));
 app.get('/version', (req, res) => {
   res.status(200).sendFile(path.join(__dirname, 'public/version.pug'));
 });
+
+function refreshSession(req, res) {
+  if ( !req.cookies.discord_session || !req.cookies.discord_session.at) {
+    accessLog.info(`Invalid session, attempting refresh`);
+    res.redirect(`/api/discord/refresh?callback=/play/${req.params.clip}`);
+    return false;
+  }
+  return true;
+}
 
 app.get('/clips', (req, res) => {
   res.status(200).render("clips", {
@@ -37,10 +49,8 @@ app.get('/clips', (req, res) => {
 
 app.get('/play/:clip', (req, res) => {
   accessLog.info(`Request received via gui to play: ${req.params.clip}`);
-  if ( !req.cookies.discord_session || !req.cookies.discord_session.at) {
-    accessLog.info(`Invalid session`);
-    return res.status(403).send("Invalid session");
-  }
+  if (!refreshSession(req, res)){ return; }
+
   if (fm.inLibrary(req.params.clip)) {
     const accesstoken = req.cookies.discord_session.at;
     const headers = {
@@ -69,6 +79,7 @@ app.get('/play/:clip', (req, res) => {
 });
 
 app.get('/random/:clip', (req, res) => {
+  if (!refreshSession(req, res)){ return; }
   if (req.cookies.discord_session && req.cookies.discord_session.at) {
     const accesstoken = req.cookies.discord_session.at;
     const headers = {
