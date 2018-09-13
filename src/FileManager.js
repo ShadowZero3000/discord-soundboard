@@ -16,7 +16,7 @@ class FileManager {
         });
       } else {
         // I think we ignore this, because the register thing would have to account for base path
-        this.register(item, null);
+        this.register(item, undefined);
       }
     });
   }
@@ -31,15 +31,16 @@ class FileManager {
     }
     //const matches = file.name.match(/^([^-]+)--(.*)$/);
     if (matches) {
-      var obj = {
+      const realCategory = (category || 'Misc').toLowerCase();
+      const obj = {
         name: matches[1],
-        category: category || 'Misc',
+        category: realCategory,
         fileSuffix: matches[2],
         fileName: `${this.home}/${category || ''}/${matches[0]}`,
       }
       this.files[obj.name] = obj;
-      this.categories[category] = this.categories[category] || {};
-      this.categories[category][obj.name] = obj;
+      this.categories[realCategory] = this.categories[realCategory] || {};
+      this.categories[realCategory][obj.name] = obj;
       return true;
     }
     return false;
@@ -47,6 +48,10 @@ class FileManager {
 
   deregister(file) {
     delete this.categories[file.category][file.name];
+    // Remove empty categories
+    if (Object.keys(this.categories[file.category]).length === 0) {
+      delete this.categories[file.category];
+    }
     delete this.files[file.name];
   }
 
@@ -54,7 +59,9 @@ class FileManager {
     var directory = `${this.home}/${category.toLowerCase()}`;
     var destination = `${directory}/${keyword}--${file.name}`;
     log.debug(`Writing attachment to file: ${destination}`);
-    fs.mkdirSync(directory);
+    if (!fs.existsSync(directory)){
+        fs.mkdirSync(directory);
+    }
     request(file.url).pipe(fs.createWriteStream(destination));
     return this.register(`${keyword}--${file.name}`, category);
   }
@@ -125,13 +132,21 @@ class FileManager {
     return this.selectRandom(filenames);
   }
 
-  rename(oldKeyword, newKeyword) {
+  rename(oldKeyword, newKeyword, newCategory = undefined) {
     const oldFile = this.get(oldKeyword);
     const newFileName = `${newKeyword}--${oldFile.fileSuffix}`
-    const newFilePath = `${this.home}/${oldFile.category}/${newFileName}`
+    if (newCategory == undefined) {
+      newCategory = oldFile.category || 'misc';
+    }
+    const newDirectory = `${this.home}/${newCategory.toLowerCase()}`;
+    const newFilePath = `${newDirectory}/${newFileName}`
+    log.debug(`Renaming: ${oldFile.fileName} to ${newFilePath}`);
+    if (!fs.existsSync(newDirectory)){
+        fs.mkdirSync(newDirectory);
+    }
     fs.renameSync(oldFile.fileName, newFilePath);
-    this.register(newFileName, oldFile.category)
     this.deregister(oldFile);
+    this.register(newFileName, newCategory);
     return true;
   }
 

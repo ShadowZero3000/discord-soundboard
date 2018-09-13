@@ -32,9 +32,9 @@ class AdminUtils {
     });
   }
 
-  _paramCheck(message, params) {
-    if (!params.length > 0) {
-      message.reply(`${this._paramCheck.caller.name} needs more parameters`)
+  _paramCheck(message, params, minParams = 1) {
+    if (!(params.length > (minParams - 1))) {
+      message.reply(`That operation needs more parameters.`)
       return false;
     }
     return true;
