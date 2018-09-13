@@ -1,23 +1,31 @@
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
 const nconf = require('nconf');
-const request = require('request');
 const utils = require('./utils.js');
 
-const files = utils.files
+const fm = require('./FileManager');
 const queues = utils.queues;
 
 class AdminUtils {
   getActions() {
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-          .filter(key => ['constructor', 'getActions', 'check'].indexOf(key) == -1)
+          .filter(key => ['constructor', 'getActions', 'check', 'getUserActions'].indexOf(key) == -1)
           .filter(key => !key.match('^_.*'));
+  }
+
+  getUserActions(message) {
+    const user = this._admins()[message.author.id];
+    if (!user) {
+      return [];
+    }
+    return user['access'].sort();
   }
 
   check(message, access) {
     return (this._admins()[message.author.id]
         && this._admins()[message.author.id]['access'].indexOf(access) > -1);
   }
+
   // Private functions
   _printAccess(message, user, id) {
     message.reply(`${user} now has: ${this._admins()[id]['access'].sort().join(', ')}`);
@@ -33,9 +41,9 @@ class AdminUtils {
     });
   }
 
-  _paramCheck(message, params) {
-    if (!params.length > 0) {
-      message.reply(`${this._paramCheck.caller.name} needs more parameters`)
+  _paramCheck(message, params, minParams = 1) {
+    if (!(params.length > (minParams - 1))) {
+      message.reply(`That operation needs more parameters.`)
       return false;
     }
     return true;
@@ -55,6 +63,10 @@ class AdminUtils {
 
   // Public functions
   access(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('access <username>: \n' +
+          'Prints what access <username> has.');
+    }
     if (!this._paramCheck(message, params)){ return; }
 
     const username = params[0];
@@ -67,40 +79,73 @@ class AdminUtils {
   }
 
   add(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('add <clip> [category] (with attachment): \n' +
+          'Adds a sound effect with <clip> as its shortcut.\n' +
+          'If provided, will assign to [category]. Defaults to "misc".');
+    }
     if (!this._paramCheck(message, params)){ return; }
 
-    const prefix = params[0];
-    if (!prefix.match(/^[a-z0-9_]+$/)) {
-      return message.reply(`${prefix} is a bad short name`);
+    const clipName = params[0];
+    const category = params[1] || 'Misc';
+    if (!clipName.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${clipName} is a bad short name`);
     }
-    if (Object.keys(files).indexOf(prefix) > -1) {
+    if (!category.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${category} is a bad category name`);
+    }
+    if (fm.inLibrary(clipName)) {
       return message.reply("That sound effect already exists");
     }
     if (message.attachments.first()) {
       // Only check the first attachment
-      const a = message.attachments.first();
-      const filename = `./Uploads/${prefix}--${a.filename}`;
-
-      log.debug(`Writing attachment to file: ${filename}`);
-      request(a.url).pipe(fs.createWriteStream(filename));
-
-      files[prefix] = filename;
-      return message.reply(`${nconf.get('KEY_SYMBOL')}${prefix} is now available`);
+      fm.create(clipName, category, message.attachments.first());
+      return message.reply(`${nconf.get('KEY_SYMBOL')}${clipName} is now available`);
     } else {
       return message.reply(`You need to attach a file`);
     }
   }
 
-  grant(discord, message, params) {
-    if (!this._paramCheck(message, params)){ return; }
+  categorize(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('categorize `<new category>` `<clip>` [`<clip>` ...]: \n' +
+        'Updates the category for any sound(s) (space separated).\n'+
+        'Remember that categories should use `_` for spaces.');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
+    const category = params.shift();
+    if (!category.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${category} is a bad category name`);
+    }
+    params.forEach(clip => {
+      if(fm.inLibrary(clip)) {
+        fm.rename(clip, clip, category);
+        message.reply(`${clip}'s category is now: ${category}`);
+      } else {
+        message.reply(`I don't recognize ${clip}`)
+      }
+    });
+  }
 
-    const username = params[0];
-    let access = params[1];
+  grant(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('grant `<username>` `<permission>` [`<permission>` ...]: \n' +
+          'Gives `<username>` access to `<permission>` feature(s).');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
+
+    const username = params.shift();
     const discordUser = this._getDiscordUser(message, username);
     const adminList = this._admins();
-    if (discordUser && access) {
+    if (discordUser && params) {
+      const validActions = this.getActions();
+      const access = params.map(operation => operation.trim())
+                .filter(operation => {
+                  return validActions.indexOf(operation) > -1;
+                });
+      if (access.length == 0){ return; }
       log.debug(`Updating: ${username} with ${access}`);
-      access = access.split(',').map(operation => operation.trim());
+
       const userId = discordUser.user.id;
 
       if (!(userId in adminList)) {
@@ -121,54 +166,51 @@ class AdminUtils {
   }
 
   remove(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('remove `<clip>`: \n' +
+          'Permanently deletes `<clip>` from the soundboard.');
+    }
     if (!this._paramCheck(message, params)){ return; }
-    if (!(Object.keys(files).indexOf(params[0]) > -1)) {
+    const clipName = params[0];
+    if (!fm.inLibrary(clipName)) {
       return log.debug(`File not found: ${params}`);
     }
-
-    const clipName = params[0];
-    log.debug(`Deleting: ${files[clipName]}`);
-
-    fs.unlink(files[clipName], err => {
-      if (err) {
-        log.debug(err);
-        return;
-      }
-
-      delete files[clipName];
-      log.debug("Deleted successfully");
+    if(fm.delete(clipName)) {
       message.reply(`${clipName} removed`);
-    });
+    }
   }
 
   rename(discord, message, params) {
-    if (!this._paramCheck(message, params)){ return; }
+    if (params[0] == 'help') {
+      return message.reply('rename `<clip>` `<new clip name>`: \n' +
+          'Renames `<clip>` to `<new clip name>`.');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
     const oldClipName = params[0];
     const newClipName = params[1];
-    if (!(Object.keys(files).indexOf(oldClipName) > -1)) {
+    if (!fm.inLibrary(oldClipName)) {
       message.reply(`Could not find: ${oldClipName}`)
       return log.debug(`File not found: ${oldClipName}`);
     }
     if (!newClipName.match(/^[a-z0-9_]+$/)) {
       return message.reply(`${newClipName} is a bad short name`);
     }
-    const newFileName = files[oldClipName].replace(oldClipName, newClipName);
-    log.debug(`Renaming: ${files[oldClipName]} to ${newFileName}`);
-    fs.rename(files[oldClipName], newFileName, (err) => {
-      if (err) throw err;
-      log.debug('Rename complete.');
-      message.reply("Rename complete.")
-    });
+    if(fm.rename(oldClipName, newClipName)) {
+      message.reply(`Rename to ${newClipName} complete.`);
+    }
   }
 
   revoke(discord, message, params) {
-    if (!this._paramCheck(message, params)){ return; }
+    if (params[0] == 'help') {
+      return message.reply('revoke `<username>` `<permission>` [`<permission>` ...]: \n' +
+          'Revokes access for `<username>` to `<permission>` feature(s).');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
 
-    const username = params[0];
-    const access = params[1];
+    const username = params.shift();
     const discordUser = this._getDiscordUser(message, username);
 
-    if (discordUser && access && this._admins()[discordUser.user.id]) {
+    if (discordUser && params && this._admins()[discordUser.user.id]) {
       const user = this._admins()[discordUser.user.id];
 
       if (user['immune']) {
@@ -177,7 +219,7 @@ class AdminUtils {
       }
 
       user['access'] = user['access'].filter((value, index, arr) => {
-        return access.split(',').indexOf(value) < 0;
+        return params.indexOf(value) < 0;
       });
 
       this._printAccess(message, username, discordUser.user.id);
@@ -203,5 +245,4 @@ class AdminUtils {
   }
 }
 
-const adm = new AdminUtils()
-module.exports = adm
+module.exports = new AdminUtils();

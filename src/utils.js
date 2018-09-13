@@ -1,17 +1,7 @@
 const log = require('./logger.js').errorLog;
 const VoiceQueue = require('./VoiceQueue.js');
 
-const files = {};
-const fs = require('fs');
-const items = fs.readdirSync('./Uploads/');
 const queues = {}
-
-items.forEach(item => {
-  const matches = item.match(/^([^-]+)--(.*)$/);
-  if (matches) {
-    files[matches[1]] = `./Uploads/${matches[0]}`;
-  }
-});
 
 function getQueueFromUser(discord, userId) {
   const vc = getVCFromUserid(discord, userId);
@@ -36,18 +26,8 @@ function getVCFromUserid(discord, userId) {
   return voiceChannel;
 }
 
-function selectRandom(collection) {
-  if (!collection.length) {
-    return;
-  }
-
-  return collection[Math.floor(Math.random() * collection.length)];
-}
-
 module.exports = {
-  files: files,
   queues: queues,
-  getQueueFromUser: getQueueFromUser,
-  selectRandom: selectRandom
+  getQueueFromUser: getQueueFromUser
 }
 

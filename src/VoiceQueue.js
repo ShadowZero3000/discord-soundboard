@@ -1,5 +1,6 @@
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
+const fm = require('./FileManager');
 class VoiceQueue {
   constructor(channel) {
     this.channel = channel;
@@ -13,8 +14,8 @@ class VoiceQueue {
     log[level](`${this.channel.guild.name} (${this.channel.name}): ${message}`);
   }
 
-  add(file) {
-    if (this.silenced) {
+  add(keyword) {
+    if (this.silenced || !fm.inLibrary(keyword)) {
       return;
     }
 
@@ -24,8 +25,8 @@ class VoiceQueue {
       return;
     }
 
-    this.log(`Queued: ${file}`);
-    this.playQueue.unshift(file);
+    this.log(`Queued: ${keyword}`);
+    this.playQueue.unshift(keyword);
     this.play();
   }
 
@@ -59,9 +60,9 @@ class VoiceQueue {
     }
 
     this.playing = true;
-    const file = this.playQueue.pop();
+    const keyword = this.playQueue.pop();
 
-    if (!file) {
+    if (!keyword) {
       this.log("Queue empty");
       this.playing = false;
       this.timeout = setTimeout(() => this.disconnect(), 3000);
@@ -71,12 +72,11 @@ class VoiceQueue {
     this.channel.join()
       // TODO: send play event to Play Bus
       .then(conn => {
-        const stream = fs.createReadStream(file);
-        this.log(`Playing: ${file}`);
-        const dispatcher = conn.play(stream);
+        this.log(`Playing: ${keyword}`);
+        const dispatcher = conn.play(fm.getStream(keyword));
         dispatcher.on("end", end => {
           // TODO: send end event to Play Bus
-          this.log(`Finished with: ${file}`);
+          this.log(`Finished with: ${keyword}`);
           this.playing = false;
           this.play();
         })

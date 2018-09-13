@@ -1,8 +1,9 @@
 const Discord = require('discord.js');
 const nconf = require('nconf');
-const adminUtils = require('./AdminUtils.js')
+const adminUtils = require('./AdminUtils.js');
 const utils = require('./utils.js')
-const files = utils.files
+const fm = require('./FileManager');
+const files = fm.getAll();
 const queues = utils.queues;
 const log = require('./logger.js').errorLog;
 const VoiceQueue = require('./VoiceQueue.js');
@@ -15,12 +16,17 @@ class DiscordBot {
   botHelp() {
     return `I'm a bot!\n` +
       `You can ask me to make sounds by saying one of the following:\n` +
-      `\`${this.symbol}${Object.keys(files).sort().join(`\`, \`${this.symbol}`)}\`\n` +
-      '----\n' +
-      'Admins can also use:\n'  +
+      `\`${this.symbol}${Object.keys(files).sort().join(`\`, \`${this.symbol}`)}\`\n`;
+  }
+
+  botAdminHelp(permissions) {
+    if (permissions == []) {
+      return '';
+    }
+    return '----\n' +
+      'As an admin, you can also use:\n'  +
       `\`${this.symbol}${this.adminWords[0]} ` +
-      adminUtils.getActions().sort().join(`\`, \`${this.symbol}${this.adminWords[0]} `) +
-      '`';
+      permissions.join(`\`, \`${this.symbol}${this.adminWords[0]} `) + '`';
   }
 
   configure(token) {
@@ -72,7 +78,8 @@ class DiscordBot {
   handleAdminMessage(message, command) {
     const commandArray = command.split(' ')
     if (!command || commandArray.indexOf("help") == 0) { // bot help
-      return message.reply(this.botHelp());
+      return message.reply(this.botHelp()
+        + this.botAdminHelp(adminUtils.getUserActions(message)));
     }
 
     if (commandArray.indexOf("leave") == 0) { // bot leave
@@ -100,23 +107,19 @@ class DiscordBot {
       return;
     }
 
-    if (Object.keys(files).indexOf(keyword) > -1) {
-      this.getQueue(voiceChannel).add(files[keyword]);
+    if (fm.inLibrary(keyword)) {
+      this.getQueue(voiceChannel).add(keyword);
       return;
     }
 
     if (keyword == 'random') {
       if (!extraArgs) { // Play a random clip if there's no extra args
-        const clip = utils.selectRandom(Object.keys(files));
-        this.getQueue(voiceChannel).add(files[clip]);
+        this.getQueue(voiceChannel).add(fm.random());
         return;
       }
 
-      const parameters = extraArgs.trim().split(' '); //.match(/(\b[\w,]+)/g);
-
-      const filenames = Object.keys(files).filter(key => key.includes(parameters[0]));
-      const clip = utils.selectRandom(filenames);
-      this.getQueue(voiceChannel).add(files[clip]);
+      const clip = extraArgs.trim().split(' ')[0]; //.match(/(\b[\w,]+)/g);
+      this.getQueue(voiceChannel).add(fm.random(clip));
       return;
     }
     // Err.. They asked for something we don't have
@@ -157,12 +160,12 @@ class DiscordBot {
       nconf.set('adminList', adminList);
       if (startup.enabled) {
         utils.getQueueFromUser(this.client, app.owner.id)
-          .add(files[startup.clip]);
+          .add(startup.clip);
       }
     }).catch(err => {
       log.debug(`Error fetching application: ${err}`)
     })
   }
 }
-const bot = new DiscordBot();
-module.exports = bot;
+
+module.exports =  new DiscordBot();
