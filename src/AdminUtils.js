@@ -106,6 +106,24 @@ class AdminUtils {
     }
   }
 
+  categorize(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('categorize `<new category>` `<clip>` [`<clip>` ...]: \n' +
+        'Updates the category for any sound(s) (space separated).\n'+
+        'Remember that categories should use `_` for spaces.');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
+    const category = params.shift();
+    params.forEach(clip => {
+      if(fm.inLibrary(clip)) {
+        fm.rename(clip, clip, category);
+        message.reply(`${clip}'s category is now: ${category}`);
+      } else {
+        message.reply(`I don't recognize ${clip}`)
+      }
+    });
+  }
+
   grant(discord, message, params) {
     if (params[0] == 'help') {
       return message.reply('grant `<username>` `<permission>`[,`<permission>`...]: \n' +
