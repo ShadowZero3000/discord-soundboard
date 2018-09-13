@@ -119,7 +119,14 @@ class AdminUtils {
     const adminList = this._admins();
     if (discordUser && access) {
       log.debug(`Updating: ${username} with ${access}`);
-      access = access.split(',').map(operation => operation.trim());
+      const validActions = this.getActions();
+      access = access.split(',')
+                .map(operation => operation.trim())
+                .filter(operation => {
+                  return validActions.indexOf(operation) > -1;
+                });
+      if (access.length == 0){ return; }
+
       const userId = discordUser.user.id;
 
       if (!(userId in adminList)) {
