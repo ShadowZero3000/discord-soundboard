@@ -1,3 +1,10 @@
+## [0.0.9](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.8...v0.0.9) (2018-09-17)
+
+
+### Bug Fixes
+
+* **bug:** Don't allow randoms that end in numbers (so wow10 and wow11 doesn't have wow1 as a random) ([9c85efa](https://github.com/ShadowZero3000/discord-soundboard/commit/9c85efa))
+
 ## [0.0.8](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.7...v0.0.8) (2018-09-13)
 
 
