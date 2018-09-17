@@ -97,7 +97,7 @@ class FileManager {
 
   getRandomList() {
     return Object.keys(this.files)
-      .map(key => key.match(/^([A-z0-9]+)[0-9]+$/))
+      .map(key => key.match(/^([A-z0-9]+[A-z])[0-9]+$/))
       .filter(match => !!match)
       .map(match => match[1])
       .filter((element, pos, arr) => {
