@@ -37,13 +37,9 @@ pipeline:
 
   # Semantic release - Updates versions, changelogs, etc..., and pushes another commit with [skip ci]
   semver-update:
-    image: node:10.9-jessie
-
+    image: registry.codethat.rocks:5000/discord-soundboard/semver
     commands:
       - if echo "$${DRONE_COMMIT_MESSAGE}" | grep "\[skip semver\]"; then exit 0; fi
-      - apt update
-      - apt install jq
-      - npm install --no-save semantic-release @semantic-release/exec @semantic-release/changelog @semantic-release/git
       - mkdir ~/.ssh -p
       - echo "$${GITHUB_SSH_KEY}" > ~/.ssh/id_rsa
       - chmod 600 ~/.ssh/id_rsa

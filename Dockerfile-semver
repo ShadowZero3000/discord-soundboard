@@ -1,0 +1,10 @@
+FROM node:10.10-jessie
+
+RUN apt update \
+ && apt install jq \
+ && npm install --no-save \
+      semantic-release \
+      @semantic-release/exec \
+      @semantic-release/changelog \
+      @semantic-release/git \
+ && rm -rf /var/lib/apt/lists/*
