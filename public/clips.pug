@@ -7,38 +7,53 @@ html
 -   });
 - }
   body
-    h1 Discord Soundboard
-    a(href='/') Return to login
-    div(class="container")
+    div(class="container-fluid")
+      div(class="page-header alert alert-dark text-center")
+        h1 Discord Soundboard
+      div(class="row justify-content-between")
+        div(class="col-sm")
+          div(class="btn-group btn-group-toggle" role="group" data-toggle="buttons")
+            label(class="btn btn-outline-secondary active" data-toggle="collapse" role="button" aria-expanded="true" aria-controls=".clip_display" data-target=".clip_display") Categorized
+              input(type="radio" name="display_type" checked="true" autocomplete="off")
+            label(class="btn btn-outline-secondary" data-toggle="collapse" role="button" aria-expanded="false" aria-controls=".clip_display" data-target=".clip_display") Alphabetized
+              input(type="radio" name="display_type" autocomplete="off")
+        div(class="col-sm align-self-end")
+          a(class="btn btn-danger float-right" role="button" href="/") Return to login
+    div(class="container-fluid")
       div(class="row alert-success")
         div(class="col-lg font-weight-bold") Randoms
       div(class="row")
         for file in randoms
           div(class='col-sm' style='padding:5px')
             div(class='btn btn-primary', onclick="random('" + file + "')") #{file} #{token}
-    div(class="container")
-      for files, category in categories
+    div(class="container-fluid show collapse clip_display")
+      - var cats = []
+      for value,key in categories
+        - cats.push(key)
+      - cats = cats.sort()
+      for category in cats
+        - categorizedFiles = categories[category]
         div(class="row alert-success")
           div(class='col-lg alert-success font-weight-bold') #{toTitleCase(category)}
         div(class="row")
-          for details, file in files
+          for details, file in categorizedFiles
             div(class='col-sm' style='padding:5px')
               div(class='btn btn-primary', onclick="play('" + file + "')") #{file}
-    //- div(class="container")
-    //-   - var firstLetter = ''
-    //-   for file in files
-    //-     - var first = file[0].toLowerCase()
-    //-     if ( first != firstLetter)
-    //-       if ( firstLetter != '')
-    //-         | </div>
-    //-       - firstLetter = first
-    //-       | <div class="row">
-    //-       | <div class="col-sm alert-success font-weight-bold" style="padding-left: 30px"> #{first.toUpperCase()}</div>
-    //-       | </div>
-    //-       | <div class="row">
-    //-     div(class='col-sm' style='padding:5px')
-    //-       div(class='btn btn-primary', onclick="play('" + file + "')") #{file} #{token}
-    //-   | </div>
+    div(class="container-fluid collapse clip_display")
+      - var firstLetter = ''
+      for file in files
+        - var first = file[0].toLowerCase()
+        if ( first != firstLetter)
+          if ( firstLetter != '')
+            | </div>
+          - firstLetter = first
+          | <div class="row">
+          | <div class="col-sm alert-success font-weight-bold" style="padding-left: 30px"> #{first.toUpperCase()}</div>
+          | </div>
+          | <div class="row">
+        div(class='col-sm' style='padding:5px')
+          div(class='btn btn-primary', onclick="play('" + file + "')") #{file} #{token}
+      | </div>
 
       // Modal for error display
       div(id="error-display" class="modal" tabindex="-1" role="dialog")
