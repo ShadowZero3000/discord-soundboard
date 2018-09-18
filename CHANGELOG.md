@@ -1,3 +1,11 @@
+# [0.1.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.9...v0.1.0) (2018-09-18)
+
+
+### Features
+
+* **requests:** Add a requests feature for admins to remind themselves ([d5eb1fd](https://github.com/ShadowZero3000/discord-soundboard/commit/d5eb1fd))
+* **requests:** Add a simple data store for the requests to persist ([e30cecc](https://github.com/ShadowZero3000/discord-soundboard/commit/e30cecc))
+
 ## [0.0.9](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.8...v0.0.9) (2018-09-17)
 
 
