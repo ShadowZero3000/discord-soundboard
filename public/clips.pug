@@ -55,19 +55,19 @@ html
           div(class='btn btn-primary', onclick="play('" + file + "')") #{file} #{token}
       | </div>
 
-      // Modal for error display
-      div(id="error-display" class="modal" tabindex="-1" role="dialog")
-        div(class="modal-dialog" role="document")
-          div(class="modal-content")
-            div(class="modal-header")
-              h5(class="modal-title") Server error
-                button(type="button" class="close" data-dismiss="modal")
-                  span &times;
-            div(class="modal-body")
-              div(class="row") Looks like something exploded...
-              div(id="error-message-holder" class="alert alert-warning row" role="alert")
-            div(class="modal-footer")
-              button(type="button" class="btn btn-secondary" data-dismiss="modal") Dismiss
+    // Modal for error display
+    div(id="error-display" class="modal" tabindex="-1" role="dialog")
+      div(class="modal-dialog" role="document")
+        div(class="modal-content")
+          div(class="modal-header")
+            h5(class="modal-title") Server error
+              button(type="button" class="close" data-dismiss="modal")
+                span &times;
+          div(class="modal-body")
+            div(class="row") Looks like something exploded...
+            div(id="error-message-holder" class="alert alert-warning row" role="alert")
+          div(class="modal-footer")
+            button(type="button" class="btn btn-secondary" data-dismiss="modal") Dismiss
 
     script(src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous")
