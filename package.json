@@ -6,6 +6,7 @@
   "dependencies": {
     "btoa": "^1.2.1",
     "cookie-parser": "^1.4.3",
+    "data-store": "^3.1.0",
     "discord.js": "discordjs/discord.js#master",
     "express": "^4.16.0",
     "nconf": "^0.10.0",

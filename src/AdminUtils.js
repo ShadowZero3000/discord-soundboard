@@ -87,7 +87,7 @@ class AdminUtils {
     if (!this._paramCheck(message, params)){ return; }
 
     const clipName = params[0];
-    const category = params[1] || 'Misc';
+    const category = params[1] || 'misc';
     if (!clipName.match(/^[a-z0-9_]+$/)) {
       return message.reply(`${clipName} is a bad short name`);
     }
@@ -198,6 +198,31 @@ class AdminUtils {
     if(fm.rename(oldClipName, newClipName)) {
       message.reply(`Rename to ${newClipName} complete.`);
     }
+  }
+
+  request(discord, message, params) {
+    if (params[0] == 'help') {
+      return message.reply('request `<clip>` `<description/url>`: \n' +
+          'Adds a request for a clip.');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
+    const requestClipName = params.shift();
+    const requestDescription = params.join(' ');
+    if (!requestClipName.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${requestClipName} is a bad clip name`);
+    }
+    if(fm.addRequest(requestClipName, requestDescription)) {
+      message.reply(`Ok, I'll add it to the list`);
+    } else {
+      message.reply(`Already on the list`);
+    }
+  }
+
+  reqlist(discord, message, params) {
+    const requests = fm.getRequests();
+    console.log(requests);
+    const result = requests.map(req => `${req.name} - ${req.description}`).join('\n');
+    message.reply(`Here's what we've got requested:\n${result}`);
   }
 
   revoke(discord, message, params) {

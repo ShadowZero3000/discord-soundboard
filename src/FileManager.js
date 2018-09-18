@@ -1,12 +1,15 @@
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
 const request = require('request');
+const Store = require('data-store');
 
 class FileManager {
   constructor() {
-    this.categories = {}
-    this.files = {}
+    this.categories = {};
+    this.files = {};
     this.home = './Uploads';
+    this.requestStore = new Store({ name: 'requests', path: 'requests.json', defaults: {} });
+
     const items = fs.readdirSync(this.home, {withFileTypes: true});
     items.forEach(item => {
       if (item.isDirectory()) {
@@ -21,6 +24,29 @@ class FileManager {
     });
   }
 
+  addRequest(clip, description) {
+    if (this.requestStore.has(clip)) {
+      return false;
+    }
+    this.requestStore.set(clip, {name: clip, description: description});
+    return true;
+  }
+
+  getRequests() {
+    var requestList = [];
+    const requests = this.requestStore.clone();
+    Object.keys(requests).sort().forEach(function(key) {
+      requestList.push(requests[key]);
+    })
+    return requestList;
+  }
+
+  removeRequest(clip) {
+    if(this.requestStore.has(clip)){
+      this.requestStore.del(clip);
+    }
+  }
+
   register(file, category) {
     var matches;
     if (file instanceof(fs.Dirent)) {
@@ -31,7 +57,7 @@ class FileManager {
     }
     //const matches = file.name.match(/^([^-]+)--(.*)$/);
     if (matches) {
-      const realCategory = (category || 'Misc').toLowerCase();
+      const realCategory = (category || 'misc').toLowerCase();
       const obj = {
         name: matches[1],
         category: realCategory,
@@ -41,6 +67,7 @@ class FileManager {
       this.files[obj.name] = obj;
       this.categories[realCategory] = this.categories[realCategory] || {};
       this.categories[realCategory][obj.name] = obj;
+      this.removeRequest(obj.name);
       return true;
     }
     return false;
