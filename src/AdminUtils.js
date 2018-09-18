@@ -211,8 +211,11 @@ class AdminUtils {
     if (!requestClipName.match(/^[a-z0-9_]+$/)) {
       return message.reply(`${requestClipName} is a bad clip name`);
     }
-    fm.addRequest(requestClipName, requestDescription);
-    message.reply(`Ok, I'll add it to the list`);
+    if(fm.addRequest(requestClipName, requestDescription)) {
+      message.reply(`Ok, I'll add it to the list`);
+    } else {
+      message.reply(`Already on the list`);
+    }
   }
 
   reqlist(discord, message, params) {

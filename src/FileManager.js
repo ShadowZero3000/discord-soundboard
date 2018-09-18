@@ -1,13 +1,15 @@
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
 const request = require('request');
+const Store = require('data-store');
 
 class FileManager {
   constructor() {
     this.categories = {};
     this.files = {};
-    this.requests = {};
     this.home = './Uploads';
+    this.requestStore = new Store({ name: 'requests', path: 'requests.json', defaults: {} });
+
     const items = fs.readdirSync(this.home, {withFileTypes: true});
     items.forEach(item => {
       if (item.isDirectory()) {
@@ -23,29 +25,25 @@ class FileManager {
   }
 
   addRequest(clip, description) {
-    if (this.requested(clip)) {
+    if (this.requestStore.has(clip)) {
       return false;
     }
-    this.requests[clip] = {name: clip, description: description};
+    this.requestStore.set(clip, {name: clip, description: description});
     return true;
   }
 
   getRequests() {
-    var requestList = []
-    const requests = this.requests;
-    Object.keys(this.requests).sort().forEach(function(key) {
+    var requestList = [];
+    const requests = this.requestStore.clone();
+    Object.keys(requests).sort().forEach(function(key) {
       requestList.push(requests[key]);
     })
     return requestList;
   }
 
-  requested(clip) {
-    return (this.requests[clip] != null);
-  }
-
   removeRequest(clip) {
-    if(this.requested(clip)){
-      delete this.requests[clip];
+    if(this.requestStore.has(clip)){
+      this.requestStore.del(clip);
     }
   }
 
