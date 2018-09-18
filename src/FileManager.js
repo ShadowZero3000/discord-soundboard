@@ -4,8 +4,9 @@ const request = require('request');
 
 class FileManager {
   constructor() {
-    this.categories = {}
-    this.files = {}
+    this.categories = {};
+    this.files = {};
+    this.requests = {};
     this.home = './Uploads';
     const items = fs.readdirSync(this.home, {withFileTypes: true});
     items.forEach(item => {
@@ -21,6 +22,33 @@ class FileManager {
     });
   }
 
+  addRequest(clip, description) {
+    if (this.requested(clip)) {
+      return false;
+    }
+    this.requests[clip] = {name: clip, description: description};
+    return true;
+  }
+
+  getRequests() {
+    var requestList = []
+    const requests = this.requests;
+    Object.keys(this.requests).sort().forEach(function(key) {
+      requestList.push(requests[key]);
+    })
+    return requestList;
+  }
+
+  requested(clip) {
+    return (this.requests[clip] != null);
+  }
+
+  removeRequest(clip) {
+    if(this.requested(clip)){
+      delete this.requests[clip];
+    }
+  }
+
   register(file, category) {
     var matches;
     if (file instanceof(fs.Dirent)) {
@@ -31,7 +59,7 @@ class FileManager {
     }
     //const matches = file.name.match(/^([^-]+)--(.*)$/);
     if (matches) {
-      const realCategory = (category || 'Misc').toLowerCase();
+      const realCategory = (category || 'misc').toLowerCase();
       const obj = {
         name: matches[1],
         category: realCategory,
@@ -41,6 +69,7 @@ class FileManager {
       this.files[obj.name] = obj;
       this.categories[realCategory] = this.categories[realCategory] || {};
       this.categories[realCategory][obj.name] = obj;
+      this.removeRequest(obj.name);
       return true;
     }
     return false;
