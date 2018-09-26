@@ -6,4 +6,4 @@ RUN echo "deb http://ftp.uk.debian.org/debian jessie-backports main" >> /etc/apt
 
 COPY package.json /node/
 
-RUN cd /node && npm install
+RUN cd /node && npm install --production

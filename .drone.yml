@@ -23,6 +23,8 @@ pipeline:
     image: registry.codethat.rocks:5000/discord-soundboard/base
     commands:
       - ls -lah
+      - cp /node/node_modules . -r
+      - npm install
       - npm test
     when:
       event: push
