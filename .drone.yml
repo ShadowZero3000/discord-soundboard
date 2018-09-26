@@ -24,6 +24,7 @@ pipeline:
     commands:
       - ls -lah
       - cp /node/node_modules . -r
+      - cp Audio Uploads -r
       - npm install
       - npm test
     when:
