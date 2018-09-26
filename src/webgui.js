@@ -6,8 +6,8 @@ const log = require('./logger.js').errorLog;
 const accessLog = require('./logger.js').accessLog;
 const path = require('path');
 const request = require('request');
-const utils = require('./utils.js');
 const fm = require('./FileManager');
+const vqm = require('./VoiceQueueManager');
 
 const app = express();
 
@@ -66,7 +66,7 @@ app.get('/play/:clip', (req, res) => {
       }
 
       const userid = JSON.parse(body).id;
-      const queue = utils.getQueueFromUser(discord.client, userid);
+      const queue = vqm.getQueueFromUser(discord.client, userid);
       if (queue) {
         queue.add(req.params.clip);
         return res.status(200).end();
@@ -95,7 +95,7 @@ app.get('/random/:clip', (req, res) => {
       }
 
       const userid = JSON.parse(body).id;
-      const queue = utils.getQueueFromUser(discord.client, userid);
+      const queue = vqm.getQueueFromUser(discord.client, userid);
       if (queue) {
         queue.add(fm.random(req.params.clip));
         return res.status(200).end();

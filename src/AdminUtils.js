@@ -1,12 +1,17 @@
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
 const nconf = require('nconf');
-const utils = require('./utils.js');
 
 const fm = require('./FileManager');
-const queues = utils.queues;
+const vqm = require('./VoiceQueueManager');
 
 class AdminUtils {
+  // Reserved functions
+  check(message, access) {
+    return (this._admins()[message.author.id]
+        && this._admins()[message.author.id]['access'].indexOf(access) > -1);
+  }
+
   getActions() {
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
           .filter(key => ['constructor', 'getActions', 'check', 'getUserActions'].indexOf(key) == -1)
@@ -21,16 +26,7 @@ class AdminUtils {
     return user['access'].sort();
   }
 
-  check(message, access) {
-    return (this._admins()[message.author.id]
-        && this._admins()[message.author.id]['access'].indexOf(access) > -1);
-  }
-
   // Private functions
-  _printAccess(message, user, id) {
-    message.reply(`${user} now has: ${this._admins()[id]['access'].sort().join(', ')}`);
-  }
-
   _admins() {
     return nconf.get('adminList');
   }
@@ -48,6 +44,11 @@ class AdminUtils {
     }
     return true;
   }
+
+  _printAccess(message, user, id) {
+    return message.reply(`${user} now has: ${this._admins()[id]['access'].sort().join(', ')}`);
+  }
+
   _saveConfig(key, value) {
     log.debug(`Saving config key: ${key}, value: ${value}`);
     nconf.set(key, value);
@@ -62,7 +63,7 @@ class AdminUtils {
   }
 
   // Public functions
-  access(discord, message, params) {
+  access(message, params) {
     if (params[0] == 'help') {
       return message.reply('access <username>: \n' +
           'Prints what access <username> has.');
@@ -72,13 +73,13 @@ class AdminUtils {
     const username = params[0];
     const discordUser = this._getDiscordUser(message, username);
     if (discordUser && this._admins()[discordUser.user.id]) {
-      this._printAccess(message, username, discordUser.user.id);
+      return this._printAccess(message, username, discordUser.user.id);
     } else {
-      message.reply(`${username} does not presently have any admin permissions`)
+      return message.reply(`${username} does not presently have any admin permissions`)
     }
   }
 
-  add(discord, message, params) {
+  add(message, params) {
     if (params[0] == 'help') {
       return message.reply('add <clip> [category] (with attachment): \n' +
           'Adds a sound effect with <clip> as its shortcut.\n' +
@@ -106,7 +107,7 @@ class AdminUtils {
     }
   }
 
-  categorize(discord, message, params) {
+  categorize(message, params) {
     if (params[0] == 'help') {
       return message.reply('categorize `<new category>` `<clip>` [`<clip>` ...]: \n' +
         'Updates the category for any sound(s) (space separated).\n'+
@@ -125,9 +126,10 @@ class AdminUtils {
         message.reply(`I don't recognize ${clip}`)
       }
     });
+    return true;
   }
 
-  grant(discord, message, params) {
+  grant(message, params) {
     if (params[0] == 'help') {
       return message.reply('grant `<username>` `<permission>` [`<permission>` ...]: \n' +
           'Gives `<username>` access to `<permission>` feature(s).');
@@ -165,7 +167,7 @@ class AdminUtils {
     }
   }
 
-  remove(discord, message, params) {
+  remove(message, params) {
     if (params[0] == 'help') {
       return message.reply('remove `<clip>`: \n' +
           'Permanently deletes `<clip>` from the soundboard.');
@@ -180,7 +182,7 @@ class AdminUtils {
     }
   }
 
-  rename(discord, message, params) {
+  rename(message, params) {
     if (params[0] == 'help') {
       return message.reply('rename `<clip>` `<new clip name>`: \n' +
           'Renames `<clip>` to `<new clip name>`.');
@@ -200,7 +202,7 @@ class AdminUtils {
     }
   }
 
-  request(discord, message, params) {
+  request(message, params) {
     if (params[0] == 'help') {
       return message.reply('request `<clip>` `<description/url>`: \n' +
           'Adds a request for a clip.');
@@ -218,14 +220,13 @@ class AdminUtils {
     }
   }
 
-  reqlist(discord, message, params) {
+  reqlist(message, params) {
     const requests = fm.getRequests();
-    console.log(requests);
     const result = requests.map(req => `${req.name} - ${req.description}`).join('\n');
     message.reply(`Here's what we've got requested:\n${result}`);
   }
 
-  revoke(discord, message, params) {
+  revoke(message, params) {
     if (params[0] == 'help') {
       return message.reply('revoke `<username>` `<permission>` [`<permission>` ...]: \n' +
           'Revokes access for `<username>` to `<permission>` feature(s).');
@@ -252,21 +253,29 @@ class AdminUtils {
     }
   }
 
-  silence(discord, message, params) {
-    utils.getQueueFromUser(discord, message.member.id).silence();
-    message.reply("Oooooh kaaaaay. I'll go sit in a corner for a while and think about what I did.");
+  silence(message, params) {
+    try {
+      vqm.getQueueFromMessage(message).silence();
+      message.reply("Oooooh kaaaaay. I'll go sit in a corner for a while and think about what I did.");
+    } catch (e) {
+      message.reply(e.message);
+    }
   }
 
-  togglestartup(discord, message, params) {
+  togglestartup(message, params) {
     let startup = nconf.get('startup');
     startup['enabled'] = !startup['enabled'];
     this._saveConfig('startup', startup);
     message.reply(`Startup audio set: ${startup['enabled']}`);
   }
 
-  unmute(discord, message, params) {
-    utils.getQueueFromUser(discord, message.member.id).unsilence();
-    message.reply("Ok, ready to make some noise.");
+  unmute(message, params) {
+    try {
+      vqm.getQueueFromMessage(message).unsilence();
+      message.reply("Ok, ready to make some noise.");
+    } catch (e) {
+      message.reply(e.message);
+    }
   }
 }
 

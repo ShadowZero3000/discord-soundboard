@@ -18,6 +18,17 @@ pipeline:
     when:
       event: [push, tag]
 
+  # Unit tests
+  unit-test:
+    image: registry.codethat.rocks:5000/discord-soundboard/base
+    commands:
+      - ls -lah
+      - npm test
+    when:
+      event: push
+      branch:
+        exclude: [master, release/*]
+
   # Dev build. Occurs on non-master/release branches
   docker-build:
     image: plugins/docker

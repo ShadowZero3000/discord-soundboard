@@ -1,12 +1,11 @@
 const Discord = require('discord.js');
 const nconf = require('nconf');
 const adminUtils = require('./AdminUtils.js');
-const utils = require('./utils.js')
 const fm = require('./FileManager');
 const files = fm.getAll();
-const queues = utils.queues;
 const log = require('./logger.js').errorLog;
 const VoiceQueue = require('./VoiceQueue.js');
+const vqm = require('./VoiceQueueManager');
 
 class DiscordBot {
   constructor() {
@@ -54,17 +53,14 @@ class DiscordBot {
     return this.client;
   }
 
-  getQueue(vc) {
-    if (!vc) {
-      // TODO: This will misbehave, need to throw?
-      return;
-    }
-
-    if (!queues[vc.id]) {
-      queues[vc.id] = new VoiceQueue(vc);
-    }
-
-    return queues[vc.id];
+  getVCFromUserid(userId) {
+    log.debug(`Looking for an active voice channel for ${userId}`);
+    const voiceChannel =
+      this.client.guilds.map(guild => guild.voiceStates.get(userId))
+        .filter(voiceState => voiceState !== undefined)
+        .map(user => user.guild.channels.get(user.channelID))[0];
+    log.debug(`Found voice channel ${voiceChannel}`);
+    return voiceChannel;
   }
 
   getVoiceChannel(message) {
@@ -72,7 +68,7 @@ class DiscordBot {
       message.reply("You don't appear to be in a voice channel!");
       return null;
     }
-    return utils.getQueueFromUser(this.client, message.member.id).channel;
+    return this.getVCFromUserid(message.member.id);
   }
 
   handleAdminMessage(message, command) {
@@ -94,7 +90,7 @@ class DiscordBot {
     // Will have to ensure that we add check logic lower down
     if (adminUtils.getActions().indexOf(commandArray[0]) > -1
          && adminUtils.check(message, commandArray[0])) {
-      return adminUtils[commandArray.shift()](this.client, message, commandArray);
+      return adminUtils[commandArray.shift()](message, commandArray);
     }
 
     return;
@@ -108,18 +104,18 @@ class DiscordBot {
     }
 
     if (fm.inLibrary(keyword)) {
-      this.getQueue(voiceChannel).add(keyword);
+      vqm.getQueueFromChannel(voiceChannel).add(keyword);
       return;
     }
 
     if (keyword == 'random') {
       if (!extraArgs) { // Play a random clip if there's no extra args
-        this.getQueue(voiceChannel).add(fm.random());
+        vqm.getQueueFromChannel(voiceChannel).add(fm.random());
         return;
       }
 
       const clip = extraArgs.trim().split(' ')[0]; //.match(/(\b[\w,]+)/g);
-      this.getQueue(voiceChannel).add(fm.random(clip));
+      vqm.getQueueFromChannel(voiceChannel).add(fm.random(clip));
       return;
     }
     // Err.. They asked for something we don't have
@@ -159,8 +155,8 @@ class DiscordBot {
       };
       nconf.set('adminList', adminList);
       if (startup.enabled) {
-        utils.getQueueFromUser(this.client, app.owner.id)
-          .add(startup.clip);
+        vqm.getQueueFromChannel(this.getVCFromUserid(app.owner.id))
+           .add(startup.clip);
       }
     }).catch(err => {
       log.debug(`Error fetching application: ${err}`)

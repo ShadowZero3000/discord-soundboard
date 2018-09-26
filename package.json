@@ -23,7 +23,7 @@
     "sinon": "^6.2.0"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec"
+    "test": "./node_modules/.bin/mocha --reporter spec --exit"
   },
   "author": "Josh Souza",
   "license": "ISC",
