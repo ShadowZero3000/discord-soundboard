@@ -18,7 +18,7 @@ class VoiceQueueManager {
   }
 
   getQueueFromUser(discord, userId) {
-    const voiceChannel = getVCFromUserid(discord, userId);
+    const voiceChannel = this.getVCFromUserid(discord, userId);
     if (!voiceChannel) {
       throw new Error("No queue found")
     }

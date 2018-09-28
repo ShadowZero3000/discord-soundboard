@@ -57,7 +57,7 @@ class AdminUtils {
       fs.readFile(configFile, (err, data) => {
         data = data || {};
         // TODO: I'm pretty sure this can be dropped
-        console.dir(JSON.parse(data.toString()));
+        console.dir(data);
       })
     });
   }
