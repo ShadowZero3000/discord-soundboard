@@ -33,9 +33,9 @@ router.get('/callback', async (req, res) => {
     'at': json.access_token,
     'rt': json.refresh_token
   };
-
+  // maxAge is milliseconds
   res.cookie('discord_session', session, {
-    maxAge: 9000000, httpOnly: true
+    maxAge: 14*24*60*60*1000, httpOnly: true
   });
 
   res.redirect(`/clips`);

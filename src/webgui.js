@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
   if ( req.cookies.discord_session && req.cookies.discord_session.at) {
     return res.redirect('/clips');
   }
-  return res.status(200).sendFile(path.join(__dirname, 'public/index.html'));
+  return res.status(200).render(path.join(__dirname, 'public/index.pug'));
 });
 
 app.use('/js', express.static('public/js'));
