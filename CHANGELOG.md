@@ -1,3 +1,10 @@
+## [0.1.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.0...v0.1.1) (2018-09-28)
+
+
+### Bug Fixes
+
+* **cookies:** Announce that, like every website since the stone age, this site has delicious cookies that are "totally not for doing bad things" ([dd948a0](https://github.com/ShadowZero3000/discord-soundboard/commit/dd948a0))
+
 # [0.1.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.0.9...v0.1.0) (2018-09-18)
 
 
