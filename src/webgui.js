@@ -23,6 +23,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/js', express.static('public/js'));
+app.use('/media', express.static('public/media'));
 app.use('/logs', express.static('logs'));
 app.use('/api/discord', require('./webapi.js'));
 
