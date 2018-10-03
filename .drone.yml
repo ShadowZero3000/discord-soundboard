@@ -90,6 +90,7 @@ pipeline:
     secret_key: supersecretkey
     service: dev-discord/discordbot
     start_first: false
+    timeout: 300
     url: http://rancher.codethat.rocks:8080
     when:
       event: push
@@ -106,6 +107,7 @@ pipeline:
     secret_key: supersecretkey
     service: discordbot/discordbot
     start_first: false
+    timeout: 300
     url: http://rancher.codethat.rocks:8080
     when:
       event: tag

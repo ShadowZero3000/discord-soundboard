@@ -8,7 +8,7 @@ class FileManager {
     this.categories = {};
     this.files = {};
     this.home = './Uploads';
-    this.requestStore = new Store({ name: 'requests', path: 'requests.json', defaults: {} });
+    this.requestStore = new Store({ name: 'requests', path: 'config/requests.json', defaults: {} });
 
     const items = fs.readdirSync(this.home, {withFileTypes: true});
     items.forEach(item => {

@@ -1,2 +1,4 @@
-Audio/*
+Uploads/*
+!Uploads/.gitkeep
 node_modules
+drone.yaml
