@@ -1,3 +1,11 @@
+## [0.1.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.1...v0.1.2) (2018-10-03)
+
+
+### Bug Fixes
+
+* **media:** Move some media around, create favicon ([71330d7](https://github.com/ShadowZero3000/discord-soundboard/commit/71330d7))
+* **requests:** Move requests to persistent storage location ([2b1751e](https://github.com/ShadowZero3000/discord-soundboard/commit/2b1751e))
+
 ## [0.1.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.0...v0.1.1) (2018-09-28)
 
 
