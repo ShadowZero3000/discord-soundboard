@@ -1,3 +1,10 @@
+## [0.1.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.2...v0.1.3) (2018-10-03)
+
+
+### Bug Fixes
+
+* **sorting:** Fix sorting after files added ([d46b3bd](https://github.com/ShadowZero3000/discord-soundboard/commit/d46b3bd))
+
 ## [0.1.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.1...v0.1.2) (2018-10-03)
 
 
