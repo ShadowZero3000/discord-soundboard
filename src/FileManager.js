@@ -68,9 +68,21 @@ class FileManager {
       this.categories[realCategory] = this.categories[realCategory] || {};
       this.categories[realCategory][obj.name] = obj;
       this.removeRequest(obj.name);
+      this.sortCategories();
       return true;
     }
     return false;
+  }
+
+  sortCategories() {
+    var result = {};
+    Object.keys(this.categories).sort().forEach(category => {
+      result[category] = {}
+      Object.keys(this.categories[category]).sort().forEach(key => {
+        result[category][key] = this.categories[category][key];
+      });
+    });
+    this.categories = result;
   }
 
   deregister(file) {
