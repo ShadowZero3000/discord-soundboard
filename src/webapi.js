@@ -1,19 +1,37 @@
-const express = require('express');
+const accessLog = require('./logger.js').accessLog;
 const btoa = require('btoa');
+const express = require('express');
 const fetch = require('node-fetch');
-const { URLSearchParams } = require('url');
-const router = express.Router();
-const nconf = require('nconf');
 const log = require('./logger.js').errorLog;
+const nconf = require('nconf');
+const { URLSearchParams } = require('url');
+
+const am = require('./AccessManager');
+const discord = require('./DiscordBot.js');
+const fm = require('./FileManager');
+const request = require('request');
+const router = express.Router();
+const vqm = require('./VoiceQueueManager');
+
 function getRedirect(req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
 }
-router.get('/login', (req, res) => {
+
+function refreshSession(req, res) {
+  if ( !req.cookies.discord_session || !req.cookies.discord_session.at) {
+    accessLog.info(`Invalid session, attempting refresh`);
+    res.redirect(`/api/discord/refresh?callback=/play/${req.params.clip}`);
+    return false;
+  }
+  return true;
+}
+
+router.get('/discord/login', (req, res) => {
   const redirect = getRedirect(req);
   res.redirect(`https://discordapp.com/oauth2/authorize?client_id=${nconf.get('CLIENT_ID')}&scope=identify&response_type=code&redirect_uri=${redirect}`);
 });
 
-router.get('/callback', async (req, res) => {
+router.get('/discord/callback', async (req, res) => {
   if (!req.query.code) {
     throw new Error('NoCodeProvided');
   }
@@ -41,7 +59,7 @@ router.get('/callback', async (req, res) => {
   res.redirect(`/clips`);
 });
 
-router.get('/refresh', async (req, res) => {
+router.get('/discord/refresh', async (req, res) => {
   if (!req.cookies.discord_session || !req.cookies.discord_session.rt) {
     return res.status(403).send("Session expired, please log back in");
   };
@@ -84,6 +102,74 @@ router.get('/refresh', async (req, res) => {
     return res.redirect(req.query.callback);
   }
   return res.redirect(`/clips`);
+});
+
+router.get('/play/:clip', (req, res) => {
+  accessLog.info(`Request received via gui to play: ${req.params.clip}`);
+  if (!refreshSession(req, res)){ return; }
+
+  if (fm.inLibrary(req.params.clip)) {
+    const accesstoken = req.cookies.discord_session.at;
+    const headers = {
+      'Authorization': 'Bearer ' + accesstoken
+    }
+    log.debug(`Got request to play: ${req.params.clip}`);
+
+    request.get('https://discordapp.com/api/users/@me', (err, r, body) => {
+      if (err) {
+        return res.redirect(`/`);
+      }
+
+      try {
+        const userid = JSON.parse(body).id;
+        const queue = vqm.getQueueFromUser(discord.client, userid);
+        const user = queue.channel.guild.members.get(userid);
+        if (am.checkAccess(user, queue.channel.guild, 'play')) {
+          queue.add(req.params.clip);
+          return res.status(200).end();
+        } else {
+          return res.status(403).send("Play permission not available on your current server.");
+        }
+      } catch (e) {
+        log.debug("Error: " + e.message);
+        return res.status(404).send("Couldn't find a voice channel for you where I'm available");
+      }
+    })
+    .auth(null, null, true, accesstoken);
+  }
+});
+
+router.get('/random/:clip', (req, res) => {
+  if (!refreshSession(req, res)){ return; }
+  if (req.cookies.discord_session && req.cookies.discord_session.at) {
+    const accesstoken = req.cookies.discord_session.at;
+    const headers = {
+      'Authorization': 'Bearer ' + accesstoken
+    }
+
+    log.debug(`Got request to play random: ${req.params.clip}`);
+
+    request.get('https://discordapp.com/api/users/@me', (err, r, body) => {
+      if (err) {
+        return res.redirect(`/`);
+      }
+
+      try {
+        const userid = JSON.parse(body).id;
+        const queue = vqm.getQueueFromUser(discord.client, userid);
+        const user = queue.channel.guild.members.get(userid);
+        if (am.checkAccess(user, queue.channel.guild, 'play')) {
+          queue.add(fm.random(req.params.clip));
+          return res.status(200).end();
+        } else {
+          return res.status(403).send("Play permission not available on your current server.");
+        }
+      } catch(e) {
+        return res.status(404).send("Couldn't find a voice channel for you where I'm available");
+      }
+    })
+    .auth(null, null, true, accesstoken);
+  }
 });
 
 module.exports = router;

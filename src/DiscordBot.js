@@ -1,9 +1,9 @@
-const Discord = require('discord.js');
-const nconf = require('nconf');
 const adminUtils = require('./AdminUtils.js');
+const am = require('./AccessManager');
+const Discord = require('discord.js');
 const fm = require('./FileManager');
-const files = fm.getAll();
 const log = require('./logger.js').errorLog;
+const nconf = require('nconf');
 const VoiceQueue = require('./VoiceQueue.js');
 const vqm = require('./VoiceQueueManager');
 
@@ -15,7 +15,7 @@ class DiscordBot {
   botHelp() {
     return `I'm a bot!\n` +
       `You can ask me to make sounds by saying one of the following:\n` +
-      `\`${this.symbol}${Object.keys(files).sort().join(`\`, \`${this.symbol}`)}\`\n`;
+      `\`${this.symbol}${Object.keys(fm.getAll()).sort().join(`\`, \`${this.symbol}`)}\`\n`;
   }
 
   botAdminHelp(permissions) {
@@ -98,8 +98,14 @@ class DiscordBot {
 
   handleKeywordMessage(message, keyword, extraArgs) {
     // Time for some audio!
+    //var botRole=am.getRoleByName('Bot Interactions', message.guild)
     const voiceChannel = this.getVoiceChannel(message);
     if (!voiceChannel) {
+      return;
+    }
+
+    // Access check for guilds with it turned on
+    if (!am.checkAccess(message.author, message.guild, 'play')) {
       return;
     }
 

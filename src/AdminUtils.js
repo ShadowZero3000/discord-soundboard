@@ -2,6 +2,7 @@ const fs = require('fs');
 const log = require('./logger.js').errorLog;
 const nconf = require('nconf');
 
+const am = require('./AccessManager');
 const fm = require('./FileManager');
 const vqm = require('./VoiceQueueManager');
 
@@ -77,6 +78,23 @@ class AdminUtils {
     } else {
       return message.reply(`${username} does not presently have any admin permissions`)
     }
+  }
+
+  accessrole(message, params) {
+    const play = am.getAccess(message.guild, 'play').map(role => { return role.name });
+    var response = `Roles with play permission: ${play.join(', ')}`;
+
+    const request = am.getAccess(message.guild, 'request').map(role => { return role.name });
+    if (request.length != 0) {
+      response += '\nRoles with request permission: ' + request.join(', ');
+    }
+
+    const admin = am.getAccess(message.guild, 'admin').map(role => { return role.name });
+    if (admin.length != 0) {
+      response += '\nRoles with admin permission: ' + request.join(', ');
+    }
+
+    return message.reply(response);
   }
 
   add(message, params) {
@@ -167,6 +185,27 @@ class AdminUtils {
     }
   }
 
+  grantrole(message, params) {
+    if (params[0] == 'help') {
+      return message.reply('grantrole `play|request|admin` `<role name>`: \n' +
+          'Gives `<role name>` access to `play` `request` or do `admin` things(s).');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
+    const access = params.shift();
+    const roleName = params.join(' ');
+    if (!access.match(/^(play|request|admin)$/)) {
+      return message.reply('Must select the granted access: play|request|admin')
+    }
+    const role = am.getRole(roleName, message.guild);
+    if (!role) {
+      return message.reply(`Couldn't find that role`);
+    }
+    if (am.grantAccessById(role.id, message.guild.id, access)){
+      return message.reply(`Granted ${access} to '${role.name}'`);
+    }
+    return message.reply(`Something went wrong with that`);
+  }
+
   remove(message, params) {
     if (params[0] == 'help') {
       return message.reply('remove `<clip>`: \n' +
@@ -251,6 +290,27 @@ class AdminUtils {
       this._printAccess(message, username, discordUser.user.id);
       this._saveConfig('adminList', this._admins());
     }
+  }
+
+  revokerole(message, params) {
+    if (params[0] == 'help') {
+      return message.reply('revokerole `play|request|admin` `<role name>`: \n' +
+          'Removes `<role name>` access to `play` `request` or do `admin` things(s).');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
+    const access = params.shift();
+    const roleName = params.join(' ');
+    if (!access.match(/^(play|request|admin)$/)) {
+      return message.reply('Must select the revoked access: play|request|admin')
+    }
+    const role = am.getRole(roleName, message.guild);
+    if (!role) {
+      return message.reply(`Couldn't find that role`);
+    }
+    if (am.revokeAccessById(role.id, message.guild.id, access)){
+      return message.reply(`Revoked ${access} from '${role.name}'`);
+    }
+    return message.reply(`Something went wrong with that`);
   }
 
   silence(message, params) {
