@@ -5,7 +5,8 @@ var fs = require('fs');
 
 var stubbedVQM = sinon.stub(require('../src/VoiceQueueManager'));
 var stubbedNconf = sinon.stub(require('nconf'));
-var stubbedFileManager = sinon.stub(require('../src/FileManager'))
+var stubbedFileManager = sinon.stub(require('../src/FileManager'));
+var stubbedAccessManager = sinon.stub(require('../src/AccessManager'));
 
 
 var testUser = {
@@ -18,7 +19,7 @@ var immuneUser = {
   id: '1234'
 }
 
-admins = {
+const admins = {
   '123': {
     username: 'testuser',
     access: ['access']
@@ -40,12 +41,17 @@ var fakeMessage = {
     }
   },
   author: {
-    id: '0'
+    id: '123'
   },
   channel: {
     guild: {
+      id: '1',
       members: [{user: testUser},{user: immuneUser}]
     }
+  },
+  guild: {
+    id: '1',
+    members: [{user: testUser},{user: immuneUser}]
   },
   reply: function (message) {
     return `Message Reply: ${message}`;
@@ -136,8 +142,73 @@ describe("Admin Utils", () => {
 
   });
 
+  describe("Non-admin public functions", () => {
+    describe("check", () => {
+      it("Verifies that access is granted", function () {
+        stubbedNconf.get.withArgs('adminList').returns(admins);
+        expect(adminUtils.check(fakeMessage, 'access')).to.be.true;
+      });
+      it("Does not permit access that is not granted", function() {
+        stubbedNconf.get.withArgs('adminList').returns(admins);
+        expect(adminUtils.check(fakeMessage, 'revoke')).to.be.false;
+      });
+    });
+    describe("getActions", () => {
+      it("Returns all admin actions", function () {
+        expect(adminUtils.getActions()).to.deep.equal([
+          "access", "accessrole", "add",
+          "categorize", "grant", "grantrole",
+          "remove", "rename", "request",
+          "reqlist", "revoke", "revokerole",
+          "silence", "togglestartup", "unmute"]);
+      });
+    });
+    describe("getUserActions", () => {
+      it("Returns all actions the user is authorized for", function () {
+        stubbedNconf.get.withArgs('adminList').returns(admins);
+        expect(adminUtils.getUserActions(fakeMessage)).to.equal(admins['123']['access']);
+      });
+      it("Returns nothing if the user is not found", function () {
+        stubbedNconf.get.withArgs('adminList').returns([]);
+        expect(adminUtils.getUserActions(fakeMessage)).to.deep.equal([]);
+      });
+    });
+  });
+
   describe("Public functions", () => {
+
+    describe("access", () => {
+      it("Has a help function", () => {
+        expect(adminUtils.access(fakeMessage, ['help'])).to.match(/Message Reply: access `<username>`.*/);
+      });
+      it("Will print access when requested", function (){
+        stubbedNconf.get.withArgs('adminList').returns(admins);
+        expect(adminUtils.access(fakeMessage, [testUser.username])).to.equal(`Message Reply: ${testUser.username} now has: access`);
+      });
+      it("Will print a message for users with no access", function (){
+        stubbedNconf.get.withArgs('adminList').returns([]);
+        expect(adminUtils.access(fakeMessage, [testUser.username])).to.equal(`Message Reply: ${testUser.username} does not presently have any admin permissions`);
+      });
+    });
+
+    describe("accessrole", () => {
+      it("Will print access by role when requested", function (){
+        stubbedAccessManager.getAccess.onFirstCall().returns([{name: 'Play role'}]);
+        stubbedAccessManager.getAccess.onSecondCall().returns([{name: 'Request role'}]);
+        stubbedAccessManager.getAccess.onThirdCall().returns([{name: 'Admin role'}]);
+
+        expect(adminUtils.accessrole(fakeMessage)).to.equal(
+          `Message Reply: Roles with play permission: Play role\n`+
+          `Roles with request permission: Request role\n`+
+          `Roles with admin permission: Admin role`
+        );
+      });
+    });
+
     describe("add", () => {
+      it("Has a help function", () => {
+        expect(adminUtils.add(fakeMessage, ['help'])).to.match(/Message Reply: add `<clip>` `\[category]` \(with attachment\).*/);
+      });
       it("Can add a new sound", function () {
         stubbedNconf.get.withArgs('KEY_SYMBOL').returns('!');
         stubbedFileManager.inLibrary.returns(false);
@@ -152,12 +223,32 @@ describe("Admin Utils", () => {
         expect(adminUtils.add(fakeMessage, ['hi'])).to.equal('Message Reply: That sound effect already exists');
         expect(stubbedFileManager.inLibrary.called).to.be.true;
       });
-    });
+      it("Will not add clips with a bad clip name", function (){
+        stubbedFileManager.inLibrary.returns(true);
 
-    describe("access", () => {
-      it("Will print access when requested", function (){
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        expect(adminUtils.access(fakeMessage, [testUser.username])).to.equal(`Message Reply: ${testUser.username} now has: access`);
+        adminUtils.add(fakeMessage, ['clip!1']);
+
+        expect(stubbedFileManager.create.called).to.be.false;
+        expect(fakeMessage.reply.calledWith(`clip!1 is a bad short name`)).to.be.true;
+      });
+      it("Will not add clips with a bad category name", function (){
+        stubbedFileManager.inLibrary.returns(true);
+
+        adminUtils.add(fakeMessage, ['clip1', 'category!']);
+
+        expect(stubbedFileManager.create.called).to.be.false;
+        expect(fakeMessage.reply.calledWith(`category! is a bad category name`)).to.be.true;
+      });
+      it("Will print a message if the user forgot an attachment", function (){
+        stubbedFileManager.inLibrary.returns(false);
+        sinon.stub(fakeMessage.attachments, 'first').returns(null);
+
+        adminUtils.add(fakeMessage, ['clip1', 'category']);
+
+        fakeMessage.attachments.first.restore()
+
+        expect(stubbedFileManager.create.called).to.be.false;
+        expect(fakeMessage.reply.calledWith(`You need to attach a file`)).to.be.true;
       });
     });
 
@@ -178,6 +269,15 @@ describe("Admin Utils", () => {
         expect(stubbedFileManager.rename.called).to.be.true
         expect(fakeMessage.reply.calledWith(`soundclip's category is now: category1`)).to.be.true;
       });
+      it("Will not categorize clips with a bad category name", function (){
+        stubbedFileManager.inLibrary.returns(true);
+        stubbedFileManager.rename.returns(true);
+
+        adminUtils.categorize(fakeMessage, ['category!','clip1']);
+
+        expect(stubbedFileManager.rename.called).to.be.false;
+        expect(fakeMessage.reply.calledWith(`category! is a bad category name`)).to.be.true;
+      });
     });
 
     describe("grant", () => {
@@ -193,6 +293,17 @@ describe("Admin Utils", () => {
         adminUtils._saveConfig.restore();
         expect(fakeMessage.reply.calledWith(`${testUser.username} now has: access, grant`)).to.be.true;
       });
+      it("Will grant users permission even if they never been granted permissions", function (){
+        stubbedNconf.get.withArgs('adminList').returns(admins);
+        sinon.stub(adminUtils,'_saveConfig'); // WTF to do with this?
+        sinon.stub(adminUtils,'_getDiscordUser').returns({user: {id: '5'}})
+
+        adminUtils.grant(fakeMessage, [testUser.username + 'bogus', 'grant']);
+
+        adminUtils._saveConfig.restore();
+        adminUtils._getDiscordUser.restore();
+        expect(fakeMessage.reply.calledWith(`${testUser.username}bogus now has: grant`)).to.be.true;
+      });
       it("Will not grant fake permissions", function (){
         stubbedNconf.get.withArgs('adminList').returns(admins);
         sinon.stub(adminUtils,'_saveConfig'); // WTF to do with this?
@@ -201,6 +312,37 @@ describe("Admin Utils", () => {
 
         adminUtils._saveConfig.restore();
         expect(fakeMessage.reply.calledWith(`${testUser.username} now has: access, grant`)).to.be.true;
+      });
+    });
+
+    describe("grantrole", () => {
+      it("Has a help function", () => {
+        expect(adminUtils.grantrole(fakeMessage, ['help'])).to.match(/Message Reply: grantrole `play|request|admin` `<role name>`.*/);
+      });
+      it("Will grant a server role permissions", function (){
+        stubbedAccessManager.getRole.returns({name: 'Bogus role', id: 1})
+        stubbedAccessManager.grantAccessById.returns(true);
+        adminUtils.grantrole(fakeMessage, ['play', 'bogus', 'role']);
+        expect(fakeMessage.reply.calledWith(`Granted play to 'Bogus role'`)).to.be.true;
+        expect(stubbedAccessManager.grantAccessById.called).to.be.true;
+      });
+      it("Will do nothing given a bad role", function (){
+        adminUtils.grantrole(fakeMessage, ['play', 'bogus', 'role']);
+        expect(fakeMessage.reply.calledWith(`Couldn't find that role`)).to.be.true;
+      });
+      it("Will not grant invalid permissions", function (){
+        adminUtils.grantrole(fakeMessage, ['bogus', 'bogus', 'role']);
+
+        expect(fakeMessage.reply.calledWith(`Must select the granted access: play|request|admin`)).to.be.true;
+      });
+      it("Will fail if an underlying system fails", function (){
+        stubbedAccessManager.getRole.returns({name: 'Bogus role', id: 1})
+        stubbedAccessManager.grantAccessById.returns(false);
+
+        adminUtils.grantrole(fakeMessage, ['play', 'bogus', 'role']);
+
+        expect(fakeMessage.reply.calledWith(`Something went wrong with that`)).to.be.true;
+        expect(stubbedAccessManager.grantAccessById.called).to.be.true;
       });
     });
 
@@ -232,7 +374,7 @@ describe("Admin Utils", () => {
       it("Has a help function", () => {
         expect(adminUtils.rename(fakeMessage, ['help'])).to.match(/Message Reply: rename `<clip>`.*/);
       });
-      it("Will rename songs that exist", function (){
+      it("Will rename clips that exist", function (){
         stubbedFileManager.inLibrary.returns(true);
         stubbedFileManager.rename.returns(true);
 
@@ -242,7 +384,7 @@ describe("Admin Utils", () => {
         expect(fakeMessage.reply.calledWith(`Rename to clip2 complete.`)).to.be.true;
 
       });
-      it("Will not rename songs that do not exist", function (){
+      it("Will not rename clips that do not exist", function (){
         stubbedFileManager.inLibrary.returns(false);
         stubbedFileManager.rename.returns(true);
 
@@ -252,6 +394,15 @@ describe("Admin Utils", () => {
         expect(stubbedFileManager.inLibrary.called).to.be.true;
         expect(stubbedFileManager.rename.called).to.be.false;
         expect(fakeMessage.reply.calledWith(`Could not find: clip1`)).to.be.true;
+      });
+      it("Will not rename clips with a bad name", function (){
+        stubbedFileManager.inLibrary.returns(true);
+        stubbedFileManager.rename.returns(true);
+
+        adminUtils.rename(fakeMessage, ['clip1','clip!2']);
+
+        expect(stubbedFileManager.rename.called).to.be.false;
+        expect(fakeMessage.reply.calledWith(`clip!2 is a bad short name`)).to.be.true;
       });
     });
 
@@ -275,6 +426,14 @@ describe("Admin Utils", () => {
 
         expect(stubbedFileManager.addRequest.called).to.be.true;
         expect(fakeMessage.reply.calledWith(`Already on the list`)).to.be.true;
+      });
+      it("Will not request clips with a bad name", function (){
+        stubbedFileManager.addRequest.returns(false);
+
+        adminUtils.request(fakeMessage, ['clip!1','clip2']);
+
+        expect(stubbedFileManager.addRequest.called).to.be.false;
+        expect(fakeMessage.reply.calledWith(`clip!1 is a bad clip name`)).to.be.true;
       });
     });
 
@@ -318,6 +477,40 @@ describe("Admin Utils", () => {
       });
     });
 
+    describe("revokerole", () => {
+      it("Has a help function", () => {
+        expect(adminUtils.revokerole(fakeMessage, ['help'])).to.match(/Message Reply: revokerole `play|request|admin` `<role name>`.*/);
+      });
+      it("Will revoke a server role permissions", function (){
+        stubbedAccessManager.getRole.returns({name: 'Bogus role', id: 1})
+        stubbedAccessManager.revokeAccessById.returns(true);
+
+        adminUtils.revokerole(fakeMessage, ['play', 'bogus', 'role']);
+
+        expect(fakeMessage.reply.calledWith(`Revoked play from 'Bogus role'`)).to.be.true;
+        expect(stubbedAccessManager.revokeAccessById.called).to.be.true;
+      });
+      it("Will do nothing given a bad role", function (){
+        adminUtils.revokerole(fakeMessage, ['play', 'bogus', 'role']);
+
+        expect(fakeMessage.reply.calledWith(`Couldn't find that role`)).to.be.true;
+      });
+      it("Will not revoke invalid permissions", function (){
+        adminUtils.revokerole(fakeMessage, ['bogus', 'bogus', 'role']);
+
+        expect(fakeMessage.reply.calledWith(`Must select the revoked access: play|request|admin`)).to.be.true;
+      });
+      it("Will fail if an underlying system fails", function (){
+        stubbedAccessManager.getRole.returns({name: 'Bogus role', id: 1})
+        stubbedAccessManager.revokeAccessById.returns(false);
+
+        adminUtils.revokerole(fakeMessage, ['play', 'bogus', 'role']);
+
+        expect(fakeMessage.reply.calledWith(`Something went wrong with that`)).to.be.true;
+        expect(stubbedAccessManager.revokeAccessById.called).to.be.true;
+      });
+    });
+
     describe("silence", () => {
       it("Will silence a voice channel", function (){
         //sinon.stub(vqm, 'getQueueFromMessage').returns({silence:function(){}})
@@ -356,6 +549,28 @@ describe("Admin Utils", () => {
 
         expect(stubbedNconf.get.called).to.be.true;
         expect(fakeMessage.reply.calledWith(`Startup audio set: false`)).to.be.true;
+      });
+    });
+
+    describe("unmute", () => {
+      it("Will unmute a voice channel", function (){
+        //sinon.stub(vqm, 'getQueueFromMessage').returns({silence:function(){}})
+        var fakeUnSilence = sinon.stub();
+        stubbedVQM.getQueueFromMessage.returns({unsilence: fakeUnSilence})
+
+        adminUtils.unmute(fakeMessage, []);
+
+        expect(stubbedVQM.getQueueFromMessage.called).to.be.true;
+        expect(fakeUnSilence.called).to.be.true;
+        expect(fakeMessage.reply.calledWith(`Ok, ready to make some noise.`)).to.be.true;
+      });
+      it  ("Will not unmute if the user isn't in a channel", function (){
+        stubbedVQM.getQueueFromMessage.throws(new Error('Not in channel'))
+
+        adminUtils.unmute(fakeMessage, []);
+
+        expect(stubbedVQM.getQueueFromMessage.called).to.be.true;
+        expect(fakeMessage.reply.calledWith(`Not in channel`)).to.be.true;
       });
     });
   });

@@ -66,7 +66,7 @@ class AdminUtils {
   // Public functions
   access(message, params) {
     if (params[0] == 'help') {
-      return message.reply('access <username>: \n' +
+      return message.reply('access `<username>`: \n' +
           'Prints what access <username> has.');
     }
     if (!this._paramCheck(message, params)){ return; }
@@ -91,7 +91,7 @@ class AdminUtils {
 
     const admin = am.getAccess(message.guild, 'admin').map(role => { return role.name });
     if (admin.length != 0) {
-      response += '\nRoles with admin permission: ' + request.join(', ');
+      response += '\nRoles with admin permission: ' + admin.join(', ');
     }
 
     return message.reply(response);
@@ -99,7 +99,7 @@ class AdminUtils {
 
   add(message, params) {
     if (params[0] == 'help') {
-      return message.reply('add <clip> [category] (with attachment): \n' +
+      return message.reply('add `<clip>` `[category]` (with attachment): \n' +
           'Adds a sound effect with <clip> as its shortcut.\n' +
           'If provided, will assign to [category]. Defaults to "misc".');
     }
