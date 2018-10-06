@@ -79,10 +79,10 @@ class VoiceQueue {
           this.log(`Finished with: ${keyword}`);
           this.playing = false;
           this.play();
-        })
+        });
       })
       .catch(err => {
-        this.log(err)
+        this.log(`Error in channel join: ${err}`);
         this.playing = false;
         this.play();
       });
