@@ -60,6 +60,9 @@ class AccessManager {
   }
 
   revokeAccessById(roleId, guildId, access) {
+    if (roleId == undefined || guildId == undefined || access == undefined) {
+      return false;
+    }
     const guild = this.getGuildById(guildId);
     log.info(`Revoking '${access}' access for ${roleId} in ${guildId}`)
     if (guild[access].indexOf(roleId) > -1) {
