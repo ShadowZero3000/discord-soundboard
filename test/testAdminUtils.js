@@ -8,6 +8,8 @@ var stubbedNconf = sinon.stub(require('nconf'));
 var stubbedFileManager = sinon.stub(require('../src/FileManager'));
 var stubbedAccessManager = sinon.stub(require('../src/AccessManager'));
 
+const AccessGuild = require('../src/AccessGuild.js');
+const Access = require('../src/Access.js');
 
 var testUser = {
   username: 'testuser',
@@ -51,11 +53,15 @@ var fakeMessage = {
   },
   guild: {
     id: '1',
-    members: [{user: testUser},{user: immuneUser}]
+    members: [{user: testUser},{user: immuneUser}],
+    roles: {
+      find: sinon.stub()
+    }
   },
   reply: function (message) {
     return `Message Reply: ${message}`;
-  }
+  },
+  delete: sinon.stub()
 }
 
 var fakeLogger = {
@@ -63,6 +69,11 @@ var fakeLogger = {
     debug: sinon.fake()
   }
 }
+const testAccessGuild = new AccessGuild();
+const testAccessGuildWithRoles = new AccessGuild({roles:{'0': 'play'}});
+const testAccessUser = new Access();
+const testAccessUserWithRoles = new Access(['clipmanager']);
+const testRole = {id:'4000',name:'Test role'}
 
 describe("Admin Utils", () => {
 
@@ -125,18 +136,10 @@ describe("Admin Utils", () => {
 
     describe("_saveConfig", () => {
       it("Saves a parameter value", function () {
-        sinon.stub(fs, 'readFile');
-        fs.readFile.yields(null, {file: 'blah'})
-
-        stubbedNconf.save.yields(null);
-        sinon.stub(console, 'dir');
-
         adminUtils._saveConfig('key', 'value');
 
-        console.dir.restore();
-
         expect(stubbedNconf.set.called).to.be.true;
-        expect(fs.readFile.called).to.be.true;
+        expect(stubbedNconf.save.called).to.be.true;
       });
     });
 
@@ -145,31 +148,22 @@ describe("Admin Utils", () => {
   describe("Non-admin public functions", () => {
     describe("check", () => {
       it("Verifies that access is granted", function () {
-        stubbedNconf.get.withArgs('adminList').returns(admins);
+        stubbedAccessManager.checkAccess.returns(true);
         expect(adminUtils.check(fakeMessage, 'access')).to.be.true;
       });
       it("Does not permit access that is not granted", function() {
-        stubbedNconf.get.withArgs('adminList').returns(admins);
+        stubbedAccessManager.checkAccess.returns(false);
         expect(adminUtils.check(fakeMessage, 'revoke')).to.be.false;
       });
     });
-    describe("getActions", () => {
-      it("Returns all admin actions", function () {
-        expect(adminUtils.getActions()).to.deep.equal([
-          "access", "accessrole", "add",
-          "categorize", "grant", "grantrole",
-          "remove", "rename", "request",
-          "reqlist", "revoke", "revokerole",
-          "silence", "togglestartup", "unmute"]);
-      });
-    });
+
     describe("getUserActions", () => {
       it("Returns all actions the user is authorized for", function () {
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        expect(adminUtils.getUserActions(fakeMessage)).to.equal(admins['123']['access']);
+        stubbedAccessManager.getUserById.returns(testAccessUserWithRoles)
+        expect(adminUtils.getUserActions(fakeMessage)).to.deep.equal(['add','categorize','remove','rename']);
       });
       it("Returns nothing if the user is not found", function () {
-        stubbedNconf.get.withArgs('adminList').returns([]);
+        stubbedAccessManager.getUserById.returns(testAccessUser)
         expect(adminUtils.getUserActions(fakeMessage)).to.deep.equal([]);
       });
     });
@@ -182,25 +176,23 @@ describe("Admin Utils", () => {
         expect(adminUtils.access(fakeMessage, ['help'])).to.match(/Message Reply: access `<username>`.*/);
       });
       it("Will print access when requested", function (){
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        expect(adminUtils.access(fakeMessage, [testUser.username])).to.equal(`Message Reply: ${testUser.username} now has: access`);
+        stubbedAccessManager.getUserAccess.returns(testAccessUserWithRoles.permissions)
+        expect(adminUtils.access(fakeMessage, [testUser.username])).to.equal(`Message Reply: ${testUser.username} has: clipmanager`);
       });
       it("Will print a message for users with no access", function (){
-        stubbedNconf.get.withArgs('adminList').returns([]);
-        expect(adminUtils.access(fakeMessage, [testUser.username])).to.equal(`Message Reply: ${testUser.username} does not presently have any admin permissions`);
+        stubbedAccessManager.getUserAccess.returns(testAccessUser.permissions)
+        expect(adminUtils.access(fakeMessage, [testUser.username])).to.equal(`Message Reply: ${testUser.username} does not have any directly assigned permissions`);
       });
     });
 
     describe("accessrole", () => {
       it("Will print access by role when requested", function (){
-        stubbedAccessManager.getAccess.onFirstCall().returns([{name: 'Play role'}]);
-        stubbedAccessManager.getAccess.onSecondCall().returns([{name: 'Request role'}]);
-        stubbedAccessManager.getAccess.onThirdCall().returns([{name: 'Admin role'}]);
+        stubbedAccessManager.getRoleAccess.returns([{name: 'Play role', access: ['play']}]);
 
         expect(adminUtils.accessrole(fakeMessage)).to.equal(
-          `Message Reply: Roles with play permission: Play role\n`+
-          `Roles with request permission: Request role\n`+
-          `Roles with admin permission: Admin role`
+          `Message Reply: \`accessrole\`\n`+
+          `Current role access:\n`+
+          `Play role - play`
         );
       });
     });
@@ -285,33 +277,34 @@ describe("Admin Utils", () => {
         expect(adminUtils.grant(fakeMessage, ['help'])).to.match(/Message Reply: grant `<username>` `<permission>`.*/);
       });
       it("Will grant users permissions", function (){
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        sinon.stub(adminUtils,'_saveConfig'); // WTF to do with this?
+        stubbedAccessManager.getUserAccess.returns(['clipmanager']);
+        sinon.stub(adminUtils,'_getDiscordUser').returns({user: {id: '5'}});
 
-        adminUtils.grant(fakeMessage, [testUser.username, 'grant']);
+        adminUtils.grant(fakeMessage, [testUser.username, 'clipmanager']);
 
-        adminUtils._saveConfig.restore();
-        expect(fakeMessage.reply.calledWith(`${testUser.username} now has: access, grant`)).to.be.true;
+        adminUtils._getDiscordUser.restore();
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${testUser.username} has: clipmanager`])
+        expect(stubbedAccessManager.grantUserAccessById.called).to.be.true;
       });
       it("Will grant users permission even if they never been granted permissions", function (){
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        sinon.stub(adminUtils,'_saveConfig'); // WTF to do with this?
-        sinon.stub(adminUtils,'_getDiscordUser').returns({user: {id: '5'}})
+        stubbedAccessManager.getUserAccess.returns(['clipmanager']);
+        sinon.stub(adminUtils,'_getDiscordUser').returns({user: {id: '5'}});
 
-        adminUtils.grant(fakeMessage, [testUser.username + 'bogus', 'grant']);
+        adminUtils.grant(fakeMessage, [testUser.username + 'bogus', 'clipmanager']);
 
-        adminUtils._saveConfig.restore();
         adminUtils._getDiscordUser.restore();
-        expect(fakeMessage.reply.calledWith(`${testUser.username}bogus now has: grant`)).to.be.true;
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${testUser.username}bogus has: clipmanager`]);
       });
       it("Will not grant fake permissions", function (){
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        sinon.stub(adminUtils,'_saveConfig'); // WTF to do with this?
+        stubbedAccessManager.getUserAccess.returns(['clipmanager']);
+        sinon.stub(adminUtils,'_getDiscordUser').returns({user: {id: '5'}});
 
-        adminUtils.grant(fakeMessage, [testUser.username, 'grant', 'bogus']);
 
-        adminUtils._saveConfig.restore();
-        expect(fakeMessage.reply.calledWith(`${testUser.username} now has: access, grant`)).to.be.true;
+        adminUtils.grant(fakeMessage, [testUser.username, 'clipmanager', 'bogus']);
+
+        adminUtils._getDiscordUser.restore();
+        expect(stubbedAccessManager.grantUserAccessById.lastCall.args).to.deep.equal(['5',['clipmanager']])
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${testUser.username} has: clipmanager`]);
       });
     });
 
@@ -320,11 +313,11 @@ describe("Admin Utils", () => {
         expect(adminUtils.grantrole(fakeMessage, ['help'])).to.match(/Message Reply: grantrole `play|request|admin` `<role name>`.*/);
       });
       it("Will grant a server role permissions", function (){
-        stubbedAccessManager.getRole.returns({name: 'Bogus role', id: 1})
-        stubbedAccessManager.grantAccessById.returns(true);
-        adminUtils.grantrole(fakeMessage, ['play', 'bogus', 'role']);
-        expect(fakeMessage.reply.calledWith(`Granted play to 'Bogus role'`)).to.be.true;
-        expect(stubbedAccessManager.grantAccessById.called).to.be.true;
+        stubbedAccessManager.grantRoleAccessById.returns(true);
+        fakeMessage.guild.roles.find.returns({name: 'Test role'});
+        adminUtils.grantrole(fakeMessage, ['play', 'test', 'role']);
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Granted play to 'Test role'`]);
+        expect(stubbedAccessManager.grantRoleAccessById.called).to.be.true;
       });
       it("Will do nothing given a bad role", function (){
         adminUtils.grantrole(fakeMessage, ['play', 'bogus', 'role']);
@@ -336,13 +329,13 @@ describe("Admin Utils", () => {
         expect(fakeMessage.reply.calledWith(`Must select the granted access: play|request|admin`)).to.be.true;
       });
       it("Will fail if an underlying system fails", function (){
-        stubbedAccessManager.getRole.returns({name: 'Bogus role', id: 1})
-        stubbedAccessManager.grantAccessById.returns(false);
+        stubbedAccessManager.grantRoleAccessById.returns(false);
+        fakeMessage.guild.roles.find.returns({name: 'Test role'})
 
         adminUtils.grantrole(fakeMessage, ['play', 'bogus', 'role']);
 
         expect(fakeMessage.reply.calledWith(`Something went wrong with that`)).to.be.true;
-        expect(stubbedAccessManager.grantAccessById.called).to.be.true;
+        expect(stubbedAccessManager.grantRoleAccessById.called).to.be.true;
       });
     });
 
@@ -390,7 +383,6 @@ describe("Admin Utils", () => {
 
         adminUtils.rename(fakeMessage, ['clip1','clip2']);
 
-        //console.log(fakeMessage.reply.getCall(0).args);
         expect(stubbedFileManager.inLibrary.called).to.be.true;
         expect(stubbedFileManager.rename.called).to.be.false;
         expect(fakeMessage.reply.calledWith(`Could not find: clip1`)).to.be.true;
@@ -453,27 +445,28 @@ describe("Admin Utils", () => {
         expect(adminUtils.revoke(fakeMessage, ['help'])).to.match(/Message Reply: revoke `<username>` `<permission>`.*/);
       });
       it("Will revoke users permissions if present", function (){
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        sinon.stub(adminUtils,'_saveConfig'); // WTF to do with this?
+        stubbedAccessManager.getUserAccess.returns(['silencer']);
+        sinon.stub(adminUtils,'_getDiscordUser').returns({user: {id: '5'}});
 
         // Our test data didn't get reset before this :(
         // We need to fix that
-        adminUtils.revoke(fakeMessage, [testUser.username, 'grant']);
+        adminUtils.revoke(fakeMessage, [testUser.username, 'clipmanager']);
 
-        adminUtils._saveConfig.restore();
-        //console.log(fakeMessage.reply.getCall(0).args)
-        expect(fakeMessage.reply.calledWith(`${testUser.username} now has: access`)).to.be.true;
+        adminUtils._getDiscordUser.restore();
+        expect(stubbedAccessManager.revokeUserAccessById.lastCall.args).to.deep.equal(['5',['clipmanager']])
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${testUser.username} has: silencer`]);
 
       });
       it("Will not revoke permissions from immune users", function (){
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        sinon.stub(adminUtils,'_saveConfig'); // WTF to do with this?
+        stubbedAccessManager.getUserAccess.returns(['silencer']);
+        sinon.stub(adminUtils,'_getDiscordUser').returns({user: {id: '5'}});
+        adminUtils.immuneUser = '5';
 
         adminUtils.revoke(fakeMessage, ['immuneuser', 'revoke', 'grant']);
 
-        adminUtils._saveConfig.restore();
-        //console.log(fakeMessage.reply.getCall(0).args)
-        expect(fakeMessage.reply.calledWith(`${immuneUser.username} is immune to revokes`)).to.be.true;
+        adminUtils._getDiscordUser.restore();
+        adminUtils.immuneUser = '-1';
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${immuneUser.username} is immune to revokes`]);
       });
     });
 
@@ -482,13 +475,13 @@ describe("Admin Utils", () => {
         expect(adminUtils.revokerole(fakeMessage, ['help'])).to.match(/Message Reply: revokerole `play|request|admin` `<role name>`.*/);
       });
       it("Will revoke a server role permissions", function (){
-        stubbedAccessManager.getRole.returns({name: 'Bogus role', id: 1})
-        stubbedAccessManager.revokeAccessById.returns(true);
+        stubbedAccessManager.revokeRoleAccessById.returns(true);
+        fakeMessage.guild.roles.find.returns({name: 'Bogus role'})
 
         adminUtils.revokerole(fakeMessage, ['play', 'bogus', 'role']);
 
-        expect(fakeMessage.reply.calledWith(`Revoked play from 'Bogus role'`)).to.be.true;
-        expect(stubbedAccessManager.revokeAccessById.called).to.be.true;
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Revoked play from 'Bogus role'`]);
+        expect(stubbedAccessManager.revokeRoleAccessById.called).to.be.true;
       });
       it("Will do nothing given a bad role", function (){
         adminUtils.revokerole(fakeMessage, ['play', 'bogus', 'role']);
@@ -496,24 +489,22 @@ describe("Admin Utils", () => {
         expect(fakeMessage.reply.calledWith(`Couldn't find that role`)).to.be.true;
       });
       it("Will not revoke invalid permissions", function (){
+        fakeMessage.guild.roles.find.returns({name: 'Bogus role'})
         adminUtils.revokerole(fakeMessage, ['bogus', 'bogus', 'role']);
 
-        expect(fakeMessage.reply.calledWith(`Must select the revoked access: play|request|admin`)).to.be.true;
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Must select the revoked access: \`clipmanager|play|requestor|servermanager|silencer\``]);
       });
       it("Will fail if an underlying system fails", function (){
-        stubbedAccessManager.getRole.returns({name: 'Bogus role', id: 1})
-        stubbedAccessManager.revokeAccessById.returns(false);
+        stubbedAccessManager.revokeRoleAccessById.returns(false);
+        fakeMessage.guild.roles.find.returns({name: 'Bogus role'})
 
         adminUtils.revokerole(fakeMessage, ['play', 'bogus', 'role']);
-
-        expect(fakeMessage.reply.calledWith(`Something went wrong with that`)).to.be.true;
-        expect(stubbedAccessManager.revokeAccessById.called).to.be.true;
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Something went wrong with that`]);
       });
     });
 
     describe("silence", () => {
       it("Will silence a voice channel", function (){
-        //sinon.stub(vqm, 'getQueueFromMessage').returns({silence:function(){}})
         var fakeSilence = sinon.stub();
         stubbedVQM.getQueueFromMessage.returns({silence: fakeSilence})
 

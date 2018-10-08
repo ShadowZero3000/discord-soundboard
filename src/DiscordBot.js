@@ -23,7 +23,7 @@ class DiscordBot {
       return '';
     }
     return '----\n' +
-      'As an admin, you can also use:\n'  +
+      'You can also use:\n'  +
       `\`${this.symbol}${this.adminWords[0]} ` +
       permissions.join(`\`, \`${this.symbol}${this.adminWords[0]} `) + '`';
   }
@@ -88,7 +88,7 @@ class DiscordBot {
 
     // POTENTIAL PROBLEM: If you haven't joined a voice channel, some admin commands might not work
     // Will have to ensure that we add check logic lower down
-    if (adminUtils.getActions().indexOf(commandArray[0]) > -1
+    if (commandArray[0] in adminUtils.reverseAccessMap
          && adminUtils.check(message, commandArray[0])) {
       return adminUtils[commandArray.shift()](message, commandArray);
     }
@@ -155,10 +155,11 @@ class DiscordBot {
       nconf.set('CLIENT_ID', app.id); //Overrides environment variables
       var startup = nconf.get('startup');
       const adminList = nconf.get('adminList');
-      adminList[app.owner.id] = {
-        'access': adminUtils.getActions(),
-        'immune': true
-      };
+      adminUtils._setImmuneUser(app.owner.id);
+      // adminList[app.owner.id] = {
+      //   'access': adminUtils.getUserActions(),
+      //   'immune': true
+      // };
       nconf.set('adminList', adminList);
       if (startup.enabled) {
         vqm.getQueueFromChannel(this.getVCFromUserid(app.owner.id))

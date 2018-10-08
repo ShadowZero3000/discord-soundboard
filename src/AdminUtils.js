@@ -7,24 +7,53 @@ const fm = require('./FileManager');
 const vqm = require('./VoiceQueueManager');
 
 class AdminUtils {
-  // Reserved functions
-  check(message, access) {
-    return (this._admins()[message.author.id]
-        && this._admins()[message.author.id]['access'].indexOf(access) > -1);
+  constructor() {
+    this.accessMap = {
+      'servermanager': [
+        'access',
+        'accessrole',
+        'grant',
+        'grantrole',
+        'revoke',
+        'revokerole',
+        'togglestartup'
+      ],
+      'clipmanager': [
+        'add',
+        'categorize',
+        'remove',
+        'rename'
+      ],
+      'requestor': [
+        'request',
+        'reqlist'
+      ],
+      'silencer': [
+        'silence',
+        'unmute'
+      ],
+      'play': []
+    }
+    this.reverseAccessMap = {};
+    Object.keys(this.accessMap).forEach(group => {
+      this.accessMap[group].forEach(entry => {
+        this.reverseAccessMap[entry] = group;
+      });
+    });
+    this.immuneUser = '0';
   }
 
-  getActions() {
-    return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-          .filter(key => ['constructor', 'getActions', 'check', 'getUserActions'].indexOf(key) == -1)
-          .filter(key => !key.match('^_.*'));
+  // Reserved functions
+  check(message, access) {
+    return (am.checkAccess(message.author, message.guild, this.reverseAccessMap[access]));
   }
 
   getUserActions(message) {
-    const user = this._admins()[message.author.id];
-    if (!user) {
-      return [];
-    }
-    return user['access'].sort();
+    var userAccess=am.getUserById(message.author.id).permissions
+              .filter(permission => permission in this.accessMap)
+              .map(permission => this.accessMap[permission]);
+    userAccess = userAccess.reduce((acc, val) => acc.concat(val), []).sort();
+    return userAccess;
   }
 
   // Private functions
@@ -50,16 +79,24 @@ class AdminUtils {
     return message.reply(`${user} now has: ${this._admins()[id]['access'].sort().join(', ')}`);
   }
 
+  _printUserAccess(message, user, access) {
+    if (access.length == 0) {
+      return message.reply(`${user} does not have any directly assigned permissions`);
+    }
+    return message.reply(`${user} has: ${access.sort().join(', ')}`);
+  }
+
   _saveConfig(key, value) {
     log.debug(`Saving config key: ${key}, value: ${value}`);
     nconf.set(key, value);
     const configFile = nconf.stores.file.file;
-    nconf.save(err => {
-      fs.readFile(configFile, (err, data) => {
-        data = data || {};
-        // TODO: I'm pretty sure this can be dropped
-        console.dir(data);
-      })
+    nconf.save(err => {});
+  }
+
+  _setImmuneUser(userId) {
+    this.immuneUser = userId;
+    Object.keys(this.accessMap).forEach(access => {
+      am.grantUserAccessById(userId, access);
     });
   }
 
@@ -73,27 +110,25 @@ class AdminUtils {
 
     const username = params[0];
     const discordUser = this._getDiscordUser(message, username);
-    if (discordUser && this._admins()[discordUser.user.id]) {
-      return this._printAccess(message, username, discordUser.user.id);
+    // No need to keep the requested message visible
+    message.delete();
+    if (discordUser) {
+      const userAccess = am.getUserAccess(discordUser.user);
+      return this._printUserAccess(message, username, userAccess);
     } else {
       return message.reply(`${username} does not presently have any admin permissions`)
     }
   }
 
   accessrole(message, params) {
-    const play = am.getAccess(message.guild, 'play').map(role => { return role.name });
-    var response = `Roles with play permission: ${play.join(', ')}`;
-
-    const request = am.getAccess(message.guild, 'request').map(role => { return role.name });
-    if (request.length != 0) {
-      response += '\nRoles with request permission: ' + request.join(', ');
-    }
-
-    const admin = am.getAccess(message.guild, 'admin').map(role => { return role.name });
-    if (admin.length != 0) {
-      response += '\nRoles with admin permission: ' + admin.join(', ');
-    }
-
+    var response = `\`accessrole\`\nCurrent role access:`;
+    am.getRoleAccess(message.guild)
+      .sort((a,b) => (a.name > b.name) ? 1 : 0)
+      .forEach(role => {
+        response += `\n${role.name} - ${role.access.sort().join(', ')}`;
+      });
+    // No need to keep the requested message visible
+    message.delete();
     return message.reply(response);
   }
 
@@ -148,59 +183,48 @@ class AdminUtils {
   }
 
   grant(message, params) {
+    const validRoles = Object.keys(this.accessMap).sort().join('|');
     if (params[0] == 'help') {
       return message.reply('grant `<username>` `<permission>` [`<permission>` ...]: \n' +
-          'Gives `<username>` access to `<permission>` feature(s).');
+          'Gives `<username>` access to `<permission>` feature(s).\n' +
+          `Permissions: \`${validRoles}\``);
     }
     if (!this._paramCheck(message, params, 2)){ return; }
 
     const username = params.shift();
     const discordUser = this._getDiscordUser(message, username);
-    const adminList = this._admins();
     if (discordUser && params) {
-      const validActions = this.getActions();
       const access = params.map(operation => operation.trim())
-                .filter(operation => {
-                  return validActions.indexOf(operation) > -1;
-                });
+                           .filter(operation => (operation in this.accessMap));
       if (access.length == 0){ return; }
-      log.debug(`Updating: ${username} with ${access}`);
 
       const userId = discordUser.user.id;
-
-      if (!(userId in adminList)) {
-        log.debug("New user")
-        adminList[userId] = {'access': access, 'immune': false};
-      } else {
-        log.debug("Additional permissions")
-        adminList[userId]['access'] = [...access, ...adminList[userId]['access']]
-          .filter((element, pos, arr) => {
-            // Unique filter
-            return arr.indexOf(element) == pos;
-          });
-      }
-
-      this._saveConfig('adminList', adminList);
-      this._printAccess(message, username, userId);
+      message.delete();
+      // Access manager
+      am.grantUserAccessById(userId, access);
+      this._printUserAccess(message, username, am.getUserAccess(discordUser.user));
     }
+
   }
 
   grantrole(message, params) {
+    const validRoles = Object.keys(this.accessMap).sort().join('|');
     if (params[0] == 'help') {
-      return message.reply('grantrole `play|request|admin` `<role name>`: \n' +
-          'Gives `<role name>` access to `play` `request` or do `admin` things(s).');
+      return message.reply(`grantrole \`${validRoles}\` \`<role name>\`: \n` +
+          'Gives `<role name>` access to the named role.');
     }
     if (!this._paramCheck(message, params, 2)){ return; }
     const access = params.shift();
     const roleName = params.join(' ');
-    if (!access.match(/^(play|request|admin)$/)) {
+    if (!access.match("/^" + validRoles + "$/")) {
       return message.reply('Must select the granted access: play|request|admin')
     }
-    const role = am.getRole(roleName, message.guild);
+
+    const role = message.guild.roles.find(role => role.name.toLowerCase() === roleName);
     if (!role) {
       return message.reply(`Couldn't find that role`);
     }
-    if (am.grantAccessById(role.id, message.guild.id, access)){
+    if (am.grantRoleAccessById(role.id, message.guild.id, access)){
       return message.reply(`Granted ${access} to '${role.name}'`);
     }
     return message.reply(`Something went wrong with that`);
@@ -266,48 +290,44 @@ class AdminUtils {
   }
 
   revoke(message, params) {
+    const validRoles = Object.keys(this.accessMap).sort().join('|');
     if (params[0] == 'help') {
       return message.reply('revoke `<username>` `<permission>` [`<permission>` ...]: \n' +
-          'Revokes access for `<username>` to `<permission>` feature(s).');
+          'Revokes access for `<username>` to `<permission>` feature(s).\n' +
+          'Permissions: `' + validRoles + '`');
     }
     if (!this._paramCheck(message, params, 2)){ return; }
 
     const username = params.shift();
     const discordUser = this._getDiscordUser(message, username);
 
-    if (discordUser && params && this._admins()[discordUser.user.id]) {
-      const user = this._admins()[discordUser.user.id];
-
-      if (user['immune']) {
-        message.reply(`${username} is immune to revokes`);
-        return;
+    if (discordUser && params) {
+      if (discordUser.user.id == this.immuneUser) {
+        return message.reply(`${username} is immune to revokes`);
       }
-
-      user['access'] = user['access'].filter((value, index, arr) => {
-        return params.indexOf(value) < 0;
-      });
-
-      this._printAccess(message, username, discordUser.user.id);
-      this._saveConfig('adminList', this._admins());
+      // Access manager
+      am.revokeUserAccessById(discordUser.user.id, params);
+      this._printUserAccess(message, username, am.getUserAccess(discordUser.user));
     }
   }
 
   revokerole(message, params) {
+    const validRoles = Object.keys(this.accessMap).sort().join('|');
     if (params[0] == 'help') {
-      return message.reply('revokerole `play|request|admin` `<role name>`: \n' +
-          'Removes `<role name>` access to `play` `request` or do `admin` things(s).');
+      return message.reply('revokerole `' + validRoles + '` `<role name>`: \n' +
+          'Removes `<role name>` access to the named role.');
     }
     if (!this._paramCheck(message, params, 2)){ return; }
     const access = params.shift();
     const roleName = params.join(' ');
-    if (!access.match(/^(play|request|admin)$/)) {
-      return message.reply('Must select the revoked access: play|request|admin')
+    if (!access.match("/^" + validRoles + "$/")) {
+      return message.reply('Must select the revoked access: `' + validRoles + '`')
     }
-    const role = am.getRole(roleName, message.guild);
+    const role = message.guild.roles.find(role => role.name.toLowerCase() === roleName);
     if (!role) {
       return message.reply(`Couldn't find that role`);
     }
-    if (am.revokeAccessById(role.id, message.guild.id, access)){
+    if (am.revokeRoleAccessById(role.id, message.guild.id, access)){
       return message.reply(`Revoked ${access} from '${role.name}'`);
     }
     return message.reply(`Something went wrong with that`);
