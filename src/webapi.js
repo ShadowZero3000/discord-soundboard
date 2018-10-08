@@ -120,8 +120,18 @@ router.get('/play/:clip', (req, res) => {
         return res.redirect(`/`);
       }
 
+      if(r.statusCode != 200) {
+        var msg;
+        try {
+          msg = JSON.parse(body).message;
+        } catch(e) {
+          msg = "Not parsable"
+        }
+        return res.status(500).send("Server error: " + msg);
+      }
       try {
         const userid = JSON.parse(body).id;
+        log.debug(`Discord claims I am: ${body}`)
         const queue = vqm.getQueueFromUser(discord.client, userid);
         const user = queue.channel.guild.members.get(userid);
         if (am.checkAccess(user, queue.channel.guild, 'play')) {
@@ -154,6 +164,15 @@ router.get('/random/:clip', (req, res) => {
         return res.redirect(`/`);
       }
 
+      if(r.statusCode != 200) {
+        var msg;
+        try {
+          msg = JSON.parse(body).message;
+        } catch(e) {
+          msg = "Not parsable"
+        }
+        return res.status(500).send("Server error: " + msg);
+      }
       try {
         const userid = JSON.parse(body).id;
         const queue = vqm.getQueueFromUser(discord.client, userid);
