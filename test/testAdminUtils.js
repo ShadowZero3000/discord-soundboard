@@ -296,7 +296,7 @@ describe("Admin Utils", () => {
 
     describe("grantrole", () => {
       it("Has a help function", () => {
-        expect(adminUtils.grantrole(fakeMessage, ['help'])).to.match(/Message Reply: grantrole `play|request|admin` `<role name>`.*/);
+        expect(adminUtils.grantrole(fakeMessage, ['help'])).to.match(/Message Reply: grantrole `clipmanager|play|requestor|servermanager|silencer` `<role name>`.*/);
       });
       it("Will grant a server role permissions", function (){
         stubbedAccessManager.grantRoleAccessById.returns(true);
@@ -312,7 +312,7 @@ describe("Admin Utils", () => {
       it("Will not grant invalid permissions", function (){
         adminUtils.grantrole(fakeMessage, ['bogus', 'bogus', 'role']);
 
-        expect(fakeMessage.reply.calledWith(`Must select the granted access: play|request|admin`)).to.be.true;
+        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Must select the granted access: \`clipmanager|play|requestor|servermanager|silencer\``]);
       });
       it("Will fail if an underlying system fails", function (){
         stubbedAccessManager.grantRoleAccessById.returns(false);
