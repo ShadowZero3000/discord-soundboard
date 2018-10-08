@@ -11,7 +11,6 @@ nconf.argv()
       enabled: false,
       clip: 'sensors'
     },
-    adminList: {},
     PORT: 3000,
     WEBSERVER_ENABLED: 'true',
     ADMIN_KEYS: 'sb,soundbot',

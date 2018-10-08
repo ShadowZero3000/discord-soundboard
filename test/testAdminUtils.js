@@ -104,13 +104,6 @@ describe("Admin Utils", () => {
   });
 
   describe("Private functions", () => {
-    describe("_admins", () => {
-      it("Returns admins", function () {
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        expect(adminUtils._admins()).to.deep.equal(admins)
-        expect(stubbedNconf.get.calledWith('adminList')).to.be.true;
-      });
-    });
 
     describe("_getDiscordUser", () => {
       it("Returns the user", function () {
@@ -124,13 +117,6 @@ describe("Admin Utils", () => {
         expect(adminUtils._paramCheck(fakeMessage, ['one', 'two'], 2)).to.be.true;
         expect(adminUtils._paramCheck(fakeMessage, ['one', 'two'], 3)).to.be.false;
         expect(adminUtils._paramCheck(fakeMessage, [])).to.be.false;
-      });
-    });
-
-    describe("_printAccess", () => {
-      it("Prints access for a user", function () {
-        stubbedNconf.get.withArgs('adminList').returns(admins);
-        expect(adminUtils._printAccess(fakeMessage, testUser.username, testUser.id)).to.equal(`Message Reply: ${testUser.username} now has: access`);
       });
     });
 

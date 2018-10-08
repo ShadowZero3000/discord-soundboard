@@ -57,10 +57,6 @@ class AdminUtils {
   }
 
   // Private functions
-  _admins() {
-    return nconf.get('adminList');
-  }
-
   _getDiscordUser(message, username) {
     return message.channel.guild.members.find(a => {
       return a.user['username'].toLowerCase() == username.toLowerCase();
@@ -73,10 +69,6 @@ class AdminUtils {
       return false;
     }
     return true;
-  }
-
-  _printAccess(message, user, id) {
-    return message.reply(`${user} now has: ${this._admins()[id]['access'].sort().join(', ')}`);
   }
 
   _printUserAccess(message, user, access) {
@@ -216,8 +208,8 @@ class AdminUtils {
     if (!this._paramCheck(message, params, 2)){ return; }
     const access = params.shift();
     const roleName = params.join(' ');
-    if (!access.match("/^" + validRoles + "$/")) {
-      return message.reply('Must select the granted access: play|request|admin')
+    if (!access.match("^(" + validRoles + ")$")) {
+      return message.reply('Must select the granted access: `' + validRoles + '`')
     }
 
     const role = message.guild.roles.find(role => role.name.toLowerCase() === roleName);
@@ -320,7 +312,7 @@ class AdminUtils {
     if (!this._paramCheck(message, params, 2)){ return; }
     const access = params.shift();
     const roleName = params.join(' ');
-    if (!access.match("/^" + validRoles + "$/")) {
+    if (!access.match("^(" + validRoles + ")$")) {
       return message.reply('Must select the revoked access: `' + validRoles + '`')
     }
     const role = message.guild.roles.find(role => role.name.toLowerCase() === roleName);

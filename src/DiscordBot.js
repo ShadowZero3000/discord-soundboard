@@ -154,13 +154,7 @@ class DiscordBot {
     this.client.fetchApplication().then(app => {
       nconf.set('CLIENT_ID', app.id); //Overrides environment variables
       var startup = nconf.get('startup');
-      const adminList = nconf.get('adminList');
       adminUtils._setImmuneUser(app.owner.id);
-      // adminList[app.owner.id] = {
-      //   'access': adminUtils.getUserActions(),
-      //   'immune': true
-      // };
-      nconf.set('adminList', adminList);
       if (startup.enabled) {
         vqm.getQueueFromChannel(this.getVCFromUserid(app.owner.id))
            .add(startup.clip);
