@@ -1,9 +1,9 @@
-const Discord = require('discord.js');
-const nconf = require('nconf');
 const adminUtils = require('./AdminUtils.js');
+const am = require('./AccessManager');
+const Discord = require('discord.js');
 const fm = require('./FileManager');
-const files = fm.getAll();
 const log = require('./logger.js').errorLog;
+const nconf = require('nconf');
 const VoiceQueue = require('./VoiceQueue.js');
 const vqm = require('./VoiceQueueManager');
 
@@ -15,7 +15,7 @@ class DiscordBot {
   botHelp() {
     return `I'm a bot!\n` +
       `You can ask me to make sounds by saying one of the following:\n` +
-      `\`${this.symbol}${Object.keys(files).sort().join(`\`, \`${this.symbol}`)}\`\n`;
+      `\`${this.symbol}${Object.keys(fm.getAll()).sort().join(`\`, \`${this.symbol}`)}\`\n`;
   }
 
   botAdminHelp(permissions) {
@@ -23,7 +23,7 @@ class DiscordBot {
       return '';
     }
     return '----\n' +
-      'As an admin, you can also use:\n'  +
+      'You can also use:\n'  +
       `\`${this.symbol}${this.adminWords[0]} ` +
       permissions.join(`\`, \`${this.symbol}${this.adminWords[0]} `) + '`';
   }
@@ -88,7 +88,7 @@ class DiscordBot {
 
     // POTENTIAL PROBLEM: If you haven't joined a voice channel, some admin commands might not work
     // Will have to ensure that we add check logic lower down
-    if (adminUtils.getActions().indexOf(commandArray[0]) > -1
+    if (commandArray[0] in adminUtils.reverseAccessMap
          && adminUtils.check(message, commandArray[0])) {
       return adminUtils[commandArray.shift()](message, commandArray);
     }
@@ -98,8 +98,14 @@ class DiscordBot {
 
   handleKeywordMessage(message, keyword, extraArgs) {
     // Time for some audio!
+    //var botRole=am.getRoleByName('Bot Interactions', message.guild)
     const voiceChannel = this.getVoiceChannel(message);
     if (!voiceChannel) {
+      return;
+    }
+
+    // Access check for guilds with it turned on
+    if (!am.checkAccess(message.author, message.guild, 'play')) {
       return;
     }
 
@@ -148,12 +154,7 @@ class DiscordBot {
     this.client.fetchApplication().then(app => {
       nconf.set('CLIENT_ID', app.id); //Overrides environment variables
       var startup = nconf.get('startup');
-      const adminList = nconf.get('adminList');
-      adminList[app.owner.id] = {
-        'access': adminUtils.getActions(),
-        'immune': true
-      };
-      nconf.set('adminList', adminList);
+      adminUtils._setImmuneUser(app.owner.id);
       if (startup.enabled) {
         vqm.getQueueFromChannel(this.getVCFromUserid(app.owner.id))
            .add(startup.clip);

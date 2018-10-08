@@ -5,14 +5,14 @@ function parseFailure(jqXHR, status, error) {
 
 function play(clip) {
   $.ajax({
-    url: `play/${clip}`,
+    url: `api/play/${clip}`,
     data: Math.random().toString(36).substring(7)
   }).fail(parseFailure);
 }
 
 function random(clip) {
   $.ajax({
-    url: `random/${clip}`,
+    url: `api/random/${clip}`,
     data: Math.random().toString(36).substring(7)
   }).fail(parseFailure);
 }

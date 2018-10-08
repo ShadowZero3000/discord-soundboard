@@ -1,6 +1,7 @@
+const fm = require('./FileManager');
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
-const fm = require('./FileManager');
+
 class VoiceQueue {
   constructor(channel) {
     this.channel = channel;
