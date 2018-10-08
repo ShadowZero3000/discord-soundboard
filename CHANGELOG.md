@@ -1,3 +1,11 @@
+## [0.1.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.4...v0.1.5) (2018-10-08)
+
+
+### Bug Fixes
+
+* **Access:** Remove references to the old 'AdminList' ([d516a2f](https://github.com/ShadowZero3000/discord-soundboard/commit/d516a2f))
+* **webapi:** Fix bad response from Discord ([04e17bf](https://github.com/ShadowZero3000/discord-soundboard/commit/04e17bf))
+
 ## [0.1.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.3...v0.1.4) (2018-10-06)
 
 
