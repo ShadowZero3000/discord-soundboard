@@ -166,8 +166,7 @@ class FileManager {
     if (!keyword || !this.inRandoms(keyword)) { // Play a random clip if there's no extra args
       return this.selectRandom(this.getClipList());
     }
-
-    const filenames = this.getClipList().filter(key => key.includes(keyword));
+    const filenames = this.getClipList().filter(key => key.match(`^${keyword}[0-9]+`));
     return this.selectRandom(filenames);
   }
 
