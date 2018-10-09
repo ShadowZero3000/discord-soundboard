@@ -1,3 +1,10 @@
+## [0.1.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.5...v0.1.6) (2018-10-09)
+
+
+### Bug Fixes
+
+* **random:** Fix the issue with partial matches in randoms ([d601c68](https://github.com/ShadowZero3000/discord-soundboard/commit/d601c68))
+
 ## [0.1.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.4...v0.1.5) (2018-10-08)
 
 
