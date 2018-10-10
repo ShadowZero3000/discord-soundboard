@@ -1,3 +1,10 @@
+## [0.1.7](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.6...v0.1.7) (2018-10-10)
+
+
+### Bug Fixes
+
+* **missing_channels:** Fix when a user travels to a server I don't know ([5a7db84](https://github.com/ShadowZero3000/discord-soundboard/commit/5a7db84))
+
 ## [0.1.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.5...v0.1.6) (2018-10-09)
 
 
