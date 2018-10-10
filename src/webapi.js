@@ -131,7 +131,6 @@ router.get('/play/:clip', (req, res) => {
       }
       try {
         const userid = JSON.parse(body).id;
-        log.debug(`Discord claims I am: ${body}`)
         const queue = vqm.getQueueFromUser(discord.client, userid);
         const user = queue.channel.guild.members.get(userid);
         if (am.checkAccess(user, queue.channel.guild, 'play')) {

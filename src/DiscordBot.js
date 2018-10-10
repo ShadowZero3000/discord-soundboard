@@ -139,6 +139,8 @@ class DiscordBot {
       return;
     }
 
+    message.dclient=this.client;
+
     if (adminMatches) {
       log.silly("Admin match");
       return this.handleAdminMessage(message, adminMatches[2].trim());
