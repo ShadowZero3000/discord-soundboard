@@ -16,7 +16,8 @@ class AdminUtils {
         'grantrole',
         'revoke',
         'revokerole',
-        'togglestartup'
+        'togglestartup',
+        'whereareyou'
       ],
       'clipmanager': [
         'add',
@@ -348,6 +349,11 @@ class AdminUtils {
     } catch (e) {
       message.reply(e.message);
     }
+  }
+
+  whereareyou(message, params) {
+    return message.reply(`I'm available in the following servers: \n`+
+      message.dclient.guilds.map(guild => guild.name).join('\n'));
   }
 }
 
