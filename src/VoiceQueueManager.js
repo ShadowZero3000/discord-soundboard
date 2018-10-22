@@ -39,17 +39,18 @@ class VoiceQueueManager {
 
   getVCFromUserid(discord, userId) {
     log.debug(`Looking for an active voice channel for ${userId}`);
-    const voiceChannel =
+    const voiceChannels =
       discord.guilds
         .map(guild => guild.voiceStates.get(userId))
         .filter(voiceState => voiceState !== undefined)
         .map(voiceState => voiceState.guild.channels.get(voiceState.channelID))
-        .filter(channel => channel !== null)[0];
-    if (!voiceChannel) {
+        .filter(channel => channel !== undefined);
+    if (!voiceChannels.length > 0) {
+      log.debug("Not in a channel")
       throw new Error(`You don't appear to be in a voice channel in this server`);
     }
-    log.debug(`Found voice channel ${voiceChannel}`);
-    return voiceChannel;
+    log.debug(`Found voice channels ${voiceChannels}`);
+    return voiceChannels[0];
   }
 
 }
