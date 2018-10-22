@@ -75,7 +75,8 @@ class DiscordBot {
     const commandArray = command.split(' ')
     if (!command || commandArray.indexOf("help") == 0) { // bot help
       return message.reply(this.botHelp()
-        + this.botAdminHelp(adminUtils.getUserActions(message)));
+        + this.botAdminHelp(adminUtils.getUserActions(message)),
+        {split: true});
     }
 
     if (commandArray.indexOf("leave") == 0) { // bot leave
