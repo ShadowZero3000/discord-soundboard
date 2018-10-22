@@ -19,6 +19,13 @@ app.get('/', (req, res) => {
   return res.status(200).render(path.join(__dirname, 'public/index.pug'));
 });
 
+app.get('/logout', (req, res) => {
+  res.cookie('discord_session', {}, {
+    maxAge: 1000, httpOnly: true
+  });
+  return res.redirect('/');
+});
+
 app.use('/js', express.static('public/js'));
 app.use('/media', express.static('public/media'));
 app.use('/logs', express.static('logs'));
