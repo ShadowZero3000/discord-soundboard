@@ -1,3 +1,19 @@
+# [0.2.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.7...v0.2.0) (2018-11-13)
+
+
+### Bug Fixes
+
+* **help:** Fix the help message ([7dc9717](https://github.com/ShadowZero3000/discord-soundboard/commit/7dc9717))
+* **missing_persons:** Try a different code path ([bf8a5b9](https://github.com/ShadowZero3000/discord-soundboard/commit/bf8a5b9))
+* **timeout:** Extend timeout to 15m, because it's better ([8b0d527](https://github.com/ShadowZero3000/discord-soundboard/commit/8b0d527))
+* **voicechannels:** Attempt to fix missing persons again ([e23ab95](https://github.com/ShadowZero3000/discord-soundboard/commit/e23ab95))
+
+
+### Features
+
+* **logout:** Add a logout function ([3d44970](https://github.com/ShadowZero3000/discord-soundboard/commit/3d44970))
+* **nightmode:** Add night mode ([c47f854](https://github.com/ShadowZero3000/discord-soundboard/commit/c47f854))
+
 ## [0.1.7](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.1.6...v0.1.7) (2018-10-10)
 
 
