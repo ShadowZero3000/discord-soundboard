@@ -26,6 +26,7 @@ app.get('/logout', (req, res) => {
   return res.redirect('/');
 });
 
+app.use('/css', express.static('public/css'));
 app.use('/js', express.static('public/js'));
 app.use('/media', express.static('public/media'));
 app.use('/logs', express.static('logs'));
