@@ -66,7 +66,7 @@ class VoiceQueue {
     if (!keyword) {
       this.log("Queue empty");
       this.playing = false;
-      this.timeout = setTimeout(() => this.disconnect(), 3000);
+      this.timeout = setTimeout(() => this.disconnect(), 15*60*1000); // 15m unless he moves
       return;
     }
 

@@ -75,7 +75,8 @@ class DiscordBot {
     const commandArray = command.split(' ')
     if (!command || commandArray.indexOf("help") == 0) { // bot help
       return message.reply(this.botHelp()
-        + this.botAdminHelp(adminUtils.getUserActions(message)));
+        + this.botAdminHelp(adminUtils.getUserActions(message)),
+        {split: true});
     }
 
     if (commandArray.indexOf("leave") == 0) { // bot leave
@@ -99,8 +100,8 @@ class DiscordBot {
   handleKeywordMessage(message, keyword, extraArgs) {
     // Time for some audio!
     //var botRole=am.getRoleByName('Bot Interactions', message.guild)
-    const voiceChannel = this.getVoiceChannel(message);
-    if (!voiceChannel) {
+    const voiceQueue = vqm.getQueueFromUser(this.client, message.member.id);
+    if (!voiceQueue) {
       return;
     }
 
@@ -110,18 +111,18 @@ class DiscordBot {
     }
 
     if (fm.inLibrary(keyword)) {
-      vqm.getQueueFromChannel(voiceChannel).add(keyword);
+      voiceQueue.add(keyword);
       return;
     }
 
     if (keyword == 'random') {
       if (!extraArgs) { // Play a random clip if there's no extra args
-        vqm.getQueueFromChannel(voiceChannel).add(fm.random());
+        voiceQueue.add(fm.random());
         return;
       }
 
       const clip = extraArgs.trim().split(' ')[0]; //.match(/(\b[\w,]+)/g);
-      vqm.getQueueFromChannel(voiceChannel).add(fm.random(clip));
+      voiceQueue.add(fm.random(clip));
       return;
     }
     // Err.. They asked for something we don't have
