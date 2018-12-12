@@ -18,7 +18,7 @@ html
       div(class="row" id="the_body")
         div(class="col-2" id="leftnav" style="border=1px blue")
           div(class="container-fluid show collapse btn-group-toggle" role="group" data-toggle="buttons")
-            label(class='col-lg btn btn-outline-secondary active' data-toggle="collapse" role="button" aria-expanded="true" aria-controls="#cat_random" data-target="#cat_random") Random
+            label(class='col-lg btn btn-success active' data-toggle="collapse" role="button" aria-expanded="true" aria-controls="#cat_random" data-target="#cat_random") Random
               input(type="radio" name="category" checked="true" autocomplete="off")
             - var cats = []
             for value,key in categories
@@ -26,19 +26,18 @@ html
             - cats = cats.sort()
             for category in cats
               - categorizedFiles = categories[category]
-                label(class='col-lg btn btn-outline-secondary' data-toggle="collapse" role="button" aria-expanded="false" aria-controls="#cat_"+category data-target="#cat_"+category) #{toTitleCase(category)}
-                  input(type="radio" name="category" autocomplete="off")
+                label(class='col-lg btn btn-success' data-toggle="collapse" role="button" aria-expanded="false" aria-controls="#cat_"+category data-target="#cat_"+category) #{toTitleCase(category)}
         div(class="col-10" id="buttoncards")
-          div(class="row card collapse show" data-parent="#buttoncards" id="cat_random")
+          div(class="row card collapse show" id="cat_random")
             div(class="card-body container-fluid" style="padding:5px")
               for file in randoms
-                div(class='btn btn-primary', onclick="random('" + file + "')" style="margin:5px") #{file} #{token}
+                div(class='btn btn-primary', onclick="random('" + file + "')" style="margin:5px") #{toTitleCase(file)} #{token}
           for category in cats
             - categorizedFiles = categories[category]
-              div(class="row card collapse" data-parent="#buttoncards" id="cat_"+category)
+              div(class="row card collapse"  id="cat_"+category)
                 div(class='card-body container-fluid' style="padding:5px")
                   for details, file in categorizedFiles
-                    div(class='btn btn-primary', onclick="play('" + file + "')" style="margin:5px") #{file}
+                    div(class='btn btn-primary', onclick="play('" + file + "')" style="margin:5px") #{toTitleCase(file)}
 
     // Modal for error display
     div(id="error-display" class="modal" tabindex="-1" role="dialog")
