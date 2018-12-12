@@ -1,3 +1,10 @@
+## [0.2.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.2.1...v0.2.2) (2018-12-12)
+
+
+### Bug Fixes
+
+* **layout:** More layout changes ([7fb19ba](https://github.com/ShadowZero3000/discord-soundboard/commit/7fb19ba))
+
 ## [0.2.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.2.0...v0.2.1) (2018-12-11)
 
 
