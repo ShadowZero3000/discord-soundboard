@@ -203,7 +203,7 @@ class FileManager {
     }
     fs.renameSync(oldFile.fileName, newFilePath);
     this.deregister(oldFile);
-    this.register(newFileName, newCategory);
+    this.register(newFileName, newCategory, newSubCategory);
     return true;
   }
 
