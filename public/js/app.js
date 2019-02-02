@@ -1,10 +1,10 @@
-function parseFailure(jqXHR, status, error) {
-  $("#error-message-holder").html(`<b>${status}</b>: ${jqXHR.responseText}`);
-  $("#error-display").modal('show');
+function parseFailure(error) {
+  vm.showModal(error.response.data)
 }
 
 function play(clip) {
   axios.get(`api/play/${clip}`)
+    .catch(parseFailure)
 }
 
 function random(clip) {
@@ -51,12 +51,12 @@ Vue.component('search-box', {
           var subcat = cat[subcategory];
           Object.keys(subcat).forEach(function(clip) {
             if(clip.match(regex)) {
-              clipList.push(clip)
+              clipList.push({"name": clip, "subcategory": subcategory, "category": category})
             }
           });
         });
       });
-      this.searchResults = clipList.sort();
+      this.searchResults = _.sortBy(clipList, "name");
       if(this.searchResults.length > 0) {
         this.searching = true;
       } else {
@@ -67,10 +67,13 @@ Vue.component('search-box', {
       return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
       });
+    },
+    mouseOver(clip) {
+      return clip.category
     }
   }
 })
-new Vue({
+var vm = new Vue({
   el: '#vuewrapper',
   data () {
     return {
@@ -78,7 +81,8 @@ new Vue({
       category: null,
       subcategory: null,
       sounds: null,
-      loaded: false
+      loaded: false,
+      errorMessage: null
     }
   },
   mounted () {
@@ -91,6 +95,10 @@ new Vue({
       return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
       });
+    },
+    showModal(str) {
+      this.errorMessage = str
+      this.$refs.errorModal.show()
     }
   }
 })

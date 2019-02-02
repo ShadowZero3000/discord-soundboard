@@ -22,7 +22,7 @@ html
             div(class="offset-9 col-3")
               input(id="searchbox" class="form-control" placeholder="Search..."  v-model="searchQuery" @input="isTyping = true")
             div(v-if="searching" class="col-11 offset-1 border border-primary")
-              b-btn(:onclick="'play(\"'+clip+'\")'" style="margin:5px" variant="primary" v-for="clip in searchResults" :key="clip") {{ toTitleCase(clip) }}
+              b-btn(:onclick="'play(\"'+clip.name+'\")'" style="margin:5px" variant="primary" v-for="clip in searchResults" :key="clip" v-b-tooltip="toTitleCase(clip.category) + ' - ' + toTitleCase(clip.subcategory)") {{ toTitleCase(clip.name) }}
         div(class="row" id="categories")
           div(class="col-3" id="leftnav" style="border=1px blue")
             div(class="container-fluid show collapse btn-group-toggle" role="group" data-toggle="buttons" v-for="subcats,category in clips.data", :key="category" style="margin:3px")
@@ -36,19 +36,9 @@ html
                 div(class="bg-secondary border border-dark p-1") {{ toTitleCase(category) }} - {{ toTitleCase(subcategory) }}
                 b-btn(v-for="clipdata, clip in sounds", :key="clip" :id="'clip_' + clip" variant="primary" :onclick="'play(\"'+clip+'\")'" style="margin:5px") {{ toTitleCase(clip) }}
 
-    // Modal for error display
-    div(id="error-display" class="modal" tabindex="-1" role="dialog")
-      div(class="modal-dialog" role="document")
-        div(class="modal-content")
-          div(class="modal-header")
-            h5(class="modal-title") Server error
-              button(type="button" class="close" data-dismiss="modal")
-                span &times;
-          div(class="modal-body")
-            div(class="row") Looks like something exploded...
-            div(id="error-message-holder" class="alert alert-warning row" role="alert")
-          div(class="modal-footer")
-            button(type="button" class="btn btn-secondary" data-dismiss="modal") Dismiss
+        // Modal for error display
+        b-modal(ref="errorModal" title="Error encountered")
+          p {{ errorMessage }}
     // script(src="//cdn.jsdelivr.net/npm/vue/dist/vue.js")
     script(src="//cdn.jsdelivr.net/npm/vue")
     script(src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js")
