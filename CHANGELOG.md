@@ -1,3 +1,16 @@
+# [0.4.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.3.1...v0.4.0) (2019-02-02)
+
+
+### Bug Fixes
+
+* **randoms:** Return randoms to their former glory ([518d928](https://github.com/ShadowZero3000/discord-soundboard/commit/518d928))
+
+
+### Features
+
+* **search:** Add tooltips to search results ([38e7bfb](https://github.com/ShadowZero3000/discord-soundboard/commit/38e7bfb))
+* **subcategories:** Add a close button to the blocks ([a12e28f](https://github.com/ShadowZero3000/discord-soundboard/commit/a12e28f))
+
 ## [0.3.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.3.0...v0.3.1) (2019-02-02)
 
 
