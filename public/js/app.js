@@ -9,6 +9,7 @@ function play(clip) {
 
 function random(clip) {
   axios.get(`api/random/${clip}`)
+    .catch(parseFailure)
 }
 
 Vue.component('search-box', {
@@ -81,16 +82,22 @@ var vm = new Vue({
       category: null,
       subcategory: null,
       sounds: null,
-      loaded: false,
-      errorMessage: null
+      errorMessage: null,
+      randomClips: ['wow']
     }
   },
   mounted () {
-    axios
-      .get('//'+window.location.host+'/api/clips')
-      .then(response => {this.clips = response; this.loaded = true})
+    this.refreshData()
   },
   methods: {
+    refreshData() {
+      axios
+        .get('//'+window.location.host+'/api/clips')
+        .then(response => {this.clips = response.data})
+      axios
+        .get('//'+window.location.host+'/api/clips/random')
+        .then(response => {this.randomClips = response.data})
+    },
     toTitleCase(str) {
       return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
