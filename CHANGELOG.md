@@ -3,7 +3,7 @@
 
 ### Bug Fixes
 
-* **randoms:** Return randoms to their former glory ([518d928](https://github.com/ShadowZero3000/discord-soundboard/commit/518d928))
+* **randoms:** Return randoms clips to their former glory ([518d928](https://github.com/ShadowZero3000/discord-soundboard/commit/518d928))
 
 
 ### Features
