@@ -1,3 +1,16 @@
+# [0.3.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.2.2...v0.3.0) (2019-02-02)
+
+
+### Bug Fixes
+
+* **tests:** Fix those unit tests ([5d75abd](https://github.com/ShadowZero3000/discord-soundboard/commit/5d75abd))
+
+
+### Features
+
+* **clientside:** Do rendering logic clientside. Add search. ([d0ec451](https://github.com/ShadowZero3000/discord-soundboard/commit/d0ec451))
+* **subcategories:** Support subcategories ([2969a02](https://github.com/ShadowZero3000/discord-soundboard/commit/2969a02))
+
 ## [0.2.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.2.1...v0.2.2) (2018-12-12)
 
 
