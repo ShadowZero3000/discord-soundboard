@@ -127,26 +127,30 @@ class AdminUtils {
 
   add(message, params) {
     if (params[0] == 'help') {
-      return message.reply('add `<clip>` `[category]` (with attachment): \n' +
+      return message.reply('add `<clip>` `[category]` `[subcategory]` (with attachment): \n' +
           'Adds a sound effect with <clip> as its shortcut.\n' +
-          'If provided, will assign to [category]. Defaults to "misc".');
+          'If provided, will assign to [category] and [subcategory]. Defaults to "misc".');
     }
     if (!this._paramCheck(message, params)){ return; }
 
     const clipName = params[0];
     const category = params[1] || 'misc';
+    const subcategory = params[2] || 'misc';
     if (!clipName.match(/^[a-z0-9_]+$/)) {
       return message.reply(`${clipName} is a bad short name`);
     }
     if (!category.match(/^[a-z0-9_]+$/)) {
       return message.reply(`${category} is a bad category name`);
     }
+    if (!subcategory.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${subcategory} is a bad subcategory name`);
+    }
     if (fm.inLibrary(clipName)) {
       return message.reply("That sound effect already exists");
     }
     if (message.attachments.first()) {
       // Only check the first attachment
-      fm.create(clipName, category, message.attachments.first());
+      fm.create(clipName, category, subcategory, message.attachments.first());
       return message.reply(`${nconf.get('KEY_SYMBOL')}${clipName} is now available`);
     } else {
       return message.reply(`You need to attach a file`);
@@ -155,19 +159,23 @@ class AdminUtils {
 
   categorize(message, params) {
     if (params[0] == 'help') {
-      return message.reply('categorize `<new category>` `<clip>` [`<clip>` ...]: \n' +
-        'Updates the category for any sound(s) (space separated).\n'+
+      return message.reply('categorize `<new category>` `<new subcategory>` `<clip>` [`<clip>` ...]: \n' +
+        'Updates the category/subcategory for any sound(s) (space separated).\n'+
         'Remember that categories should use `_` for spaces.');
     }
-    if (!this._paramCheck(message, params, 2)){ return; }
+    if (!this._paramCheck(message, params, 3)){ return; }
     const category = params.shift();
     if (!category.match(/^[a-z0-9_]+$/)) {
       return message.reply(`${category} is a bad category name`);
     }
+    const subcategory = params.shift();
+    if (!subcategory.match(/^[a-z0-9_]+$/)) {
+      return message.reply(`${subcategory} is a bad subcategory name`);
+    }
     params.forEach(clip => {
       if(fm.inLibrary(clip)) {
-        fm.rename(clip, clip, category);
-        message.reply(`${clip}'s category is now: ${category}`);
+        fm.rename(clip, clip, category, subcategory);
+        message.reply(`${clip}'s category is now: ${category} - ${subcategory}`);
       } else {
         message.reply(`I don't recognize ${clip}`)
       }
