@@ -185,7 +185,7 @@ describe("Admin Utils", () => {
 
     describe("add", () => {
       it("Has a help function", () => {
-        expect(adminUtils.add(fakeMessage, ['help'])).to.match(/Message Reply: add `<clip>` `\[category]` \(with attachment\).*/);
+        expect(adminUtils.add(fakeMessage, ['help'])).to.match(/Message Reply: add `<clip>` `\[category]` `\[subcategory]` \(with attachment\).*/);
       });
       it("Can add a new sound", function () {
         stubbedNconf.get.withArgs('KEY_SYMBOL').returns('!');
@@ -232,29 +232,38 @@ describe("Admin Utils", () => {
 
     describe("categorize", () => {
       it("Has a help function", () => {
-        expect(adminUtils.categorize(fakeMessage, ['help'])).to.match(/Message Reply: categorize `<new category>` `<clip>`.*/);
+        expect(adminUtils.categorize(fakeMessage, ['help'])).to.match(/Message Reply: categorize `<new category>` `<new subcategory>` `<clip>`.*/);
       });
       it("Will error if the sound doesn't exist", function (){
-        expect(adminUtils.categorize(fakeMessage, ['category1', 'soundclip'])).to.be.true;
+        expect(adminUtils.categorize(fakeMessage, ['category1', 'subcategory1', 'soundclip'])).to.be.true;
         expect(fakeMessage.reply.calledWith(`I don't recognize soundclip`)).to.be.true;
       });
       it("Will change a sound's category", function (){
         stubbedFileManager.inLibrary.returns(true);
         stubbedFileManager.rename.returns(true);
 
-        expect(adminUtils.categorize(fakeMessage, ['category1', 'soundclip'])).to.be.true;
+        expect(adminUtils.categorize(fakeMessage, ['category1', 'subcategory1', 'soundclip'])).to.be.true;
 
         expect(stubbedFileManager.rename.called).to.be.true
-        expect(fakeMessage.reply.calledWith(`soundclip's category is now: category1`)).to.be.true;
+        expect(fakeMessage.reply.calledWith(`soundclip's category is now: category1 - subcategory1`)).to.be.true;
       });
       it("Will not categorize clips with a bad category name", function (){
         stubbedFileManager.inLibrary.returns(true);
         stubbedFileManager.rename.returns(true);
 
-        adminUtils.categorize(fakeMessage, ['category!','clip1']);
+        adminUtils.categorize(fakeMessage, ['category!', 'subcategory1', 'clip1']);
 
         expect(stubbedFileManager.rename.called).to.be.false;
         expect(fakeMessage.reply.calledWith(`category! is a bad category name`)).to.be.true;
+      });
+      it("Will not categorize clips with a bad subcategory name", function (){
+        stubbedFileManager.inLibrary.returns(true);
+        stubbedFileManager.rename.returns(true);
+
+        adminUtils.categorize(fakeMessage, ['category1', 'subcategory!', 'clip1']);
+
+        expect(stubbedFileManager.rename.called).to.be.false;
+        expect(fakeMessage.reply.calledWith(`subcategory! is a bad subcategory name`)).to.be.true;
       });
     });
 

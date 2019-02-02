@@ -1,43 +1,40 @@
 html
-  script(src='/js/app.js')
-  link(rel="stylesheet", href="/css/darkly.min.css")
-  link(rel="shortcut icon", href="/media/discordbot-180.png", sizes="180x180")
-  link(rel="shortcut icon", href="/media/discordbot.png", sizes="32x32")
-- function toTitleCase(str) {
--   return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
--     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
--   });
-- }
+  head
+    title Discord Soundboard
+    link(rel="shortcut icon", href="media/discordbot-180.png", sizes="180x180")
+    link(rel="shortcut icon", href="media/discordbot.png", sizes="32x32")
+    link(type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css")
+    link(type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css")
+    link(rel="stylesheet", href="css/darkly.min.css")
+    style
+      | [v-cloak] {
+      |  display: none;
+      | }
   body
-    div(class="container-fluid")
+    div(class="container")
       div(class="page-header alert alert-dark text-center")
         h1 Discord Soundboard
-      div(class="row justify-content-between")
-        div(class="col-sm align-self-end")
-          a(class="btn btn-danger float-right" role="button" href="/logout") Logout
-      div(class="row" id="the_body")
-        div(class="col-2" id="leftnav" style="border=1px blue")
-          div(class="container-fluid show collapse btn-group-toggle" role="group" data-toggle="buttons")
-            label(class='col-lg btn btn-success active' data-toggle="collapse" role="button" aria-expanded="true" aria-controls="#cat_random" data-target="#cat_random") Random
-              input(type="radio" name="category" checked="true" autocomplete="off")
-            - var cats = []
-            for value,key in categories
-              - cats.push(key)
-            - cats = cats.sort()
-            for category in cats
-              - categorizedFiles = categories[category]
-                label(class='col-lg btn btn-success' data-toggle="collapse" role="button" aria-expanded="false" aria-controls="#cat_"+category data-target="#cat_"+category) #{toTitleCase(category)}
-        div(class="col-10" id="buttoncards")
-          div(class="row card collapse show" id="cat_random")
-            div(class="card-body container-fluid" style="padding:5px")
-              for file in randoms
-                div(class='btn btn-primary', onclick="random('" + file + "')" style="margin:5px") #{toTitleCase(file)} #{token}
-          for category in cats
-            - categorizedFiles = categories[category]
-              div(class="row card collapse"  id="cat_"+category)
-                div(class='card-body container-fluid' style="padding:5px")
-                  for details, file in categorizedFiles
-                    div(class='btn btn-primary', onclick="play('" + file + "')" style="margin:5px") #{toTitleCase(file)}
+
+      a(class="btn btn-danger float-right" role="button" href="logout") Logout
+      div(id="vuewrapper" v-cloak)
+        search-box(inline-template :clips="clips")
+          div(class="row" id="search")
+            div(class="offset-9 col-3")
+              input(id="searchbox" class="form-control" placeholder="Search..."  v-model="searchQuery" @input="isTyping = true")
+            div(v-if="searching" class="col-11 offset-1 border border-primary")
+              b-btn(:onclick="'play(\"'+clip+'\")'" style="margin:5px" variant="primary" v-for="clip in searchResults" :key="clip") {{ toTitleCase(clip) }}
+        div(class="row" id="categories")
+          div(class="col-3" id="leftnav" style="border=1px blue")
+            div(class="container-fluid show collapse btn-group-toggle" role="group" data-toggle="buttons" v-for="subcats,category in clips.data", :key="category" style="margin:3px")
+              b-btn(v-b-toggle="'cat_' + category" class="col-12" variant="success") {{ toTitleCase(category) }}
+              b-collapse(:id="'cat_' + category" v-for="sounds, subcategory in subcats", :key="subcategory" style="margin:3px")
+                b-btn(v-b-toggle="'cat_' + category + '_sub_' + subcategory" variant="primary" class="col-10 offset-1" ) {{ toTitleCase(subcategory) }}
+
+          div(class="col-9" id="buttoncards")
+            div(v-for="subcats, category in clips.data", :key="category" no-body="true")
+              b-collapse(v-for="sounds,subcategory in subcats", :key="subcategory" :id="'cat_' + category + '_sub_' + subcategory")
+                div(class="bg-secondary border border-dark p-1") {{ toTitleCase(category) }} - {{ toTitleCase(subcategory) }}
+                b-btn(v-for="clipdata, clip in sounds", :key="clip" :id="'clip_' + clip" variant="primary" :onclick="'play(\"'+clip+'\")'" style="margin:5px") {{ toTitleCase(clip) }}
 
     // Modal for error display
     div(id="error-display" class="modal" tabindex="-1" role="dialog")
@@ -52,7 +49,10 @@ html
             div(id="error-message-holder" class="alert alert-warning row" role="alert")
           div(class="modal-footer")
             button(type="button" class="btn btn-secondary" data-dismiss="modal") Dismiss
-
-    script(src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous")
-    script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous")
-    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous")
+    // script(src="//cdn.jsdelivr.net/npm/vue/dist/vue.js")
+    script(src="//cdn.jsdelivr.net/npm/vue")
+    script(src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js")
+    script(src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js")
+    script(src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js")
+    script(src="//unpkg.com/axios/dist/axios.min.js")
+    script(src='js/app.js')

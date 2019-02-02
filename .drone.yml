@@ -36,7 +36,7 @@ pipeline:
     image: plugins/docker
 
     # Seems to be required to push to the registry on the same host
-    custom_dns: [ 192.168.5.1 ]
+    custom_dns: [ 192.168.10.1 ]
     debug: true
     network_mode: host
     registry: registry.codethat.rocks:5000
@@ -70,7 +70,7 @@ pipeline:
     image: plugins/docker
 
     # Seems to be required to push to the registry on the same host
-    custom_dns: [ 192.168.5.1 ]
+    custom_dns: [ 192.168.10.1 ]
     debug: true
     network_mode: host
     registry: registry.codethat.rocks:5000

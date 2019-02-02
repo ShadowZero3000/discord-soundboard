@@ -10,16 +10,23 @@ class FileManager {
     this.home = './Uploads';
     this.requestStore = new Store({ name: 'requests', path: 'config/requests.json', defaults: {} });
 
-    const items = fs.readdirSync(this.home, {withFileTypes: true});
-    items.forEach(item => {
-      if (item.isDirectory()) {
-        var sounds = fs.readdirSync(`${this.home}/${item.name}`, {withFileTypes: true});
-        sounds.forEach(sound => {
-          this.register(sound, item.name);
+    const cats = fs.readdirSync(this.home, {withFileTypes: true});
+    cats.forEach(category => {
+      if (category.isDirectory()) {
+        var subcats = fs.readdirSync(`${this.home}/${category.name}`, {withFileTypes: true});
+        subcats.forEach(subcategory => {
+          if (subcategory.isDirectory()) {
+            var sounds = fs.readdirSync(`${this.home}/${category.name}/${subcategory.name}`, {withFileTypes: true});
+            sounds.forEach(sound => {
+              this.register(sound, category.name, subcategory.name);
+            });
+          } else {
+            this.register(subcategory, category.name, undefined);
+          }
         });
       } else {
         // I think we ignore this, because the register thing would have to account for base path
-        this.register(item, undefined);
+        this.register(category, undefined, undefined);
       }
     });
   }
@@ -47,7 +54,7 @@ class FileManager {
     }
   }
 
-  register(file, category) {
+  register(file, category, subcategory) {
     var matches;
     if (file instanceof(fs.Dirent)) {
       if(!file.isFile()) { return false; }
@@ -58,15 +65,18 @@ class FileManager {
     //const matches = file.name.match(/^([^-]+)--(.*)$/);
     if (matches) {
       const realCategory = (category || 'misc').toLowerCase();
+      const realSubCategory = (subcategory || 'misc').toLowerCase();
       const obj = {
         name: matches[1],
         category: realCategory,
+        subcategory: realSubCategory,
         fileSuffix: matches[2],
-        fileName: `${this.home}/${category || ''}/${matches[0]}`,
+        fileName: `${this.home}/${category || ''}/${subcategory || ''}/${matches[0]}`.replace('//','/'),
       }
       this.files[obj.name] = obj;
       this.categories[realCategory] = this.categories[realCategory] || {};
-      this.categories[realCategory][obj.name] = obj;
+      this.categories[realCategory][realSubCategory] = this.categories[realCategory][realSubCategory] || {};
+      this.categories[realCategory][realSubCategory][obj.name] = obj;
       this.removeRequest(obj.name);
       this.sortCategories();
       return true;
@@ -78,31 +88,37 @@ class FileManager {
     var result = {};
     Object.keys(this.categories).sort().forEach(category => {
       result[category] = {}
-      Object.keys(this.categories[category]).sort().forEach(key => {
-        result[category][key] = this.categories[category][key];
+      Object.keys(this.categories[category]).sort().forEach(subcategory => {
+        result[category][subcategory] = {};
+        Object.keys(this.categories[category][subcategory]).sort().forEach(key => {
+          result[category][subcategory][key] = this.categories[category][subcategory][key];
+        });
       });
     });
     this.categories = result;
   }
 
   deregister(file) {
-    delete this.categories[file.category][file.name];
+    delete this.categories[file.category][file.subcategory][file.name];
     // Remove empty categories
+    if (Object.keys(this.categories[file.category][file.subcategory]).length === 0) {
+      delete this.categories[file.category][file.subcategory];
+    }
     if (Object.keys(this.categories[file.category]).length === 0) {
       delete this.categories[file.category];
     }
     delete this.files[file.name];
   }
 
-  create(keyword, category, file) {
-    var directory = `${this.home}/${category.toLowerCase()}`;
+  create(keyword, category, subcategory, file) {
+    var directory = `${this.home}/${category.toLowerCase()}/${subcategory.toLowerCase()}`;
     var destination = `${directory}/${keyword}--${file.name}`;
     log.debug(`Writing attachment to file: ${destination}`);
     if (!fs.existsSync(directory)){
-        fs.mkdirSync(directory);
+        fs.mkdirSync(directory, {recursive: true});
     }
     request(file.url).pipe(fs.createWriteStream(destination));
-    return this.register(`${keyword}--${file.name}`, category);
+    return this.register(`${keyword}--${file.name}`, category, subcategory);
   }
 
   delete(keyword) {
@@ -170,17 +186,20 @@ class FileManager {
     return this.selectRandom(filenames);
   }
 
-  rename(oldKeyword, newKeyword, newCategory = undefined) {
+  rename(oldKeyword, newKeyword, newCategory = undefined, newSubCategory = undefined) {
     const oldFile = this.get(oldKeyword);
     const newFileName = `${newKeyword}--${oldFile.fileSuffix}`
     if (newCategory == undefined) {
       newCategory = oldFile.category || 'misc';
     }
-    const newDirectory = `${this.home}/${newCategory.toLowerCase()}`;
+    if (newSubCategory == undefined) {
+      newSubCategory = oldFile.subcategory || 'misc';
+    }
+    const newDirectory = `${this.home}/${newCategory.toLowerCase()}/${newSubCategory.toLowerCase()}`;
     const newFilePath = `${newDirectory}/${newFileName}`
     log.debug(`Renaming: ${oldFile.fileName} to ${newFilePath}`);
     if (!fs.existsSync(newDirectory)){
-        fs.mkdirSync(newDirectory);
+        fs.mkdirSync(newDirectory, {recursive: true});
     }
     fs.renameSync(oldFile.fileName, newFilePath);
     this.deregister(oldFile);

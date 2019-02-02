@@ -33,7 +33,7 @@ app.use('/logs', express.static('logs'));
 app.use('/api', require('./webapi.js'));
 
 app.get('/version', (req, res) => {
-  res.status(200).sendFile(path.join(__dirname, 'public/version.pug'));
+  res.status(200).render(path.join(__dirname, 'public/version.pug'));
 });
 
 app.get('/clips', (req, res) => {
