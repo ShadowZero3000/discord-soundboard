@@ -44,7 +44,7 @@ Vue.component('search-box', {
                             .replace(' ','[_-]*')
                             .replace(/[^A-z0-9_\-\*]/g,'')
       var clipList = []
-      var data = this.clips.data
+      var data = this.clips
       var regex = new RegExp(`.*${searchString}.*`, 'i')
       Object.keys(data).forEach(function(category) {
         var cat = data[category];
