@@ -190,4 +190,14 @@ router.get('/random/:clip', (req, res) => {
   }
 });
 
+router.get('/clips', (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200)
+       .send(JSON.stringify(fm.getCategorizedFiles()));
+  } catch(e) {
+    return res.status(404).send("Failure"+e)
+  }
+});
+
 module.exports = router;
