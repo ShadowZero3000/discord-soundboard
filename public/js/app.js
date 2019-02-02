@@ -1,14 +1,15 @@
-function parseFailure(jqXHR, status, error) {
-  $("#error-message-holder").html(`<b>${status}</b>: ${jqXHR.responseText}`);
-  $("#error-display").modal('show');
+function parseFailure(error) {
+  vm.showModal(error.response.data)
 }
 
 function play(clip) {
   axios.get(`api/play/${clip}`)
+    .catch(parseFailure)
 }
 
 function random(clip) {
   axios.get(`api/random/${clip}`)
+    .catch(parseFailure)
 }
 
 Vue.component('search-box', {
@@ -51,12 +52,12 @@ Vue.component('search-box', {
           var subcat = cat[subcategory];
           Object.keys(subcat).forEach(function(clip) {
             if(clip.match(regex)) {
-              clipList.push(clip)
+              clipList.push({"name": clip, "subcategory": subcategory, "category": category})
             }
           });
         });
       });
-      this.searchResults = clipList.sort();
+      this.searchResults = _.sortBy(clipList, "name");
       if(this.searchResults.length > 0) {
         this.searching = true;
       } else {
@@ -67,10 +68,13 @@ Vue.component('search-box', {
       return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
       });
+    },
+    mouseOver(clip) {
+      return clip.category
     }
   }
 })
-new Vue({
+var vm = new Vue({
   el: '#vuewrapper',
   data () {
     return {
@@ -78,19 +82,30 @@ new Vue({
       category: null,
       subcategory: null,
       sounds: null,
-      loaded: false
+      errorMessage: null,
+      randomClips: ['wow']
     }
   },
   mounted () {
-    axios
-      .get('//'+window.location.host+'/api/clips')
-      .then(response => {this.clips = response; this.loaded = true})
+    this.refreshData()
   },
   methods: {
+    refreshData() {
+      axios
+        .get('//'+window.location.host+'/api/clips')
+        .then(response => {this.clips = response.data})
+      axios
+        .get('//'+window.location.host+'/api/clips/random')
+        .then(response => {this.randomClips = response.data})
+    },
     toTitleCase(str) {
       return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
       });
+    },
+    showModal(str) {
+      this.errorMessage = str
+      this.$refs.errorModal.show()
     }
   }
 })

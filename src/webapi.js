@@ -200,4 +200,14 @@ router.get('/clips', (req, res) => {
   }
 });
 
+router.get('/clips/random', (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200)
+       .send(JSON.stringify(fm.getRandomList()));
+  } catch(e) {
+    return res.status(404).send("Failure"+e)
+  }
+});
+
 module.exports = router;
