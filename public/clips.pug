@@ -33,6 +33,7 @@ html
           div(class="col-9" id="buttoncards")
             div(v-for="subcats, category in clips.data", :key="category" no-body="true")
               b-collapse(v-for="sounds,subcategory in subcats", :key="subcategory" :id="'cat_' + category + '_sub_' + subcategory")
+                b-button-close(style="margin:4px" v-b-toggle="'cat_' + category + '_sub_' + subcategory")
                 div(class="bg-secondary border border-dark p-1") {{ toTitleCase(category) }} - {{ toTitleCase(subcategory) }}
                 b-btn(v-for="clipdata, clip in sounds", :key="clip" :id="'clip_' + clip" variant="primary" :onclick="'play(\"'+clip+'\")'" style="margin:5px") {{ toTitleCase(clip) }}
 
