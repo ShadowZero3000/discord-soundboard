@@ -31,7 +31,7 @@ html
             div(class="container-fluid show collapse btn-group-toggle" role="group" data-toggle="buttons" v-for="subcats,category in clips", :key="category" style="margin:3px")
               b-btn(v-b-toggle="'cat_' + category" class="col-12" variant="success") {{ toTitleCase(category) }}
               b-collapse(:id="'cat_' + category" v-for="sounds, subcategory in subcats", :key="subcategory" style="margin:3px")
-                b-btn(v-b-toggle="'cat_' + category + '_sub_' + subcategory" variant="primary" class="col-10 offset-1" ) {{ toTitleCase(subcategory) }}
+                b-btn(v-b-toggle="'cat_' + category + '_sub_' + subcategory" variant="primary" class="col-10 offset-1") {{ toTitleCase(subcategory) }}
 
           div(class="col-9" id="buttoncards")
             b-collapse(id='random' visible)
@@ -53,4 +53,5 @@ html
     script(src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js")
     script(src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js")
     script(src="//unpkg.com/axios/dist/axios.min.js")
+    script(src="//cdn.jsdelivr.net/npm/idb-keyval@3/dist/idb-keyval-iife.min.js")
     script(src='js/app.js')
