@@ -78,16 +78,34 @@ var vm = new Vue({
   el: '#vuewrapper',
   data () {
     return {
-      clips: { data: null },
       category: null,
-      subcategory: null,
-      sounds: null,
+      clips: { data: null },
       errorMessage: null,
-      randomClips: ['wow']
+      randomClips: [],
+      sounds: null,
+      subcategory: null,
+      syncedCollapses: {}
     }
   },
   mounted () {
     this.refreshData()
+    // Restore state of expansions
+    this.$root.$on("bv::collapse::state", function(collapseId, isJustShown) {
+      if(collapseId == 'random') { return }
+      idbKeyval.get(collapseId).then(val => {
+        if(val == undefined) {
+          idbKeyval.set(collapseId, isJustShown)
+        } else {
+          var synced = collapseId in this.syncedCollapses
+          if(!synced && val != isJustShown) {
+            this.$root.$emit('bv::toggle::collapse', collapseId)
+          } else {
+            idbKeyval.set(collapseId, isJustShown)
+          }
+        }
+        this.syncedCollapses[collapseId] = true
+      })
+    });
   },
   methods: {
     refreshData() {
