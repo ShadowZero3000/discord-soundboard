@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.4.0...v0.5.0) (2019-02-03)
+
+
+### Features
+
+* **memory:** Remember user expanded stuff after refresh ([538db7f](https://github.com/ShadowZero3000/discord-soundboard/commit/538db7f))
+
 # [0.4.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.3.1...v0.4.0) (2019-02-02)
 
 
