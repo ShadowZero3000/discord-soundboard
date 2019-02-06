@@ -12,6 +12,91 @@ function random(clip) {
     .catch(parseFailure)
 }
 
+var titleCaseMixin = {
+  methods: {
+    toTitleCase(str) {
+      return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+      });
+    }
+  }
+}
+
+var findClipMixin = {
+  methods: {
+    findClip: function(needle, haystack) {
+      var searchString = needle
+                            .replace(' ','[_-]*')
+                            .replace(/[^A-z0-9_\-\*]/g,'')
+      var clipList = []
+      var regex = new RegExp(`.*${searchString}.*`, 'i')
+      Object.keys(haystack).forEach(function(category) {
+        var cat = haystack[category];
+        Object.keys(cat).forEach(function(subcategory) {
+          var subcat = cat[subcategory];
+          Object.keys(subcat).forEach(function(clip) {
+            if(clip.match(regex)) {
+              clipList.push({"name": clip, "subcategory": subcategory, "category": category})
+            }
+          });
+        });
+      });
+      return _.sortBy(clipList, "name");
+    }
+  }
+}
+
+Vue.component('favorites-box', {
+  data: function() {
+    return {}
+  },
+  mixins: [findClipMixin, titleCaseMixin],
+  props: {
+    clips: Object,
+    favorites: Array
+  }
+})
+
+Vue.component('heart', {
+  data: function() {
+    return {
+      favorited: false,
+    }
+  },
+  props: {
+    clip: Object,
+    favorites: Object
+  },
+  computed: {
+    cls: function() {
+      if(this.favorited) {
+        return 'fas fa-heart'
+      }
+      return 'far fa-heart'
+    }
+  },
+  mounted: function() {
+    var heart = this
+    this.$root.$on('initialFavoriteState', function(favoriteState){
+      if(favoriteState.indexOf(heart.clip.name) > -1) {
+        heart.favorited = true
+        heart.$emit('favorite', heart.clip, false)
+      }
+    })
+  },
+  methods: {
+    favorite: function(){
+      this.favorited = !this.favorited
+      if(this.favorited) {
+        this.$emit('favorite', this.clip);
+      } else {
+        this.$emit('unfavorite', this.clip);
+      }
+    }
+  },
+  template: `<b-btn variant="secondary" v-on:click="favorite"><span :class="cls"></span></b-btn>`
+})
+
 Vue.component('search-box', {
   data: function() {
     return {
@@ -21,6 +106,7 @@ Vue.component('search-box', {
       isTyping: false
     }
   },
+  mixins: [findClipMixin, titleCaseMixin],
   props: {
     clips: Object
   },
@@ -40,34 +126,12 @@ Vue.component('search-box', {
         this.searching = false
         return
       }
-      var searchString = this.searchQuery
-                            .replace(' ','[_-]*')
-                            .replace(/[^A-z0-9_\-\*]/g,'')
-      var clipList = []
-      var data = this.clips
-      var regex = new RegExp(`.*${searchString}.*`, 'i')
-      Object.keys(data).forEach(function(category) {
-        var cat = data[category];
-        Object.keys(cat).forEach(function(subcategory) {
-          var subcat = cat[subcategory];
-          Object.keys(subcat).forEach(function(clip) {
-            if(clip.match(regex)) {
-              clipList.push({"name": clip, "subcategory": subcategory, "category": category})
-            }
-          });
-        });
-      });
-      this.searchResults = _.sortBy(clipList, "name");
+      this.searchResults = this.findClip(this.searchQuery, this.clips)
       if(this.searchResults.length > 0) {
         this.searching = true;
       } else {
         this.searching = false;
       }
-    },
-    toTitleCase(str) {
-      return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-      });
     },
     mouseOver(clip) {
       return clip.category
@@ -79,14 +143,16 @@ var vm = new Vue({
   data () {
     return {
       category: null,
-      clips: { data: null },
+      clips: {},
       errorMessage: null,
       randomClips: [],
       sounds: null,
       subcategory: null,
-      syncedCollapses: {}
+      syncedCollapses: {},
+      favorites: []
     }
   },
+  mixins: [titleCaseMixin],
   mounted () {
     this.refreshData()
     // Restore state of expansions
@@ -106,8 +172,30 @@ var vm = new Vue({
         this.syncedCollapses[collapseId] = true
       })
     });
+
+    var favorites = this.favorites
+    idbKeyval.get("favorites").then(val => {
+      if(val == undefined) {
+        // Fresh set of favorites, so set it blank
+        idbKeyval.set("favorites", [])
+      } else {
+        this.$root.$emit('initialFavoriteState', val)
+      }
+    }).catch(err => {
+      console.log(err)
+    })
   },
   methods: {
+    addFavorite: function(clip, save=true){
+      this.favorites.push(clip)
+      if(save) {
+        idbKeyval.set("favorites", this.favorites.map(a => a.name))
+      }
+    },
+    removeFavorite: function(clip){
+      this.favorites.splice(this.favorites.indexOf(clip), 1)
+      idbKeyval.set("favorites", this.favorites.map(a => a.name))
+    },
     refreshData() {
       axios
         .get('//'+window.location.host+'/api/clips')
@@ -115,11 +203,6 @@ var vm = new Vue({
       axios
         .get('//'+window.location.host+'/api/clips/random')
         .then(response => {this.randomClips = response.data})
-    },
-    toTitleCase(str) {
-      return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-      });
     },
     showModal(str) {
       this.errorMessage = str
