@@ -36,7 +36,7 @@ html
                 b-btn(v-b-toggle="'cat_' + category + '_sub_' + subcategory" variant="primary" class="col-10 offset-1") {{ toTitleCase(subcategory) }}
 
           div(class="col-9" id="buttoncards")
-            favorites-box(inline-template :clips="clips" :favorites="favorites")
+            favorites-box(inline-template :clips="clips" :favorites="sortedFavorites")
               div(v-if="favorites.length > 0")
                 div(class="bg-secondary border border-dark p-1") Favorites
                 b-btn-group(size="sm")

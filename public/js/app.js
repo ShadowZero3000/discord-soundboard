@@ -152,6 +152,16 @@ var vm = new Vue({
       favorites: []
     }
   },
+  computed: {
+    sortedFavorites: function() {
+      return this.favorites.sort(this.compareSort);
+    },
+    sortedClips: function() {
+      // Not used, because this is the categories, etc...
+      // Might want to use it later
+      return Object.keys(this.clips).sort(this.compareSort)
+    }
+  },
   mixins: [titleCaseMixin],
   mounted () {
     this.refreshData()
@@ -191,6 +201,13 @@ var vm = new Vue({
       if(save) {
         idbKeyval.set("favorites", this.favorites.map(a => a.name))
       }
+    },
+    compareSort(a, b) {
+      if (a.name < b.name)
+        return -1;
+      if (a.name > b.name)
+        return 1;
+      return 0;
     },
     removeFavorite: function(clip){
       this.favorites.splice(this.favorites.indexOf(clip), 1)
