@@ -39,8 +39,10 @@ html
             favorites-box(inline-template :clips="clips" :favorites="sortedFavorites")
               div(v-if="favorites.length > 0")
                 div(class="bg-secondary border border-dark p-1") Favorites
-                b-btn-group(size="sm")
-                  b-btn(:onclick="'play(\"'+clip.name+'\")'" style="margin:5px" variant="primary" v-for="clip in favorites" :key="clip" v-b-tooltip="toTitleCase(clip.category) + ' - ' + toTitleCase(clip.subcategory)") {{ toTitleCase(clip.name) }}
+                b-btn-group(size="sm" v-for="clip in favorites" :key="clip" style="margin:5px")
+                  b-btn(:onclick="'play(\"'+clip.name+'\")'" variant="primary"  v-b-tooltip="toTitleCase(clip.category) + ' - ' + toTitleCase(clip.subcategory)") {{ toTitleCase(clip.name) }}
+                  b-btn(v-on:click="removeFavorite(clip)" :id="'favheart_' + clip.name")
+                    span(class="fas fa-heart")
             b-collapse(id='random' visible)
               b-button-close(style="margin:4px" v-b-toggle="'random'")
               div(class="bg-secondary border border-dark p-1") Random

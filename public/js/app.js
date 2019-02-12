@@ -83,6 +83,11 @@ Vue.component('heart', {
         heart.$emit('favorite', heart.clip, false)
       }
     })
+    this.$root.$on('syncFavorite'+heart.clip.name, function(clip, fav){
+      if(clip.name == heart.clip.name && fav != heart.favorited) {
+        heart.favorited = fav
+      }
+    })
   },
   methods: {
     favorite: function(){
@@ -198,6 +203,8 @@ var vm = new Vue({
   methods: {
     addFavorite: function(clip, save=true){
       this.favorites.push(clip)
+      // Unneeded at this point
+      // this.$emit('syncFavorite'+clip.name, clip, true)
       if(save) {
         idbKeyval.set("favorites", this.favorites.map(a => a.name))
       }
@@ -212,6 +219,7 @@ var vm = new Vue({
     removeFavorite: function(clip){
       this.favorites.splice(this.favorites.indexOf(clip), 1)
       idbKeyval.set("favorites", this.favorites.map(a => a.name))
+      this.$root.$emit('syncFavorite'+clip.name, clip, false)
     },
     refreshData() {
       axios
