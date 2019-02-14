@@ -16,6 +16,8 @@ html
       div(class="page-header alert alert-dark text-center")
         h1 Discord Soundboard
 
+      a(class="btn btn-success float-right" role="button" onclick="vm.refreshData()" style="margin-left:5px")
+        div(class="fa fa-sync" style="padding: 3.5px")
       a(class="btn btn-danger float-right" role="button" href="logout") Logout
       div(id="vuewrapper" v-cloak)
         search-box(inline-template :clips="clips")
