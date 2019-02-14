@@ -83,6 +83,11 @@ Vue.component('heart', {
         heart.$emit('favorite', heart.clip, false)
       }
     })
+    this.$root.$on('syncFavorite'+heart.clip.name, function(clip, fav){
+      if(clip.name == heart.clip.name && fav != heart.favorited) {
+        heart.favorited = fav
+      }
+    })
   },
   methods: {
     favorite: function(){
@@ -152,6 +157,16 @@ var vm = new Vue({
       favorites: []
     }
   },
+  computed: {
+    sortedFavorites: function() {
+      return this.favorites.sort(this.compareSort);
+    },
+    sortedClips: function() {
+      // Not used, because this is the categories, etc...
+      // Might want to use it later
+      return Object.keys(this.clips).sort(this.compareSort)
+    }
+  },
   mixins: [titleCaseMixin],
   mounted () {
     this.refreshData()
@@ -188,13 +203,23 @@ var vm = new Vue({
   methods: {
     addFavorite: function(clip, save=true){
       this.favorites.push(clip)
+      // Unneeded at this point
+      // this.$emit('syncFavorite'+clip.name, clip, true)
       if(save) {
         idbKeyval.set("favorites", this.favorites.map(a => a.name))
       }
     },
+    compareSort(a, b) {
+      if (a.name < b.name)
+        return -1;
+      if (a.name > b.name)
+        return 1;
+      return 0;
+    },
     removeFavorite: function(clip){
       this.favorites.splice(this.favorites.indexOf(clip), 1)
       idbKeyval.set("favorites", this.favorites.map(a => a.name))
+      this.$root.$emit('syncFavorite'+clip.name, clip, false)
     },
     refreshData() {
       axios
