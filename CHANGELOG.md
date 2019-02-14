@@ -1,3 +1,12 @@
+## [0.6.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.6.0...v0.6.1) (2019-02-14)
+
+
+### Bug Fixes
+
+* **refresh:** Add a refresh button ([5ebae89](https://github.com/ShadowZero3000/discord-soundboard/commit/5ebae89))
+* **sorting:** Sort favorites ([608e612](https://github.com/ShadowZero3000/discord-soundboard/commit/608e612))
+* **unfavorite:** Allow unfavoriting from the favorites ([b329fe1](https://github.com/ShadowZero3000/discord-soundboard/commit/b329fe1))
+
 # [0.6.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.5.0...v0.6.0) (2019-02-06)
 
 
