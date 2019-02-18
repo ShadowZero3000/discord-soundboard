@@ -4,6 +4,7 @@ const nconf = require('nconf');
 
 const am = require('./AccessManager');
 const fm = require('./FileManager');
+const lm = require('./ListenerManager');
 const vqm = require('./VoiceQueueManager');
 
 class AdminUtils {
@@ -28,6 +29,10 @@ class AdminUtils {
       'requestor': [
         'request',
         'reqlist'
+      ],
+      'vocalist': [
+        'listen',
+        'ignoreme'
       ],
       'silencer': [
         'silence',
@@ -229,6 +234,14 @@ class AdminUtils {
       return message.reply(`Granted ${access} to '${role.name}'`);
     }
     return message.reply(`Something went wrong with that`);
+  }
+
+  ignoreme(message, params) {
+    lm.ignore(message.author.id)
+  }
+
+  listen(message, params) {
+    lm.listenTo(message.author.id)
   }
 
   remove(message, params) {
