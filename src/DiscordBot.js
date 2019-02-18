@@ -60,33 +60,30 @@ class DiscordBot {
     if (data == '' || data == 'Too long') {
       return
     }
-    console.log(`Voice message: ${data}`)
+    log.debug(`Voice message: ${data}`)
     const voiceQueue = vqm.getQueueFromUser(this.client, userid);
     if (!voiceQueue) {
       return;
     }
 
-    var recognized_randoms = ['wow', 'no', 'phrasing']
-    recognized_randoms.every(keyword => {
-      if (data.includes(keyword)) {
-        console.log("Queueing")
-        voiceQueue.add(fm.random(keyword));
-        return
-      }
-    });
-
-    var recognized_clips = [
-      {words: 'ready', key: 'imready2'}
-    ]
-    recognized_clips.every(keyword => {
-      if ((' '+data+' ').includes((' '+keyword['words']+' '))) {
-        console.log("Queueing")
-        voiceQueue.add(keyword['key']);
-        return false
-      } else {
+    adminUtils._getHotPhrases()
+      .filter(hotPhrase => hotPhrase.random)
+      .every(hotPhrase => {
+        if (` ${data} `.includes(` ${hotPhrase.phrase} `)) {
+          voiceQueue.add(fm.random(hotPhrase.clip));
+          return false
+        }
         return true
-      }
-    });
+      })
+    adminUtils._getHotPhrases()
+      .filter(hotPhrase => !hotPhrase.random)
+      .every(hotPhrase => {
+        if (` ${data} `.includes(` ${hotPhrase.phrase} `)) {
+          voiceQueue.add(hotPhrase.clip);
+          return false
+        }
+        return true
+      })
   }
 
   getVCFromUserid(userId) {
@@ -205,7 +202,7 @@ class DiscordBot {
       if (!speaking.bitfield && voiceChannel) {
         lm.finish(member.user.id, this.processVoiceRecognition.bind(this, member.id))
       }
-    } catch(e) {console.log(e.message)}
+    } catch(e) {log.debug(`Error handling speech: ${e.message}`)}
   }
   initialize(session) {
     //TODO: Make this not choke if you provide an invalid admin_id or aren't in a channel

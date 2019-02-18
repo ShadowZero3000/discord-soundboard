@@ -43,13 +43,8 @@ class Listener {
     try {
       const stream = connection.receiver.createStream(this.memberid)
       this.inputStream = stream
-      //stream.pipe(outputStream)
       if(stream._events['data'] == null) {
         stream.on("data", this.listenerEvent)
-      }
-      //console.log(this.listenerEvent)
-      if(stream._events['end'] == null) {
-        stream.on("end",() =>{console.log("Done")})
       }
     } catch(e) {log.debug(e.message)}
   }
@@ -78,18 +73,17 @@ class Listener {
 
         // check in the promise for the completion of call to witai
         parseSpeech.then((data) => {
-          // console.log("you said: " + data._text);
           cb(data);
           //return data;
         })
         .catch((err) => {
-          console.log(err);
+          log.debug(err);
           cb(null);
           //return null;
         })
       })
       .on('error', function(err) {
-          console.log('an error happened: ' + err.message);
+          log.debug('an error happened: ' + err.message);
       })
       .addOutput(outputpath)
       .run();
@@ -106,7 +100,6 @@ class Listener {
       log.debug('Some file you want to delete failed')
     }
     if (data != null) {
-      //console.log(data._text)
       callback(data._text)
     }
   }

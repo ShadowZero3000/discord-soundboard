@@ -49,7 +49,9 @@ class VoiceQueue {
 
     this.playQueue = []; // Clear the queue on leaving
     this.log("Leaving");
-    this.channel.leave();
+    this.channel.leave().catch(err => {
+      this.log(`Error leaving channel: ${err}`)
+    });
   }
 
   play() {
