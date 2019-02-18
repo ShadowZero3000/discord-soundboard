@@ -10,4 +10,4 @@ COPY public/ /node/public/
 
 WORKDIR /node
 
-CMD ["/usr/local/bin/node", "--use_strict", "index.js"]
+CMD ["/usr/local/bin/node", "index.js"]

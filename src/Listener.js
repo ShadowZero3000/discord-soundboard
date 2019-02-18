@@ -77,7 +77,8 @@ class Listener {
           //return data;
         })
         .catch((err) => {
-          log.debug(err);
+          console.log(err)
+          log.debug(err.message);
           cb(null);
           //return null;
         })
