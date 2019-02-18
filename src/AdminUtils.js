@@ -4,7 +4,9 @@ const nconf = require('nconf');
 
 const am = require('./AccessManager');
 const fm = require('./FileManager');
+const lm = require('./ListenerManager');
 const vqm = require('./VoiceQueueManager');
+const Store = require('data-store');
 
 class AdminUtils {
   constructor() {
@@ -12,8 +14,11 @@ class AdminUtils {
       'servermanager': [
         'access',
         'accessrole',
+        'forgetphrase',
         'grant',
         'grantrole',
+        'hotphrase',
+        'listphrases',
         'revoke',
         'revokerole',
         'togglestartup',
@@ -29,6 +34,10 @@ class AdminUtils {
         'request',
         'reqlist'
       ],
+      'vocalist': [
+        'listen',
+        'ignoreme'
+      ],
       'silencer': [
         'silence',
         'unmute'
@@ -38,10 +47,19 @@ class AdminUtils {
     this.reverseAccessMap = {};
     Object.keys(this.accessMap).forEach(group => {
       this.accessMap[group].forEach(entry => {
-        this.reverseAccessMap[entry] = group;
+        this.reverseAccessMap[entry] = group
       });
     });
-    this.immuneUser = '0';
+    this.immuneUser = '0'
+    this.hotPhrases = []
+
+    this.HotPhraseStore = new Store({ name: 'hotphrases', path: 'config/hotphrases.json', defaults: {} });
+
+    const store = this.HotPhraseStore.get('hotphrases') || [];
+    // Deserialize the store into actual objects
+     store.forEach(phrase => {
+      this.hotPhrases.push(phrase)
+    });
   }
 
   // Reserved functions
@@ -62,6 +80,10 @@ class AdminUtils {
     return message.channel.guild.members.find(a => {
       return a.user['username'].toLowerCase() == username.toLowerCase();
     });
+  }
+
+  _getHotPhrases() {
+    return this.hotPhrases
   }
 
   _paramCheck(message, params, minParams = 1) {
@@ -183,6 +205,18 @@ class AdminUtils {
     return true;
   }
 
+  forgetphrase(message, params) {
+    if (params[0] == 'help') {
+      return message.reply('forgetphrase `<phrase id>`: \n' +
+        'Forgets a hotphrase.\n'+
+        'You\'ll need to use `listphrases` to get their ids.');
+    }
+    if (!this._paramCheck(message, params, 1)){ return; }
+    this.hotPhrases = this.hotPhrases.filter(phrase => phrase.phraseId != params[0])
+    this.HotPhraseStore.set('hotphrases', this.hotPhrases)
+    return message.reply(`Removed.`);
+  }
+
   grant(message, params) {
     const validRoles = Object.keys(this.accessMap).sort().join('|');
     if (params[0] == 'help') {
@@ -229,6 +263,56 @@ class AdminUtils {
       return message.reply(`Granted ${access} to '${role.name}'`);
     }
     return message.reply(`Something went wrong with that`);
+  }
+
+  hotphrase(message, params) {
+    if (params[0] == 'help') {
+      return message.reply('hotphrase `[random]` `<clip>` `<string_to_recognize>`: \n' +
+          'Plays `<clip>` when it hears `<string_to_recognize>`.');
+    }
+    if (!this._paramCheck(message, params, 2)){ return; }
+    var random = false
+    if(params[0] == 'random') {
+      random = true
+      params.shift()
+    }
+    const clipName = params.shift()
+    const hotPhrase = params.join(' ')
+    if ((!random && !fm.inLibrary(clipName)) || (random && !fm.inRandoms(clipName))) {
+      return message.reply(`Clip not found: ${clipName}`);
+    }
+
+    this.hotPhrases.push({clip: clipName, phrase: hotPhrase, random: random, phraseId: new Date().getTime()})
+    this.HotPhraseStore.set('hotphrases', this.hotPhrases)
+    return message.reply(`I'll be listening.`);
+  }
+
+  ignoreme(message, params) {
+    lm.ignore(message.author.id)
+    message.reply('I will no longer listen to what you are saying.')
+  }
+
+  listen(message, params) {
+    lm.listenTo(message.author.id)
+    message.reply(`I will now listen to what you are saying and attempt witty responses.\n`
+      +`Please be aware that by issuing this command you accept that all of your conversations `
+      +`spoken in a channel where I am also present will be recorded, and may be transferred `
+      +`to the Wit AI (https://wit.ai/) for processing.\n`
+      +`I will not permanently record your data (unless I crash, in which case it will be tidied later)`
+      +`, however, Wit may use these recordings to improve itself.\n`
+      +'If you do not agree to these terms, simply tell me: `ignoreme`')
+  }
+
+  listphrases(message, params) {
+    if (params[0] == 'help') {
+      return message.reply('listphrases: \n' +
+          'Lists hotphrase activations.');
+    }
+
+    var result = this.hotPhrases.map(phrase => {
+      return `${phrase.phraseId}: ${phrase.phrase} (${phrase.random?'random - ':''}\`${phrase.clip}\`)`
+    })
+    return message.reply("Hot phrases: \n" + result.join('\n'), {split: true})
   }
 
   remove(message, params) {

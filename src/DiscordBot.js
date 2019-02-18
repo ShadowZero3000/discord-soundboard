@@ -6,6 +6,7 @@ const log = require('./logger.js').errorLog;
 const nconf = require('nconf');
 const VoiceQueue = require('./VoiceQueue.js');
 const vqm = require('./VoiceQueueManager');
+const lm = require('./ListenerManager');
 
 class DiscordBot {
   constructor() {
@@ -50,7 +51,39 @@ class DiscordBot {
     }).catch(err => {
       log.debug(`Connection error in DiscordBot: ${err}`)
     });
+
+    this.client.on('guildMemberSpeaking', this.handleSpeaking.bind(this))
     return this.client;
+  }
+
+  processVoiceRecognition(userid, data) {
+    if (data == '' || data == 'Too long') {
+      return
+    }
+    log.debug(`Voice message: ${data}`)
+    const voiceQueue = vqm.getQueueFromUser(this.client, userid);
+    if (!voiceQueue) {
+      return;
+    }
+
+    adminUtils._getHotPhrases()
+      .filter(hotPhrase => hotPhrase.random)
+      .every(hotPhrase => {
+        if (` ${data} `.includes(` ${hotPhrase.phrase} `)) {
+          voiceQueue.add(fm.random(hotPhrase.clip));
+          return false
+        }
+        return true
+      })
+    adminUtils._getHotPhrases()
+      .filter(hotPhrase => !hotPhrase.random)
+      .every(hotPhrase => {
+        if (` ${data} `.includes(` ${hotPhrase.phrase} `)) {
+          voiceQueue.add(hotPhrase.clip);
+          return false
+        }
+        return true
+      })
   }
 
   getVCFromUserid(userId) {
@@ -151,6 +184,26 @@ class DiscordBot {
     return this.handleKeywordMessage(message, keyWordMatches[1], keyWordMatches[2]);
   }
 
+  handleSpeaking(member, speaking) {
+    if(!am.checkAccess(member.user, member.guild, 'vocalist') ||
+        !lm.amIListeningTo(member.user.id)
+      ) {
+      return
+    }
+
+    try{
+      var memberVoiceState = member.guild.voiceStates.get(member.id)
+      var voiceChannel = member.guild.channels.get(memberVoiceState.channelID);
+      if(speaking.bitfield) {
+        var currentConnection = this.client.voice.connections.get(memberVoiceState.guild.id)
+        lm.listen(member.user.id, currentConnection)
+      }
+      // Close the writeStream when a member stops speaking
+      if (!speaking.bitfield && voiceChannel) {
+        lm.finish(member.user.id, this.processVoiceRecognition.bind(this, member.id))
+      }
+    } catch(e) {log.debug(`Error handling speech: ${e.message}`)}
+  }
   initialize(session) {
     //TODO: Make this not choke if you provide an invalid admin_id or aren't in a channel
     var startup = nconf.get('startup');

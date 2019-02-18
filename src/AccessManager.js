@@ -36,7 +36,6 @@ class AccessManager {
       return true;
     }
     return userRoles.filter(roleId => {
-
       return guild.getRole(roleId).can(access);
     }).length > 0;
   }

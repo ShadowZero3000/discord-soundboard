@@ -9,11 +9,15 @@
     "data-store": "^3.1.0",
     "discord.js": "discordjs/discord.js#master",
     "express": "^4.16.0",
+    "fluent-ffmpeg": "^2.1.2",
     "nconf": "^0.10.0",
     "node-fetch": "^2.2.0",
     "node-opus": "^0.3.0",
+    "node-witai-speech": "^1.0.2",
+    "path": "^0.12.7",
     "pug": "^2.0.3",
     "request": "^2.88.0",
+    "underscore": "^1.9.1",
     "winston": "^3.0.0"
   },
   "devDependencies": {
