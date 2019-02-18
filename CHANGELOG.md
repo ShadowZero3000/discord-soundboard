@@ -1,3 +1,18 @@
+# [0.7.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.6.1...v0.7.0) (2019-02-18)
+
+
+### Bug Fixes
+
+* **errors:** Error handling for leaving channel didn't work ([6308088](https://github.com/ShadowZero3000/discord-soundboard/commit/6308088))
+* **voice-recognition:** Add a disclosure statement so people know ([2033070](https://github.com/ShadowZero3000/discord-soundboard/commit/2033070))
+* **voice-recognition:** Broken tests ([14d1cfc](https://github.com/ShadowZero3000/discord-soundboard/commit/14d1cfc))
+
+
+### Features
+
+* **voice-recognition:** Add voice recognition functionality ([0269da9](https://github.com/ShadowZero3000/discord-soundboard/commit/0269da9))
+* **voice-recognition:** Finish up feature admin stuff ([83253d3](https://github.com/ShadowZero3000/discord-soundboard/commit/83253d3))
+
 ## [0.6.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.6.0...v0.6.1) (2019-02-14)
 
 
