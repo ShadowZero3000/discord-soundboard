@@ -1,3 +1,10 @@
+## [0.7.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.7.0...v0.7.1) (2019-02-25)
+
+
+### Bug Fixes
+
+* **sessions:** Make a request to refresh discord sessions after 3 days ([329f0de](https://github.com/ShadowZero3000/discord-soundboard/commit/329f0de))
+
 # [0.7.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.6.1...v0.7.0) (2019-02-18)
 
 
