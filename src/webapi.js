@@ -28,7 +28,12 @@ async function refreshSession(req, res, callback, session_cookie) {
 }
 
 async function refreshDiscordSession(req, res, callback, session_cookie) {
-  const refreshToken = req.cookies.discord_session.rt;
+  try {
+    const refreshToken = req.cookies.discord_session.rt;
+  } catch (e){
+    res.status(403).send("Session expired, please log back in");
+    return false;
+  }
   const form = new URLSearchParams({
     'client_id': nconf.get('CLIENT_ID'),
     'client_secret': nconf.get('CLIENT_SECRET'),
