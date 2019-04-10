@@ -1,3 +1,10 @@
+## [0.7.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.7.1...v0.7.2) (2019-04-10)
+
+
+### Bug Fixes
+
+* **error:** Fix uncaught error ([7cf4e94](https://github.com/ShadowZero3000/discord-soundboard/commit/7cf4e94))
+
 ## [0.7.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.7.0...v0.7.1) (2019-02-25)
 
 
