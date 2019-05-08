@@ -28,8 +28,9 @@ async function refreshSession(req, res, callback, session_cookie) {
 }
 
 async function refreshDiscordSession(req, res, callback, session_cookie) {
+  var refreshToken
   try {
-    const refreshToken = req.cookies.discord_session.rt;
+    refreshToken = req.cookies.discord_session.rt;
   } catch (e){
     res.status(403).send("Session expired, please log back in");
     return false;
