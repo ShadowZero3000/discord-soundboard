@@ -1,3 +1,10 @@
+## [0.7.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.7.2...v0.7.3) (2019-05-08)
+
+
+### Bug Fixes
+
+* **session:** Fix the session bug ([1d65b17](https://github.com/ShadowZero3000/discord-soundboard/commit/1d65b17))
+
 ## [0.7.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.7.1...v0.7.2) (2019-04-10)
 
 
