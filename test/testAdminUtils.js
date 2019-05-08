@@ -278,7 +278,7 @@ describe("Admin Utils", () => {
         adminUtils.grant(fakeMessage, [testUser.username, 'clipmanager']);
 
         adminUtils._getDiscordUser.restore();
-        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${testUser.username} has: clipmanager`])
+        expect(fakeMessage.reply.lastCall.args[0]).to.equal(`${testUser.username} has: clipmanager`)
         expect(stubbedAccessManager.grantUserAccessById.called).to.be.true;
       });
       it("Will grant users permission even if they never been granted permissions", function (){
@@ -288,7 +288,7 @@ describe("Admin Utils", () => {
         adminUtils.grant(fakeMessage, [testUser.username + 'bogus', 'clipmanager']);
 
         adminUtils._getDiscordUser.restore();
-        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${testUser.username}bogus has: clipmanager`]);
+        expect(fakeMessage.reply.lastCall.args[0]).to.equal(`${testUser.username}bogus has: clipmanager`);
       });
       it("Will not grant fake permissions", function (){
         stubbedAccessManager.getUserAccess.returns(['clipmanager']);
@@ -299,7 +299,7 @@ describe("Admin Utils", () => {
 
         adminUtils._getDiscordUser.restore();
         expect(stubbedAccessManager.grantUserAccessById.lastCall.args).to.deep.equal(['5',['clipmanager']])
-        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${testUser.username} has: clipmanager`]);
+        expect(fakeMessage.reply.lastCall.args[0]).to.equal(`${testUser.username} has: clipmanager`);
       });
     });
 
@@ -321,7 +321,7 @@ describe("Admin Utils", () => {
       it("Will not grant invalid permissions", function (){
         adminUtils.grantrole(fakeMessage, ['bogus', 'bogus', 'role']);
 
-        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Must select the granted access: \`clipmanager|play|requestor|servermanager|silencer|vocalist\``]);
+        expect(fakeMessage.reply.lastCall.args[0]).to.equal(`Must select the granted access: \`clipmanager|play|requestor|servermanager|silencer|vocalist\``);
       });
       it("Will fail if an underlying system fails", function (){
         stubbedAccessManager.grantRoleAccessById.returns(false);
@@ -449,7 +449,7 @@ describe("Admin Utils", () => {
 
         adminUtils._getDiscordUser.restore();
         expect(stubbedAccessManager.revokeUserAccessById.lastCall.args).to.deep.equal(['5',['clipmanager']])
-        expect(fakeMessage.reply.lastCall.args).to.deep.equal([`${testUser.username} has: silencer`]);
+        expect(fakeMessage.reply.lastCall.args[0]).to.equal(`${testUser.username} has: silencer`);
 
       });
       it("Will not revoke permissions from immune users", function (){
