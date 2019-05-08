@@ -98,7 +98,7 @@ class AdminUtils {
     if (access.length == 0) {
       return message.reply(`${user} does not have any directly assigned permissions`);
     }
-    return message.reply(`${user} has: ${access.sort().join(', ')}`);
+    return message.reply(`${user} has: ${access.sort().join(', ')}`, {split: true});
   }
 
   _saveConfig(key, value) {
@@ -144,7 +144,7 @@ class AdminUtils {
       });
     // No need to keep the requested message visible
     message.delete();
-    return message.reply(response);
+    return message.reply(response, {split: true});
   }
 
   add(message, params) {
@@ -252,7 +252,7 @@ class AdminUtils {
     const access = params.shift();
     const roleName = params.join(' ');
     if (!access.match("^(" + validRoles + ")$")) {
-      return message.reply('Must select the granted access: `' + validRoles + '`')
+      return message.reply('Must select the granted access: `' + validRoles + '`', {split: true})
     }
 
     const role = message.guild.roles.find(role => role.name.toLowerCase() === roleName);
@@ -300,7 +300,7 @@ class AdminUtils {
       +`to the Wit AI (https://wit.ai/) for processing.\n`
       +`I will not permanently record your data (unless I crash, in which case it will be tidied later)`
       +`, however, Wit may use these recordings to improve itself.\n`
-      +'If you do not agree to these terms, simply tell me: `ignoreme`')
+      +'If you do not agree to these terms, simply tell me: `ignoreme`', {split: true})
   }
 
   listphrases(message, params) {
@@ -371,7 +371,7 @@ class AdminUtils {
   reqlist(message, params) {
     const requests = fm.getRequests();
     const result = requests.map(req => `${req.name} - ${req.description}`).join('\n');
-    message.reply(`Here's what we've got requested:\n${result}`);
+    message.reply(`Here's what we've got requested:\n${result}`, {split: true});
   }
 
   revoke(message, params) {

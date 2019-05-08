@@ -14,9 +14,10 @@ class DiscordBot {
   }
 
   botHelp() {
+    const selections = Object.keys(fm.getAll()).sort(() => 0.5 - Math.random()).slice(1,5);
     return `I'm a bot!\n` +
       `You can ask me to make sounds by saying one of the following:\n` +
-      `\`${this.symbol}${Object.keys(fm.getAll()).sort().join(`\`, \`${this.symbol}`)}\`\n`;
+      `\`${this.symbol}${selections.join(`\`, \`${this.symbol}`)}\`\n`;
   }
 
   botAdminHelp(permissions) {
