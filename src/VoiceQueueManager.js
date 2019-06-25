@@ -33,7 +33,10 @@ class VoiceQueueManager {
       throw new Error(`You don't appear to be in a voice channel in this server`);
     }
     const voiceChannel = user.guild.channels.get(user.channelID);
-    log.debug(`Found voice channel ${voiceChannel}`);
+    log.debug(`getQueueFromMessage found voice channel ${voiceChannel}`);
+    if(voiceChannel == undefined) {
+      throw new Error(`Couldn't find channel`)
+    }
     return this.getQueueFromChannel(voiceChannel);
   }
 

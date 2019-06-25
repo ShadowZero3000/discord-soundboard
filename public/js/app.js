@@ -147,14 +147,15 @@ var vm = new Vue({
   el: '#vuewrapper',
   data () {
     return {
+      buttons: {},
       category: null,
       clips: {},
       errorMessage: null,
+      favorites: [],
       randomClips: [],
       sounds: null,
       subcategory: null,
-      syncedCollapses: {},
-      favorites: []
+      syncedCollapses: {}
     }
   },
   computed: {
@@ -179,6 +180,10 @@ var vm = new Vue({
         } else {
           var synced = collapseId in this.syncedCollapses
           if(!synced && val != isJustShown) {
+
+            if (this.buttons['btn_'+collapseId] != null) {
+              this.$set(this.buttons, 'btn_'+collapseId,{"active": true})
+            }
             this.$root.$emit('bv::toggle::collapse', collapseId)
           } else {
             idbKeyval.set(collapseId, isJustShown)
@@ -224,7 +229,17 @@ var vm = new Vue({
     refreshData() {
       axios
         .get('//'+window.location.host+'/api/clips')
-        .then(response => {this.clips = response.data})
+        .then(response => {
+          me = this
+          for(var cat in response.data) {
+            for(var subcat in response.data[cat]) {
+              id='btn_cat_'+cat+'_sub_'+subcat
+              //me.buttons[id] = me.buttons[id] || {"active": false}
+              me.$set(me.buttons, id, {"active":false})
+            }
+          }
+          this.clips = response.data;
+        })
       axios
         .get('//'+window.location.host+'/api/clips/random')
         .then(response => {this.randomClips = response.data})
