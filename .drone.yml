@@ -20,7 +20,7 @@ pipeline:
 
   # Unit tests
   unit-test:
-    image: registry.codethat.rocks:5000/discord-soundboard/base
+    image: registry.codethat.rocks/soundboard/base
     commands:
       - ls -lah
       - cp /node/node_modules . -r
@@ -39,8 +39,8 @@ pipeline:
     custom_dns: [ 192.168.10.1 ]
     debug: true
     network_mode: host
-    registry: registry.codethat.rocks:5000
-    repo: registry.codethat.rocks:5000/discord-soundboard/soundboard
+    registry: registry.codethat.rocks
+    repo: registry.codethat.rocks/soundboard/soundboard
     storage_path: /drone/docker
     tags: dev-${CI_BUILD_NUMBER}
     when:
@@ -50,7 +50,7 @@ pipeline:
 
   # Semantic release - Updates versions, changelogs, etc..., and pushes another commit with [skip ci]
   semver-update:
-    image: registry.codethat.rocks:5000/discord-soundboard/semver
+    image: registry.codethat.rocks/soundboard/semver
     commands:
       - if echo "$${DRONE_COMMIT_MESSAGE}" | grep "\[skip semver\]"; then exit 0; fi
       - mkdir ~/.ssh -p
@@ -73,8 +73,8 @@ pipeline:
     custom_dns: [ 192.168.10.1 ]
     debug: true
     network_mode: host
-    registry: registry.codethat.rocks:5000
-    repo: registry.codethat.rocks:5000/discord-soundboard/soundboard
+    registry: registry.codethat.rocks
+    repo: registry.codethat.rocks/soundboard/soundboard
     storage_path: /drone/docker
     tags: "${DRONE_TAG}"
     when:
@@ -94,17 +94,17 @@ pipeline:
       event: push
 
   # Dev deploy. Occurs on non-master/release branches
-  rancher-dev:
-    image: peloton/drone-rancher
+  kube-dev:
+    image: quay.io/honestbee/drone-kubernetes
 
-    access_key: superaccesskey
-    confirm: true
-    docker_image: "registry.codethat.rocks:5000/discord-soundboard/soundboard:dev-${CI_BUILD_NUMBER}"
-    secret_key: supersecretkey
-    service: dev-discord/discordbot
-    start_first: false
-    timeout: 300
-    url: http://rancher.codethat.rocks:8080
+    kubernetes_server: https://rancher.codethat.rocks:8443
+    kubernetes_token: ${K8S_TOKEN}
+    namespace: default
+    deployment: dev-soundboard
+    repo: registry.codethat.rocks/soundboard
+    container: soundboard
+    tag: dev-${CI_BUILD_NUMBER}
+
     when:
       event: push
       branch:
@@ -116,7 +116,7 @@ pipeline:
 
     access_key: superaccesskey
     confirm: true
-    docker_image: "registry.codethat.rocks:5000/discord-soundboard/soundboard:${DRONE_TAG}"
+    docker_image: "registry.codethat.rocks/soundboard/soundboard:${DRONE_TAG}"
     secret_key: supersecretkey
     service: discordbot/discordbot
     start_first: false
