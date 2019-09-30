@@ -1,3 +1,7 @@
+---
+kind: pipeline
+type: docker
+name: soundboard
 # I would like to add https://github.com/semantic-release/semantic-release to the flow
 # Ideally we'd have semantic-release do the tagging (which will trigger another job)
 # So on push to master, run semantic-release, on tag push to prod
@@ -6,23 +10,31 @@
 # But that's going to be a push to the master branch, so how to not repeat ourselves
 # will need some thought
 # Can do with: git commit -m "updated README [CI SKIP]"
-pipeline:
-  restore-cache:
-    image: drillster/drone-volume-cache
 
-    mount:
-      - /drone/docker
-    restore: true
-    volumes:
-      - /tmp/cache:/cache
-    when:
-      event: [push, tag]
+volumes:
+  - name: cache
+    host:
+      path: /tmp/cache
+steps:
+  # Caching no longer necessary for docker, since no DIND now.
+  # However, it'll help with node modules eventually, so turn it back on later
+  # Note that the mount path will need to change
+  # - name: restore-cache
+  #   image: drillster/drone-volume-cache
+  #   settings:
+  #     mount:
+  #       - /drone/docker
+  #     restore: true
+  #   volumes:
+  #     - name: cache
+  #       path: /cache
+  #   when:
+  #     event: [push, tag]
 
   # Unit tests
-  unit-test:
+  - name: unit-test
     image: registry.codethat.rocks/soundboard/base
     commands:
-      - ls -lah
       - cp /node/node_modules . -r
       - npm install
       - npm test
@@ -30,26 +42,33 @@ pipeline:
       event: push
       branch:
         exclude: [master, release/*]
-
   # Dev build. Occurs on non-master/release branches
-  docker-build:
+  - name: docker-build
     image: plugins/docker
 
     # Seems to be required to push to the registry on the same host
     custom_dns: [ 192.168.10.1 ]
     debug: true
     network_mode: host
-    registry: registry.codethat.rocks
-    repo: registry.codethat.rocks/soundboard/soundboard
+    settings:
+      registry: registry.codethat.rocks
+      username: drone
+      password:
+        from_secret: REGISTRY_PASSWORD
+      repo: registry.codethat.rocks/soundboard/soundboard
+      tags:
+        - dev-${CI_BUILD_NUMBER}
     storage_path: /drone/docker
-    tags: dev-${CI_BUILD_NUMBER}
     when:
-      event: push
+      event:
+        - push
       branch:
-        exclude: [master, release/*]
+        exclude:
+          - master
+          - release/*
 
   # Semantic release - Updates versions, changelogs, etc..., and pushes another commit with [skip ci]
-  semver-update:
+  - name: semver-update
     image: registry.codethat.rocks/soundboard/semver
     commands:
       - if echo "$${DRONE_COMMIT_MESSAGE}" | grep "\[skip semver\]"; then exit 0; fi
@@ -61,68 +80,81 @@ pipeline:
       - npx semantic-release --debug
     secrets: [ github_ssh_key, github_token ]
     when:
-      event: push
+      event:
+        - push
       branch:
-        include: [master, release/*]
+        - master
+        - release/*
 
   # Prod build - Happens after Semantic release updates changelogs etc...
-  docker-build-production:
+  - name: docker-build-production
     image: plugins/docker
 
     # Seems to be required to push to the registry on the same host
     custom_dns: [ 192.168.10.1 ]
     debug: true
     network_mode: host
-    registry: registry.codethat.rocks
-    repo: registry.codethat.rocks/soundboard/soundboard
+    settings:
+      registry: registry.codethat.rocks
+      username: drone
+      password:
+        from_secret: REGISTRY_PASSWORD
+      repo: registry.codethat.rocks/soundboard/soundboard
+      auto_tag: true
+      tags:
+        - "${DRONE_TAG}"
     storage_path: /drone/docker
-    tags: "${DRONE_TAG}"
     when:
-      event: tag
-      branch:
-        include: [master, release/*]
+      event:
+        - tag
 
-  rebuild-cache:
-    image: drillster/drone-volume-cache
 
-    mount:
-      - /drone/docker
-    rebuild: true
-    volumes:
-      - /tmp/cache:/cache
-    when:
-      event: push
+
+  # See above note about caching
+  # - name: rebuild-cache
+  #   image: drillster/drone-volume-cache
+  #   settings:
+  #     mount:
+  #       - /drone/docker
+  #     rebuild: true
+  #   volumes:
+  #     - name: cache
+  #       path: /cache
+  #   when:
+  #     event: push
 
   # Dev deploy. Occurs on non-master/release branches
-  kube-dev:
+  - name: kube-dev
     image: quay.io/honestbee/drone-kubernetes
-
-    # kubernetes_server: https://rancher.codethat.rocks:8443
-    # kubernetes_token: ${K8S_TOKEN}
-    namespace: default
-    deployment: dev-soundboard
-    repo: registry.codethat.rocks/soundboard
-    container: soundboard
-    tag: dev-${CI_BUILD_NUMBER}
-
+    settings:
+      kubernetes_server: https://kubernetes.default.svc
+      kubernetes_token:
+        from_secret: PIPELINE_TOKEN
+      kubernetes_cert:
+        from_secret: PIPELINE_CA_CERT
+      namespace: default
+      deployment: dev-soundboard
+      repo: registry.codethat.rocks/soundboard/soundboard
+      container: soundboard
+      tag: dev-${CI_BUILD_NUMBER}
     when:
       event: push
       branch:
         exclude: [master, release/*]
 
   # Prod deploy, Occurs on tags
-  rancher-production:
-    image: peloton/drone-rancher
-
-    access_key: superaccesskey
-    confirm: true
-    docker_image: "registry.codethat.rocks/soundboard/soundboard:${DRONE_TAG}"
-    secret_key: supersecretkey
-    service: discordbot/discordbot
-    start_first: false
-    timeout: 300
-    url: http://rancher.codethat.rocks:8080
+  - name: kube-prod
+    image: quay.io/honestbee/drone-kubernetes
+    settings:
+      kubernetes_server: https://kubernetes.default.svc
+      kubernetes_token:
+        from_secret: PIPELINE_TOKEN
+      kubernetes_cert:
+        from_secret: PIPELINE_CA_CERT
+      namespace: default
+      deployment: dev-soundboard
+      repo: registry.codethat.rocks/soundboard/soundboard
+      container: soundboard
+      tag: ${DRONE_TAG}
     when:
       event: tag
-      branch:
-        include: [master, release/*]
