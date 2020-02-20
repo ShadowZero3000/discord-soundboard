@@ -50,6 +50,7 @@ class VoiceQueue {
     this.playQueue = []; // Clear the queue on leaving
     this.log("Leaving");
     try {
+      this.play_clip('bot_powerdown')
       this.channel.leave()
     } catch(err) {
       this.log(`Error leaving channel: ${err.message}`)
@@ -74,6 +75,27 @@ class VoiceQueue {
       return;
     }
 
+    this.play_clip(keyword)
+    // this.channel.join()
+    //   // TODO: send play event to Play Bus
+    //   .then(conn => {
+    //     this.log(`Playing: ${keyword}`);
+    //     const dispatcher = conn.play(fm.getStream(keyword));
+    //     dispatcher.on("end", end => {
+    //       // TODO: send end event to Play Bus
+    //       this.log(`Finished with: ${keyword}`);
+    //       this.playing = false;
+    //       this.play();
+    //     });
+    //   })
+    //   .catch(err => {
+    //     this.log(`Error in channel join: ${err}`);
+    //     this.playing = false;
+    //     this.play();
+    //   });
+  }
+
+  play_clip(keyword) {
     this.channel.join()
       // TODO: send play event to Play Bus
       .then(conn => {
