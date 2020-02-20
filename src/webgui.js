@@ -26,9 +26,12 @@ app.get('/logout', (req, res) => {
   return res.redirect('/');
 });
 
-app.use('/css', express.static('public/css'));
-app.use('/js', express.static('public/js'));
-app.use('/media', express.static('public/media'));
+const oneMonth = 1000 * 60 * 60 * 24 * 30
+const oneWeek = 1000 * 60 * 60 * 24 * 7
+
+app.use('/css', express.static('public/css'), { maxage: oneWeek });
+app.use('/js', express.static('public/js'), { maxage: oneWeek });
+app.use('/media', express.static('public/media'), { maxage: oneMonth });
 app.use('/logs', express.static('logs'));
 app.use('/api', require('./webapi.js'));
 
