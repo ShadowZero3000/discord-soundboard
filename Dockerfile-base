@@ -1,9 +1,10 @@
-FROM node:10.10-jessie
+FROM node:10-alpine
 
-RUN echo "deb http://ftp.uk.debian.org/debian jessie-backports main" >> /etc/apt/sources.list.d/backports.list \
- && apt-get update && apt-get install -y ffmpeg \
- && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache ffmpeg git
 
 COPY package.json /node/
 
-RUN cd /node && npm install --production
+# node-gyp has to be built in alpine, but not kept for runtime
+RUN apk add --no-cache --virtual .build-deps make gcc g++ python \
+  && cd /node && npm install --production --silent \
+  && apk del .build-deps

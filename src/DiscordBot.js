@@ -52,8 +52,10 @@ class DiscordBot {
     }).catch(err => {
       log.debug(`Connection error in DiscordBot: ${err}`)
     });
-
-    this.client.on('guildMemberSpeaking', this.handleSpeaking.bind(this))
+    if(nconf.get('LISTEN_ENABLED')){
+      console.log("Listening enabled")
+      this.client.on('guildMemberSpeaking', this.handleSpeaking.bind(this))
+    }
     return this.client;
   }
 

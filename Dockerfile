@@ -1,4 +1,4 @@
-FROM registry.codethat.rocks:5000/discord-soundboard/base
+FROM registry.codethat.rocks/soundboard/base
 
 COPY package.json /node/
 
