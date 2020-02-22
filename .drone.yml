@@ -70,6 +70,11 @@ steps:
   # Semantic release - Updates versions, changelogs, etc..., and pushes another commit with [skip ci]
   - name: semver-update
     image: registry.codethat.rocks/soundboard/semver
+    environment:
+      GITHUB_SSH_KEY:
+        from_secret: github_ssh_key
+      GITHUB_TOKEN:
+        from_secret: github_token
     commands:
       - if echo "$${DRONE_COMMIT_MESSAGE}" | grep "\[skip semver\]"; then exit 0; fi
       - mkdir ~/.ssh -p
@@ -78,7 +83,6 @@ steps:
       - chmod +x ./update_version
       - printf "StrictHostKeyChecking no\nUserKnownHostsFile /dev/null\nHost github.com\nUser ShadowZero3000" > ~/.ssh/config
       - npx semantic-release --debug
-    secrets: [ github_ssh_key, github_token ]
     when:
       event:
         - push
