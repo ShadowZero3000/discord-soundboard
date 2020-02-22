@@ -104,7 +104,7 @@ steps:
       password:
         from_secret: REGISTRY_PASSWORD
       repo: registry.codethat.rocks/soundboard/soundboard
-      auto_tag: true
+      auto_tag: false
       tags:
         - "${DRONE_TAG}"
     storage_path: /drone/docker
