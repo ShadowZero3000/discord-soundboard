@@ -1,3 +1,10 @@
+## [0.8.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.1...v0.8.2) (2020-02-22)
+
+
+### Bug Fixes
+
+* **tags:** Fix image tags (missing v) ([70ee37a](https://github.com/ShadowZero3000/discord-soundboard/commit/70ee37a1c4e4c27d6d766966464f1889db797397))
+
 ## [0.8.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.0...v0.8.1) (2020-02-22)
 
 
