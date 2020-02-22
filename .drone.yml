@@ -111,7 +111,6 @@ steps:
     when:
       event:
         - tag
-
   # See above note about caching
   # - name: rebuild-cache
   #   image: drillster/drone-volume-cache
