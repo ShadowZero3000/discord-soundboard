@@ -1,3 +1,10 @@
+## [0.8.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.2...v0.8.3) (2020-02-22)
+
+
+### Bug Fixes
+
+* **version:** Meaningless change ([25efc8a](https://github.com/ShadowZero3000/discord-soundboard/commit/25efc8afc896c9332be828aa68b5400ff9606cde))
+
 ## [0.8.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.1...v0.8.2) (2020-02-22)
 
 
