@@ -1,3 +1,10 @@
+## [0.8.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.0...v0.8.1) (2020-02-22)
+
+
+### Bug Fixes
+
+* **drone:** Update to publish to prod ([f159e83](https://github.com/ShadowZero3000/discord-soundboard/commit/f159e83c8844d7b037892af4cc615167a2c8282f))
+
 # [0.8.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.7.3...v0.8.0) (2020-02-22)
 
 
