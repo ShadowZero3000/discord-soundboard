@@ -1,7 +1,7 @@
 FROM node:10-alpine
 
-RUN apk add --no-cache jq git \
- && npm install --no-save \
+RUN apk add --no-cache jq git openssh-client \
+ && npm install -g --no-save \
       semantic-release \
       @semantic-release/exec \
       @semantic-release/changelog \
