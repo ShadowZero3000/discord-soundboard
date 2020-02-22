@@ -21,7 +21,6 @@ docker run -e TOKEN=<Bot Token> -e CLIENT_SECRET=<Client secret> -p 3000:3000 di
 
 ```
 
-
 ## Using the app
 
 You can type `!soundboard help` for some basic guidance at any time.
