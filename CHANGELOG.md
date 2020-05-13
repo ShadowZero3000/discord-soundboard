@@ -1,3 +1,10 @@
+## [0.8.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.3...v0.8.4) (2020-05-13)
+
+
+### Bug Fixes
+
+* **pin:** Another meaningless change ([6fe91d9](https://github.com/ShadowZero3000/discord-soundboard/commit/6fe91d9a8820265ea04fc50b2302cc793e85c6e4))
+
 ## [0.8.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.2...v0.8.3) (2020-02-22)
 
 
