@@ -1,3 +1,10 @@
+## [0.8.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.4...v0.8.5) (2020-06-13)
+
+
+### Bug Fixes
+
+* **login:** Fix the login flow not working ([b64a9d8](https://github.com/ShadowZero3000/discord-soundboard/commit/b64a9d831f5a49597c6c3bfeab41dcd49e9cc6b3))
+
 ## [0.8.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.3...v0.8.4) (2020-05-13)
 
 
