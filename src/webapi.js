@@ -85,12 +85,18 @@ router.get('/discord/callback', async (req, res) => {
   const redirect = getRedirect(req);
 
   const code = req.query.code;
-  const credentials = btoa(`${nconf.get('CLIENT_ID')}:${nconf.get('CLIENT_SECRET')}`);
-  const response = await fetch(`https://discordapp.com/api/oauth2/token?grant_type=authorization_code&code=${code}&redirect_uri=${redirect}`, {
+
+  const params = new URLSearchParams({
+    'client_id': nconf.get('CLIENT_ID'),
+    'client_secret': nconf.get('CLIENT_SECRET'),
+    'grant_type': 'authorization_code',
+    'code': code,
+    'redirect_uri': decodeURIComponent(redirect),
+    'scope': 'identify guilds'
+  });
+  const response = await fetch(`https://discordapp.com/api/oauth2/token`, {
     method: 'POST',
-    headers: {
-      Authorization: `Basic ${credentials}`,
-    }
+    body: params
   });
 
   const json = await response.json();
