@@ -92,10 +92,9 @@ class DiscordBot {
   getVCFromUserid(userId) {
     log.debug(`Looking for an active voice channel for ${userId}`);
     const voiceChannel =
-      this.client.guilds.map(guild => guild.voiceStates.get(userId))
+      this.client.guilds.cache.map(guild => guild.voiceStates.cache.get(userId))
         .filter(voiceState => voiceState !== undefined)
-        .map(user => user.guild.channels.get(user.channelID))[0];
-    log.debug(`Found voice channel ${voiceChannel}`);
+        .map(user => user.guild.channels.cache.get(user.channelID))[0];
     return voiceChannel;
   }
 
@@ -195,8 +194,8 @@ class DiscordBot {
     }
 
     try{
-      var memberVoiceState = member.guild.voiceStates.get(member.id)
-      var voiceChannel = member.guild.channels.get(memberVoiceState.channelID);
+      var memberVoiceState = member.guild.voiceStates.cache.get(member.id)
+      var voiceChannel = member.guild.channels.cache.get(memberVoiceState.channelID);
       if(speaking.bitfield) {
         var currentConnection = this.client.voice.connections.get(memberVoiceState.guild.id)
         lm.listen(member.user.id, currentConnection)
@@ -215,8 +214,16 @@ class DiscordBot {
       var startup = nconf.get('startup');
       adminUtils._setImmuneUser(app.owner.id);
       if (startup.enabled) {
-        vqm.getQueueFromChannel(this.getVCFromUserid(app.owner.id))
-           .add(startup.clip);
+        var queue = undefined
+        var vc = this.getVCFromUserid(app.owner.id)
+        if(vc) {
+          queue = vqm.getQueueFromChannel(vc)
+        }
+        if(queue) {
+           queue.add(startup.clip);
+        } else {
+          log.debug(`No startup noise, you're not online.`)
+        }
       }
     }).catch(err => {
       log.debug(`Error fetching application: ${err}`)

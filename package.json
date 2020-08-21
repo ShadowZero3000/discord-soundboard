@@ -8,7 +8,7 @@
     "btoa": "^1.2.1",
     "cookie-parser": "^1.4.3",
     "data-store": "^3.1.0",
-    "discord.js": "discordjs/discord.js#90aa5b3500a2ba819db1c4facb65f9949b38fbc3",
+    "discord.js": "^12.3.1",
     "express": "^4.16.0",
     "fluent-ffmpeg": "^2.1.2",
     "nconf": "^0.10.0",

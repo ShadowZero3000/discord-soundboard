@@ -420,7 +420,10 @@ class AdminUtils {
 
   silence(message, params) {
     try {
-      vqm.getQueueFromMessage(message).silence();
+      var queue = vqm.getQueueFromMessage(message)
+      if(queue){
+        queue.silence();
+      }
       message.reply("Oooooh kaaaaay. I'll go sit in a corner for a while and think about what I did.");
     } catch (e) {
       message.reply(e.message);
@@ -436,7 +439,10 @@ class AdminUtils {
 
   unmute(message, params) {
     try {
-      vqm.getQueueFromMessage(message).unsilence();
+      var queue = vqm.getQueueFromMessage(message)
+      if(queue) {
+        queue.unsilence();
+      }
       message.reply("Ok, ready to make some noise.");
     } catch (e) {
       message.reply(e.message);
@@ -444,8 +450,9 @@ class AdminUtils {
   }
 
   whereareyou(message, params) {
+    console.log(message.dclient.guilds)
     return message.reply(`I'm available in the following servers: \n`+
-      message.dclient.guilds.map(guild => guild.name).join('\n'));
+      message.dclient.guilds.cache.map(guild => guild.name).join('\n'));
   }
 }
 
