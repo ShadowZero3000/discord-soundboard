@@ -255,7 +255,7 @@ class AdminUtils {
       return message.reply('Must select the granted access: `' + validRoles + '`', {split: true})
     }
 
-    const role = message.guild.roles.find(role => role.name.toLowerCase() === roleName);
+    const role = message.guild.roles.cache.find(role => role.name.toLowerCase() === roleName);
     if (!role) {
       return message.reply(`Couldn't find that role`);
     }
@@ -408,7 +408,7 @@ class AdminUtils {
     if (!access.match("^(" + validRoles + ")$")) {
       return message.reply('Must select the revoked access: `' + validRoles + '`')
     }
-    const role = message.guild.roles.find(role => role.name.toLowerCase() === roleName);
+    const role = message.guild.roles.cache.find(role => role.name.toLowerCase() === roleName);
     if (!role) {
       return message.reply(`Couldn't find that role`);
     }

@@ -1,8 +1,8 @@
 var expect = require("chai").expect;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire');
-var Store = require('data-store');
-stubbedStore = sinon.createStubInstance(Store);
+var Store = require('data-store').Store;
+var stubbedStore = sinon.createStubInstance(Store);
 
 var testUser = {
   username: 'testuser',
