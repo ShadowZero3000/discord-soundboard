@@ -1,3 +1,10 @@
+## [0.8.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.5...v0.8.6) (2020-08-21)
+
+
+### Bug Fixes
+
+* Tests ([1224bbc](https://github.com/ShadowZero3000/discord-soundboard/commit/1224bbc235e7bac67f9da7896a350ab5314db37b))
+
 ## [0.8.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.4...v0.8.5) (2020-06-13)
 
 
