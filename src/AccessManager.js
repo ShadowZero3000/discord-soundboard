@@ -63,7 +63,7 @@ class AccessManager {
     if (!guild) { return []; }
     const guildAccess = this.getGuildById(guild.id);
     return guildAccess.getRoles().map(role => {
-      return {name: guild.roles.get(role).name, access: guildAccess.getRole(role).permissions};
+      return {name: guild.roles.cache.get(role).name, access: guildAccess.getRole(role).permissions};
     });
   }
 

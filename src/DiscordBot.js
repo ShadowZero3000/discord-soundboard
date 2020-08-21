@@ -53,7 +53,7 @@ class DiscordBot {
       log.debug(`Connection error in DiscordBot: ${err}`)
     });
     if(nconf.get('LISTEN_ENABLED')){
-      console.log("Listening enabled")
+      log.debug("Listening enabled")
       this.client.on('guildMemberSpeaking', this.handleSpeaking.bind(this))
     }
     return this.client;
