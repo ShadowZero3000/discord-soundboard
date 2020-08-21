@@ -17,7 +17,7 @@ class DiscordBot {
     const selections = Object.keys(fm.getAll()).sort(() => 0.5 - Math.random()).slice(1,5);
     return `I'm a bot!\n` +
       `You can ask me to make sounds by saying one of the following:\n` +
-      `\`${this.symbol}${selections.join(`\`, \`${this.symbol}`)}\`\n`;
+      `\`${this.safeSymbol}${selections.join(`\`, \`${this.safeSymbol}`)}\`\n`;
   }
 
   botAdminHelp(permissions) {
@@ -26,8 +26,8 @@ class DiscordBot {
     }
     return '----\n' +
       'You can also use:\n'  +
-      `\`${this.symbol}${this.adminWords[0]} ` +
-      permissions.join(`\`, \`${this.symbol}${this.adminWords[0]} `) + '`';
+      `\`${this.safeSymbol}${this.adminWords[0]} ` +
+      permissions.join(`\`, \`${this.safeSymbol}${this.adminWords[0]} `) + '`';
   }
 
   configure(token) {
@@ -60,7 +60,7 @@ class DiscordBot {
   }
 
   processVoiceRecognition(userid, data) {
-    if (data == '' || data == 'Too long') {
+    if (data == undefined || data == '' || data == 'Too long') {
       return
     }
     log.debug(`Voice message: ${data}`)

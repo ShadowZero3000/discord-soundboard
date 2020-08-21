@@ -101,7 +101,7 @@ class Listener {
       log.debug('Some file you want to delete failed')
     }
     if (data != null) {
-      callback(data._text)
+      callback(data.text)
     }
   }
   finish(callback) {
