@@ -1,8 +1,8 @@
 var expect = require("chai").expect;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire');
-var Store = require('data-store');
-stubbedStore = sinon.createStubInstance(Store);
+var Store = require('data-store').Store;
+var stubbedStore = sinon.createStubInstance(Store);
 
 var testUser = {
   username: 'testuser',
@@ -41,7 +41,9 @@ var fakeMessage = {
   },
   channel: {
     guild: {
-      members: [{user: testUser},{user: immuneUser}]
+      members: {
+        cache: [{user: testUser},{user: immuneUser}]
+      }
     }
   },
   reply: function (message) {
@@ -71,11 +73,15 @@ const testRole = {
 }
 const testGuild = {
   members: {
-    get: function(userid) { return testUser }
+    cache: {
+      get: function(userid) { return testUser }
+    }
   },
   roles: {
-    get: function(roleid) { return testRole },
-    find: sinon.stub()
+    cache: {
+      get: function(roleid) { return testRole },
+      find: sinon.stub()
+    }
   }
 }
 

@@ -77,7 +77,6 @@ class VoiceQueue {
       this.timeout = setTimeout(() => this.disconnect(), 15*60*1000); // 15m unless he moves
       return;
     }
-
     this.play_clip(keyword)
   }
 
@@ -85,9 +84,8 @@ class VoiceQueue {
     this.channel.join()
       // TODO: send play event to Play Bus
       .then(conn => {
-        this.log(`Playing: ${keyword}`);
         const dispatcher = conn.play(fm.getStream(keyword));
-        dispatcher.on("end", end => {
+        dispatcher.on("finish", end => {
           // TODO: send end event to Play Bus
           this.log(`Finished with: ${keyword}`);
           this.playing = false;

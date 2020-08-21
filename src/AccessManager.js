@@ -24,7 +24,7 @@ class AccessManager {
   }
 
   checkAccess(user, guild, access) {
-    const userRoles = guild.members.get(user.id)._roles;
+    const userRoles = guild.members.cache.get(user.id)._roles;
     return (this.checkUserAccessById(user.id, access) ||
             this.checkRoleAccessById(userRoles, guild.id, access));
   }
@@ -63,7 +63,7 @@ class AccessManager {
     if (!guild) { return []; }
     const guildAccess = this.getGuildById(guild.id);
     return guildAccess.getRoles().map(role => {
-      return {name: guild.roles.get(role).name, access: guildAccess.getRole(role).permissions};
+      return {name: guild.roles.cache.get(role).name, access: guildAccess.getRole(role).permissions};
     });
   }
 

@@ -48,14 +48,20 @@ var fakeMessage = {
   channel: {
     guild: {
       id: '1',
-      members: [{user: testUser},{user: immuneUser}]
+      members: {
+        cache: [{user: testUser},{user: immuneUser}]
+      }
     }
   },
   guild: {
     id: '1',
-    members: [{user: testUser},{user: immuneUser}],
+    members: {
+      cache: [{user: testUser},{user: immuneUser}]
+    },
     roles: {
-      find: sinon.stub()
+      cache: {
+        find: sinon.stub()
+      }
     }
   },
   reply: function (message) {
@@ -309,7 +315,7 @@ describe("Admin Utils", () => {
       });
       it("Will grant a server role permissions", function (){
         stubbedAccessManager.grantRoleAccessById.returns(true);
-        fakeMessage.guild.roles.find.returns({name: 'Test role'});
+        fakeMessage.guild.roles.cache.find.returns({name: 'Test role'});
         adminUtils.grantrole(fakeMessage, ['play', 'test', 'role']);
         expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Granted play to 'Test role'`]);
         expect(stubbedAccessManager.grantRoleAccessById.called).to.be.true;
@@ -325,7 +331,7 @@ describe("Admin Utils", () => {
       });
       it("Will fail if an underlying system fails", function (){
         stubbedAccessManager.grantRoleAccessById.returns(false);
-        fakeMessage.guild.roles.find.returns({name: 'Test role'})
+        fakeMessage.guild.roles.cache.find.returns({name: 'Test role'})
 
         adminUtils.grantrole(fakeMessage, ['play', 'bogus', 'role']);
 
@@ -471,7 +477,7 @@ describe("Admin Utils", () => {
       });
       it("Will revoke a server role permissions", function (){
         stubbedAccessManager.revokeRoleAccessById.returns(true);
-        fakeMessage.guild.roles.find.returns({name: 'Bogus role'})
+        fakeMessage.guild.roles.cache.find.returns({name: 'Bogus role'})
 
         adminUtils.revokerole(fakeMessage, ['play', 'bogus', 'role']);
 
@@ -484,14 +490,14 @@ describe("Admin Utils", () => {
         expect(fakeMessage.reply.calledWith(`Couldn't find that role`)).to.be.true;
       });
       it("Will not revoke invalid permissions", function (){
-        fakeMessage.guild.roles.find.returns({name: 'Bogus role'})
+        fakeMessage.guild.roles.cache.find.returns({name: 'Bogus role'})
         adminUtils.revokerole(fakeMessage, ['bogus', 'bogus', 'role']);
 
         expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Must select the revoked access: \`clipmanager|play|requestor|servermanager|silencer|vocalist\``]);
       });
       it("Will fail if an underlying system fails", function (){
         stubbedAccessManager.revokeRoleAccessById.returns(false);
-        fakeMessage.guild.roles.find.returns({name: 'Bogus role'})
+        fakeMessage.guild.roles.cache.find.returns({name: 'Bogus role'})
 
         adminUtils.revokerole(fakeMessage, ['play', 'bogus', 'role']);
         expect(fakeMessage.reply.lastCall.args).to.deep.equal([`Something went wrong with that`]);
