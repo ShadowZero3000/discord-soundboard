@@ -77,7 +77,7 @@ class AdminUtils {
 
   // Private functions
   _getDiscordUser(message, username) {
-    return message.channel.guild.members.find(a => {
+    return message.channel.guild.members.cache.find(a => {
       return a.user['username'].toLowerCase() == username.toLowerCase();
     });
   }

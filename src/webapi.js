@@ -146,7 +146,7 @@ router.get('/play/:clip', async (req, res) => {
       try {
         const userid = JSON.parse(body).id;
         const queue = vqm.getQueueFromUser(discord.client, userid);
-        const user = queue.channel.guild.members.get(userid);
+        const user = queue.channel.guild.members.cache.get(userid);
 
         if(session_cookie['updated']) {
           res.cookie('discord_session', session_cookie.value, {
@@ -205,7 +205,7 @@ router.get('/random/:clip', async (req, res) => {
       try {
         const userid = JSON.parse(body).id;
         const queue = vqm.getQueueFromUser(discord.client, userid);
-        const user = queue.channel.guild.members.get(userid);
+        const user = queue.channel.guild.members.cache.get(userid);
         if (am.checkAccess(user, queue.channel.guild, 'play')) {
           queue.add(fm.random(req.params.clip));
           return res.status(200).end();

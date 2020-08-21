@@ -24,7 +24,7 @@ class AccessManager {
   }
 
   checkAccess(user, guild, access) {
-    const userRoles = guild.members.get(user.id)._roles;
+    const userRoles = guild.members.cache.get(user.id)._roles;
     return (this.checkUserAccessById(user.id, access) ||
             this.checkRoleAccessById(userRoles, guild.id, access));
   }
