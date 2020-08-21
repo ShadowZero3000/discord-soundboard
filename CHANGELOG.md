@@ -1,3 +1,18 @@
+# [0.9.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.6...v0.9.0) (2020-08-21)
+
+
+### Bug Fixes
+
+* **tests:** Make tests work with the new code ([b25245b](https://github.com/ShadowZero3000/discord-soundboard/commit/b25245b1e21c09ffcbeb709125cb639983425033))
+* **upgrade:** Correct another cache reference ([997ab28](https://github.com/ShadowZero3000/discord-soundboard/commit/997ab281021ac23d1c4ca0a2a036daaa00b550ac))
+* **upgrade:** Correct more references ([b34f851](https://github.com/ShadowZero3000/discord-soundboard/commit/b34f8510e0b73b4db77fd9bc1a7b37744a5a4525))
+* **upgrade:** More upgrade details ([8339e8b](https://github.com/ShadowZero3000/discord-soundboard/commit/8339e8b327d72fed069a2d2857e4ae9c50ff3b5e))
+
+
+### Features
+
+* **listen:** Bring back listening to users ([682f919](https://github.com/ShadowZero3000/discord-soundboard/commit/682f9191144d7e728f1c7801549de789bff3a89a))
+
 ## [0.8.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.5...v0.8.6) (2020-08-21)
 
 
