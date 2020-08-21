@@ -420,7 +420,7 @@ class AdminUtils {
 
   silence(message, params) {
     try {
-      queue = vqm.getQueueFromMessage(message)
+      var queue = vqm.getQueueFromMessage(message)
       if(queue){
         queue.silence();
       }
@@ -439,7 +439,7 @@ class AdminUtils {
 
   unmute(message, params) {
     try {
-      queue = vqm.getQueueFromMessage(message)
+      var queue = vqm.getQueueFromMessage(message)
       if(queue) {
         queue.unsilence();
       }
