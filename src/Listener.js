@@ -95,7 +95,12 @@ class Listener {
       ])
       .on('end', function() {
         // Stream the file to be sent to the wit.ai
-        var stream = fs.createReadStream(outputpath);
+        try{
+          var stream = fs.createReadStream(outputpath);
+        } catch(e){
+          log.debug(`Error with readstream: ${e.message}`)
+          return cb(null)
+        }
         if(!listener.stt_enabled){
           return cb(null)
         }
