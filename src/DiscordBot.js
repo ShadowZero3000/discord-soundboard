@@ -17,7 +17,7 @@ class DiscordBot {
     const selections = Object.keys(fm.getAll()).sort(() => 0.5 - Math.random()).slice(1,5);
     return `I'm a bot!\n` +
       `You can ask me to make sounds by saying one of the following:\n` +
-      `\`${this.safeSymbol}${selections.join(`\`, \`${this.safeSymbol}`)}\`\n`;
+      `\`${this.symbol}${selections.join(`\`, \`${this.symbol}`)}\`\n`;
   }
 
   botAdminHelp(permissions) {
@@ -26,8 +26,8 @@ class DiscordBot {
     }
     return '----\n' +
       'You can also use:\n'  +
-      `\`${this.safeSymbol}${this.adminWords[0]} ` +
-      permissions.join(`\`, \`${this.safeSymbol}${this.adminWords[0]} `) + '`';
+      `\`${this.symbol}${this.adminWords[0]} ` +
+      permissions.join(`\`, \`${this.symbol}${this.adminWords[0]} `) + '`';
   }
 
   configure(token) {
@@ -135,7 +135,12 @@ class DiscordBot {
   handleKeywordMessage(message, keyword, extraArgs) {
     // Time for some audio!
     //var botRole=am.getRoleByName('Bot Interactions', message.guild)
-    const voiceQueue = vqm.getQueueFromUser(this.client, message.member.id);
+    var voiceQueue
+    try{
+      voiceQueue = vqm.getQueueFromUser(this.client, message.member.id);
+    } catch(e) {
+      return message.reply(e.message)
+    }
     if (!voiceQueue) {
       return;
     }

@@ -1,11 +1,18 @@
+const AV = require('av')
 const decode = require('./decodeOpus.js');
+const Ds = require('deepspeech')
+const Duplex = require("stream").Duplex;
 const ffmpeg = require('fluent-ffmpeg');
 const fm = require('./FileManager');
 const fs = require('fs');
 const log = require('./logger.js').errorLog;
+const MemoryStream = require("memory-stream");
 const nconf = require('nconf');
 const path = require('path');
+const Sox = require('sox-stream')
 const WitSpeech = require('node-witai-speech');
+
+require('vorbis.js')
 
 class Listener {
   constructor(memberid) {
@@ -20,7 +27,29 @@ class Listener {
     this.listenerEvent = this.pipeData.bind(this)
     this.startTimestamp = null
     this.maxRunTime = 4000 // This might need to come from a config
+    this.stt_enabled = false
+
+    this.loadStt()
   }
+
+  loadStt() {
+    var listener = this
+    var stt_dir = './stt'
+    fs.readdir(stt_dir, (err, files)=>{
+      if(!files) {
+        return
+      }
+      files.every((file)=>{
+        if(path.extname(file) == '.pbmm'){
+          log.debug('Model available, enabling speech to text')
+          listener.model = new Ds.Model(path.join(stt_dir,file))
+          listener.stt_enabled = true
+          return false // Break the loop
+        }
+      })
+    })
+  }
+
   generateOutputFile(connection) {
     // use IDs instead of username cause some people have stupid emojis in their name
     const fileName = `./recordings/${connection.channel.id}-${this.memberid}-${Date.now()}.opus`;
@@ -50,7 +79,14 @@ class Listener {
   }
   // Sourced from: https://github.com/XianhaiC/Voice-Bot
   processRawToWav(filepath, outputpath, cb) {
+    var listener = this
     fs.closeSync(fs.openSync(outputpath, 'w'));
+
+    if (!fs.existsSync(filepath)) {
+      log.debug('Recording missing:', filepath);
+      return cb(null)
+    }
+
     var command = ffmpeg(filepath)
       .addInputOptions([
         '-f s32le',
@@ -59,29 +95,58 @@ class Listener {
       ])
       .on('end', function() {
         // Stream the file to be sent to the wit.ai
-        var stream = fs.createReadStream(outputpath);
+        try{
+          var stream = fs.createReadStream(outputpath);
+        } catch(e){
+          log.debug(`Error with readstream: ${e.message}`)
+          return cb(null)
+        }
+        if(!listener.stt_enabled){
+          return cb(null)
+        }
 
-        // Its best to return a promise
-        var parseSpeech =  new Promise((ressolve, reject) => {
-        // call the wit.ai api with the created stream
-        WitSpeech.extractSpeechIntent(nconf.get("WIT_API_KEY"), stream, "audio/wav",
-        (err, res) => {
-            if (err) return reject(err);
-            ressolve(res);
-          });
-        });
+        if(nconf.get("USE_WIT") == undefined || !nconf.get("USE_WIT")) {
+          const transcode = Sox({
+            output: {
+              bits: 16,
+              rate: 16000,
+              channels: 1,
+              type: 'raw'
+            }
+          })
 
-        // check in the promise for the completion of call to witai
-        parseSpeech.then((data) => {
-          cb(data);
-          //return data;
-        })
-        .catch((err) => {
-          console.log(err)
-          log.debug(err.message);
-          cb(null);
-          //return null;
-        })
+          let audioStream = new MemoryStream();
+          audioStream.on('finish', ()=>{
+            let audioBuffer = audioStream.toBuffer();
+            let buffer = new Int16Array(audioBuffer.buffer, audioBuffer.byteOffset, audioBuffer.length / Int16Array.BYTES_PER_ELEMENT)
+            let result = listener.model.stt(buffer)
+            return cb({text: result})
+          })
+          stream.pipe(transcode).pipe(audioStream)
+        } else {
+          if(nconf.get("WIT_API_KEY") != undefined) {
+            // Its best to return a promise
+            var parseSpeech =  new Promise((ressolve, reject) => {
+              // call the wit.ai api with the created stream
+              WitSpeech.extractSpeechIntent(nconf.get("WIT_API_KEY"), stream, "audio/wav",
+              (err, res) => {
+                  if (err) return reject(err);
+                  ressolve(res);
+                });
+            });
+
+            // check in the promise for the completion of call to witai
+            parseSpeech.then((data) => {
+              cb(data);
+            })
+            .catch((err) => {
+              console.log(err)
+              log.debug(err.message);
+              return cb(null);
+            })
+          }
+          // End of wit processing
+        }
       })
       .on('error', function(err) {
           log.debug('an error happened: ' + err.message);
@@ -90,7 +155,7 @@ class Listener {
       .run();
   }
   handleTextFromSpeech(data, file, stream, callback) {
-    let basename = path.basename(file, '.opus_string');
+    let basename = path.basename(file, '.opus');
     // Create a new file for new streams to deal with
     // Delete all the temp files and streams
     try {
@@ -105,17 +170,22 @@ class Listener {
     }
   }
   finish(callback) {
+    if(!this.stt_enabled) {
+      return callback('Speech to text disabled')
+    }
+    // return
     var runTime = new Date().getTime() - this.startTimestamp
     if (runTime > this.maxRunTime) {
       // Don't bother shipping long messages
       return callback('Too long')
     }
     try{
-      let basename = path.basename(this.currentFile, '.opus_string');
+      let basename = path.basename(this.currentFile, '.opus');
       var listener = this
 
       var fileWhenRun = this.currentFile
       var streamWhenRun = this.outputStream
+      streamWhenRun.end()
       log.debug("Sending captured voice message for translation")
       decode.convertOpusStringToRawPCM(this.currentFile,
         basename,

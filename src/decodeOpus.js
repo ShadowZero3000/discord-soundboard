@@ -2,7 +2,7 @@
 // Sourced from: https://github.com/XianhaiC/Voice-Bot
 const fs = require('fs');
 const path = require('path');
-const opus = require('node-opus');
+const opus = require('@discordjs/opus');
 
 const rate = 48000;
 const frame_size = 1920;

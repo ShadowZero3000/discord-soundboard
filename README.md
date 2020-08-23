@@ -21,6 +21,16 @@ docker run -e TOKEN=<Bot Token> -e CLIENT_SECRET=<Client secret> -p 3000:3000 di
 
 ```
 
+## Enabling speech recognition
+
+To enable speech recognition (and hotphrases) You will need to:
+
+1. Set the `LISTEN_ENABLED=true` environment variable
+2. Download a model (I.E. [this one](https://github.com/mozilla/DeepSpeech/releases/download/v0.8.1/deepspeech-0.8.1-models.pbmm)) to `/node/stt`
+3. Have the bot listen (I.E. `!sb listen`)
+
+I don't package the model with the Docker container, it's better to do with a permanent disk in kubernetes or something similar, as the model is pretty big.
+
 ## Using the app
 
 You can type `!soundboard help` for some basic guidance at any time.
