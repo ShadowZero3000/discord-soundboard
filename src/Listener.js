@@ -36,11 +36,15 @@ class Listener {
     var listener = this
     var stt_dir = './stt'
     fs.readdir(stt_dir, (err, files)=>{
-      files.forEach((file)=>{
+      if(!files) {
+        return
+      }
+      files.every((file)=>{
         if(path.extname(file) == '.pbmm'){
           log.debug('Model available, enabling speech to text')
           listener.model = new Ds.Model(path.join(stt_dir,file))
           listener.stt_enabled = true
+          return false // Break the loop
         }
       })
     })
