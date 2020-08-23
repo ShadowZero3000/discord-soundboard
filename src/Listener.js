@@ -77,6 +77,10 @@ class Listener {
       }
     } catch(e) {log.debug(e.message)}
   }
+  handleTranscodeError(error, stage, cb){
+    log.debug(`Error in transcode (${stage}): ${e}`)
+    return cb(null)
+  }
   // Sourced from: https://github.com/XianhaiC/Voice-Bot
   processRawToWav(filepath, outputpath, cb) {
     var listener = this
@@ -97,6 +101,7 @@ class Listener {
         // Stream the file to be sent to the wit.ai
         try{
           var stream = fs.createReadStream(outputpath);
+          stream.on('error', (e)=>{listener.handleTranscodeError(e,'stream',cb)})
         } catch(e){
           log.debug(`Error with readstream: ${e.message}`)
           return cb(null)
@@ -122,6 +127,8 @@ class Listener {
             let result = listener.model.stt(buffer)
             return cb({text: result})
           })
+          transcode.on('error', (e)=>{listener.handleTranscodeError(e,'transcode',cb)})
+          audioStream.on('error', (e)=>{listener.handleTranscodeError(e,'audioStream',cb)})
           stream.pipe(transcode).pipe(audioStream)
         } else {
           if(nconf.get("WIT_API_KEY") != undefined) {
