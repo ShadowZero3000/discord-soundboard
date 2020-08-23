@@ -135,7 +135,12 @@ class DiscordBot {
   handleKeywordMessage(message, keyword, extraArgs) {
     // Time for some audio!
     //var botRole=am.getRoleByName('Bot Interactions', message.guild)
-    const voiceQueue = vqm.getQueueFromUser(this.client, message.member.id);
+    var voiceQueue
+    try{
+      voiceQueue = vqm.getQueueFromUser(this.client, message.member.id);
+    } catch(e) {
+      return message.reply(e.message)
+    }
     if (!voiceQueue) {
       return;
     }

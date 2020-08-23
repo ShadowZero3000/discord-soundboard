@@ -37,7 +37,7 @@ steps:
     pull: always
     commands:
       - cp /node/node_modules . -r
-      - npm install
+      - npm install --no-optional
       - npm test
     when:
       event: push
