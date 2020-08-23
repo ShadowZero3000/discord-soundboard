@@ -1,3 +1,10 @@
+## [0.9.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.0...v0.9.1) (2020-08-23)
+
+
+### Bug Fixes
+
+* **stt:** Improve error handling for no stt dir ([6429de9](https://github.com/ShadowZero3000/discord-soundboard/commit/6429de98175b9a06a3d935421860129f8f1f0fd1))
+
 # [0.9.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.8.6...v0.9.0) (2020-08-21)
 
 
