@@ -78,7 +78,7 @@ class Listener {
     } catch(e) {log.debug(e.message)}
   }
   handleTranscodeError(error, stage, cb){
-    log.debug(`Error in transcode (${stage}): ${e}`)
+    log.debug(`Error in transcode (${stage}): ${error}`)
     return cb(null)
   }
   // Sourced from: https://github.com/XianhaiC/Voice-Bot
