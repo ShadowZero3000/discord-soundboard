@@ -1,3 +1,10 @@
+## [0.9.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.2...v0.9.3) (2020-08-24)
+
+
+### Bug Fixes
+
+* **bug:** Fix a stupid bug ([c74af28](https://github.com/ShadowZero3000/discord-soundboard/commit/c74af28f99bdd1c48ac4932f33d33ac2c69fe7de))
+
 ## [0.9.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.1...v0.9.2) (2020-08-23)
 
 
