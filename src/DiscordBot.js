@@ -40,7 +40,7 @@ class DiscordBot {
       this.safeSymbol = `\\${this.symbol}`;
     }
     this.adminWordRegex = new RegExp(`^${this.safeSymbol}(${this.adminWords.join('|')})(.*)$`)
-    this.keyWordRegex = new RegExp(`${this.safeSymbol}([a-z0-9_]+)(.*)`)
+    this.keyWordRegex = new RegExp(`[^@]${this.safeSymbol}([a-z0-9_]+)(.*)`)
   }
 
   connect() {
