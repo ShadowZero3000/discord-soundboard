@@ -40,7 +40,7 @@ class DiscordBot {
       this.safeSymbol = `\\${this.symbol}`;
     }
     this.adminWordRegex = new RegExp(`^${this.safeSymbol}(${this.adminWords.join('|')})(.*)$`)
-    this.keyWordRegex = new RegExp(`[^@]${this.safeSymbol}([a-z0-9_]+)(.*)`)
+    this.keyWordRegex = new RegExp(`([^@]|^)${this.safeSymbol}([a-z0-9_]+)(.*)`)
   }
 
   connect() {
@@ -188,7 +188,7 @@ class DiscordBot {
     }
 
     log.silly("Regular match")
-    return this.handleKeywordMessage(message, keyWordMatches[1], keyWordMatches[2]);
+    return this.handleKeywordMessage(message, keyWordMatches[2], keyWordMatches[3]);
   }
 
   handleSpeaking(member, speaking) {
