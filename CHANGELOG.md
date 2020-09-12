@@ -1,3 +1,11 @@
+## [0.9.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.3...v0.9.4) (2020-09-12)
+
+
+### Bug Fixes
+
+* **mentions:** Prevent @ mentions (which become @!) from triggering ([2b06f0f](https://github.com/ShadowZero3000/discord-soundboard/commit/2b06f0fc2239cd3c4a6445769dde30d430b2e2d4))
+* **powerdown:** Catch edge case on powerdown where queue could remain ([8554835](https://github.com/ShadowZero3000/discord-soundboard/commit/85548353ca51123168ff0b4fe4a70ffc4370d2af))
+
 ## [0.9.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.2...v0.9.3) (2020-08-24)
 
 
