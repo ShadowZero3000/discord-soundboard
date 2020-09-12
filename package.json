@@ -14,7 +14,7 @@
     "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",
     "nconf": "^0.10.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "node-gyp": "^7.1.0",
     "node-witai-speech": "^1.0.2",
     "ogg.js": "^0.1.0",
