@@ -1,3 +1,10 @@
+## [0.9.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.4...v0.9.5) (2020-09-12)
+
+
+### Bug Fixes
+
+* **regex:** Fix the bad regex I just added ([31717e3](https://github.com/ShadowZero3000/discord-soundboard/commit/31717e3b62b2cad6d187a663fb9871fa2758e970))
+
 ## [0.9.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.3...v0.9.4) (2020-09-12)
 
 
