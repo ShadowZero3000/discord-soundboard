@@ -53,7 +53,11 @@ class VoiceQueue {
     // Give it time to finish playing, then leave, or catch errors
     setTimeout(() => {
       try {
-        this.channel.leave()
+        if(this.playQueue.length == 0) {
+          this.channel.leave()
+        } else {
+          this.log(`Was leaving channel, but there were still things to play`)
+        }
       } catch(err) {
         this.log(`Error leaving channel: ${err.message}`)
       }
