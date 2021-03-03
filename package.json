@@ -19,7 +19,7 @@
     "node-witai-speech": "^1.0.2",
     "ogg.js": "^0.1.0",
     "path": "^0.12.7",
-    "pug": "^3.0.0",
+    "pug": "^3.0.1",
     "request": "^2.88.2",
     "underscore": "^1.10.2",
     "vorbis.js": "^0.1.1",
