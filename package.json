@@ -21,7 +21,7 @@
     "path": "^0.12.7",
     "pug": "^3.0.0",
     "request": "^2.88.2",
-    "underscore": "^1.10.2",
+    "underscore": "^1.12.1",
     "vorbis.js": "^0.1.1",
     "winston": "^3.3.3"
   },
