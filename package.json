@@ -4,7 +4,7 @@
   "description": "SparrowBot for Discord",
   "main": "src/index.js",
   "dependencies": {
-    "@discordjs/opus": "^0.3.2",
+    "@discordjs/opus": "^0.8.0",
     "av": "^0.4.9",
     "btoa": "^1.2.1",
     "cookie-parser": "^1.4.5",
