@@ -4,7 +4,9 @@ import express from 'express'
 import { errorLog, accessLog } from './logger.js'
 const log = errorLog
 import * as path from 'path'
-import * as fm from './FileManager.js'
+
+import FileManager from './FileManager.js'
+const fm = FileManager.getInstance()
 
 import * as webapi from './webapi.js'
 

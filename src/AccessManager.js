@@ -5,6 +5,18 @@ const log = errorLog
 import Store from 'data-store'
 
 export default class AccessManager {
+    constructor() {
+        throw new Error('Use AccessManager.getInstance()');
+    }
+    static getInstance() {
+        if (!AccessManager.instance) {
+            AccessManager.instance = new PrivateAccessManager();
+        }
+        return AccessManager.instance;
+    }
+}
+
+class PrivateAccessManager {
   constructor() {
     this.guilds = {};
     this.users = {};

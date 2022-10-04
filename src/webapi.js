@@ -4,17 +4,22 @@ const log = errorLog
 import * as express from 'express'
 import fetch from 'node-fetch'
 
-import * as nconf from 'nconf'
+import nconf from 'nconf'
 import { URLSearchParams } from 'url'
 
-import * as am from './AccessManager.js'
-import * as discord from './DiscordBot.js'
-import * as fm from './FileManager.js'
-import * as request from 'request'
+import AccessManager from './AccessManager.js'
+const am = AccessManager.getInstance()
+
+import DiscordBot from './DiscordBot.js'
+
+import FileManager from './FileManager.js'
+const fm = FileManager.getInstance()
+
+import request from 'request'
 const router = express.Router();
 
 import VoiceQueueManager from './VoiceQueueManager.js'
-const vqm = new VoiceQueueManager()
+const vqm = VoiceQueueManager.getInstance()
 
 function getRedirect(req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
@@ -148,7 +153,7 @@ router.get('/play/:clip', async (req, res) => {
       }
       try {
         const userid = JSON.parse(body).id;
-        const queue = vqm.getQueueFromUser(discord.client, userid);
+        const queue = vqm.getQueueFromUser(userid);
         const user = queue.channel.guild.members.cache.get(userid);
 
         if(session_cookie['updated']) {
@@ -207,7 +212,7 @@ router.get('/random/:clip', async (req, res) => {
       }
       try {
         const userid = JSON.parse(body).id;
-        const queue = vqm.getQueueFromUser(discord.client, userid);
+        const queue = vqm.getQueueFromUser(userid);
         const user = queue.channel.guild.members.cache.get(userid);
         if (am.checkAccess(user, queue.channel.guild, 'play')) {
           queue.add(fm.random(req.params.clip));

@@ -1,10 +1,11 @@
 import * as decode from './decodeOpus.js'
 import * as ffmpeg from 'fluent-ffmpeg'
-import * as fm from './FileManager.js'
+import FileManager from './FileManager.js'
+const fm = FileManager.getInstance()
 import * as fs from 'fs'
 import { errorLog } from './logger.js'
 const log = errorLog;
-import * as nconf from 'nconf'
+import nconf from 'nconf'
 import * as path from 'path'
 import * as WitSpeech from 'node-witai-speech'
 const AV = require('av')

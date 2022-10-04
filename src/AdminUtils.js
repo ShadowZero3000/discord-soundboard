@@ -4,12 +4,13 @@ const log = errorLog
 import nconf from 'nconf'
 
 import AccessManager from './AccessManager.js'
-const am = new AccessManager()
-import * as fm from './FileManager.js'
+const am = AccessManager.getInstance()
+import FileManager from './FileManager.js'
+const fm = FileManager.getInstance()
 import ListenerManager from './ListenerManager.js'
 const lm = new ListenerManager()
 import VoiceQueueManager from './VoiceQueueManager.js'
-const vqm = new VoiceQueueManager()
+const vqm = VoiceQueueManager.getInstance()
 import Store from 'data-store'
 
 export default class AdminUtils {

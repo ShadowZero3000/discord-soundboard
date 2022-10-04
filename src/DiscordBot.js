@@ -1,15 +1,18 @@
 import AdminUtils from './AdminUtils.js'
 const adminUtils = new AdminUtils()
+
 import AccessManager from './AccessManager.js'
-const am = new AccessManager()
+const am = AccessManager.getInstance()
+
 import * as Discord from 'discord.js'
-import * as fm from './FileManager.js'
+import FileManager from './FileManager.js'
+const fm = FileManager.getInstance()
 import { errorLog } from './logger.js'
 const log = errorLog
 import nconf from 'nconf'
 import * as VoiceQueue from './VoiceQueue.js'
 import VoiceQueueManager from './VoiceQueueManager.js'
-const vqm = new VoiceQueueManager()
+const vqm = VoiceQueueManager.getInstance()
 import ListenerManager from './ListenerManager.js'
 const lm = new ListenerManager()
 export default class DiscordBot {
@@ -39,7 +42,10 @@ class PrivateDiscordBot {
     this.keyWordRegex = new RegExp(`${this.safeSymbol}([a-z0-9_]+)(.*)`)
   
     // Can probably drop the messagecontent in the future if we use slash commands
-    this.client = new Discord.Client({ intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.MessageContent]});
+    this.client = new Discord.Client({ intents: [
+      Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.MessageContent,
+      Discord.GatewayIntentBits.GuildVoiceStates
+      ]});
   }
 
   botHelp() {
@@ -98,7 +104,7 @@ class PrivateDiscordBot {
       return
     }
     log.debug(`Voice message: ${data}`)
-    const voiceQueue = vqm.getQueueFromUser(this.client, userid);
+    const voiceQueue = vqm.getQueueFromUser(userid);
     if (!voiceQueue) {
       return;
     }
@@ -128,8 +134,9 @@ class PrivateDiscordBot {
     const voiceChannel =
       this.client.guilds.cache.map(guild => guild.voiceStates.cache.get(userId))
         .filter(voiceState => voiceState !== undefined)
+        .map(voiceState => voiceState.channel)
     if (voiceChannel.length > 0) {
-      log.debug(`Found voice channel ${voiceChannel[0].channelId}`);
+      log.debug(`Found voice channel ${voiceChannel[0].id}`);
       return voiceChannel[0];
     } else {
       log.debug(`No voice channel located for ${userId}`)
@@ -176,7 +183,7 @@ class PrivateDiscordBot {
     //var botRole=am.getRoleByName('Bot Interactions', message.guild)
     var voiceQueue
     try{
-      voiceQueue = vqm.getQueueFromUser(this.client, message.member.id);
+      voiceQueue = vqm.getQueueFromUser(message.member.id);
     } catch(e) {
       return message.reply(e.message)
     }

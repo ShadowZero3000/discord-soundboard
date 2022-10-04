@@ -1,8 +1,21 @@
 import { errorLog } from './logger.js'
 const log = errorLog;
 import VoiceQueue from './VoiceQueue.js'
+import DiscordBot from './DiscordBot.js'
 
 export default class VoiceQueueManager {
+    constructor() {
+        throw new Error('Use VoiceQueueManager.getInstance()');
+    }
+    static getInstance() {
+        if (!VoiceQueueManager.instance) {
+            VoiceQueueManager.instance = new PrivateVoiceQueueManager();
+        }
+        return VoiceQueueManager.instance;
+    }
+}
+
+class PrivateVoiceQueueManager {
   constructor() {
     this.queues = {};
   }
@@ -11,7 +24,7 @@ export default class VoiceQueueManager {
       // TODO: This will misbehave, need to throw?
       return null;
     }
-    
+
     if (!this.queues[voiceChannel.id]) {
       this.queues[voiceChannel.id] = new VoiceQueue(voiceChannel);
       log.info(`New voice queue created: ${voiceChannel.id}`);
@@ -19,8 +32,8 @@ export default class VoiceQueueManager {
     return this.queues[voiceChannel.id];
   }
 
-  getQueueFromUser(discord, userId) {
-    const voiceChannel = this.getVCFromUserid(discord, userId);
+  getQueueFromUser(userId) {
+    const voiceChannel = this.getVCFromUserid(userId);
     if (!voiceChannel) {
       throw new Error("No queue found")
     }
@@ -42,13 +55,14 @@ export default class VoiceQueueManager {
     return this.getQueueFromChannel(voiceChannel);
   }
 
-  getVCFromUserid(discord, userId) {
+  getVCFromUserid(userId) {
+    const discord = DiscordBot.getInstance().client
     log.debug(`Looking for an active voice channel for ${userId}`);
     const voiceChannels =
       discord.guilds.cache
         .map(guild => guild.voiceStates.cache.get(userId))
         .filter(voiceState => voiceState !== undefined)
-        .map(voiceState => voiceState.guild.channels.cache.get(voiceState.channelID))
+        .map(voiceState => voiceState.channel)
         .filter(channel => channel !== undefined);
     if (!voiceChannels.length > 0) {
       log.debug("Not in a channel")
@@ -57,5 +71,4 @@ export default class VoiceQueueManager {
     log.debug(`Found voice channels ${voiceChannels}`);
     return voiceChannels[0];
   }
-
 }

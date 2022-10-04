@@ -5,6 +5,18 @@ import * as request from 'request'
 import Store from 'data-store'
 
 export default class FileManager {
+    constructor() {
+        throw new Error('Use FileManager.getInstance()');
+    }
+    static getInstance() {
+        if (!FileManager.instance) {
+            FileManager.instance = new PrivateFileManager();
+        }
+        return FileManager.instance;
+    }
+}
+
+class PrivateFileManager {
   constructor() {
     this.categories = {};
     this.files = {};
