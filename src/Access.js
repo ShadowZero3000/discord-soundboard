@@ -1,5 +1,4 @@
-
-class Access {
+export default class Access {
   constructor(permissions=null) {
     this.permissions = permissions || [];
   }
@@ -24,5 +23,3 @@ class Access {
     }
   }
 }
-
-module.exports = Access;

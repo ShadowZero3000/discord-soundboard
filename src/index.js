@@ -1,7 +1,12 @@
 // Includes
-const discordBot = require('./DiscordBot');
-const nconf = require('nconf');
-const path = require('path');
+import DiscordBot from './DiscordBot.js'
+import nconf from 'nconf'
+import path from 'path'
+
+import * as url from 'url';
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
 const configFile = path.join(__dirname,'config/config.json');
 nconf.argv()
   .env()
@@ -18,11 +23,14 @@ nconf.argv()
     LISTEN_ENABLED: false
   });
 
-const webgui = require('./webgui.js');
+import * as webgui from './webgui.js'
 
 // Var definitions
-const log = require('./logger.js').errorLog;
+import { errorLog } from './logger.js'
+const log = errorLog
 var server = null;
+
+const discordBot = DiscordBot.getInstance()
 
 // Make sure we handle exiting properly (SIGTERM might not be needed)
 process.on('SIGINT', () => {
@@ -47,11 +55,11 @@ process.on('SIGTERM', () => {
 
 
 // Start up the discordBot bot
-discordBot.configure(nconf.get('TOKEN'));
+// discordBot.configure(nconf.get('TOKEN'));
 discordBot.connect();
 
 if (nconf.get('WEBSERVER_ENABLED')) {
-  webgui.enable('trust proxy');
-  server = webgui.listen(nconf.get('PORT'), () => log.debug(`Web UI available on port ${nconf.get('PORT')}!`))
+  webgui.app.enable('trust proxy');
+  server = webgui.app.listen(nconf.get('PORT'), () => log.debug(`Web UI available on port ${nconf.get('PORT')}!`))
 }
 log.debug("Let the fun begin!");

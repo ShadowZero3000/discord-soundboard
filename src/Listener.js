@@ -1,3 +1,12 @@
+import * as decode from './decodeOpus.js'
+import * as ffmpeg from 'fluent-ffmpeg'
+import * as fm from './FileManager.js'
+import * as fs from 'fs'
+import { errorLog } from './logger.js'
+const log = errorLog;
+import * as nconf from 'nconf'
+import * as path from 'path'
+import * as WitSpeech from 'node-witai-speech'
 const AV = require('av')
 const decode = require('./decodeOpus.js');
 const Ds = require('deepspeech')
@@ -13,8 +22,7 @@ const Sox = require('sox-stream')
 const WitSpeech = require('node-witai-speech');
 
 require('vorbis.js')
-
-class Listener {
+export default class Listener {
   constructor(memberid) {
     this.memberid = memberid;
     this.recordingsPath = './recordings';
@@ -207,5 +215,3 @@ class Listener {
     } catch(e){log.debug("Gothere");log.debug(e.message)}
   }
 }
-
-module.exports = Listener

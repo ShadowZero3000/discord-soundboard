@@ -1,9 +1,10 @@
-const Access = require('./Access.js');
-const AccessGuild = require('./AccessGuild.js');
-const log = require('./logger.js').errorLog;
-const Store = require('data-store');
+import Access from './Access.js'
+import * as AccessGuild from './AccessGuild.js'
+import { errorLog } from './logger.js'
+const log = errorLog
+import Store from 'data-store'
 
-class AccessManager {
+export default class AccessManager {
   constructor() {
     this.guilds = {};
     this.users = {};
@@ -136,5 +137,3 @@ class AccessManager {
     this.AccessStore.set(type, this[type]);
   }
 }
-
-module.exports = new AccessManager();

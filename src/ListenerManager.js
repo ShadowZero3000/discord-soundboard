@@ -1,8 +1,9 @@
-const Listener = require('./Listener.js');
-const log = require('./logger.js').errorLog;
-const Store = require('data-store');
+import * as Listener from './Listener.js'
+import { errorLog } from './logger.js'
+const log = errorLog;
+import Store from 'data-store'
 
-class ListenerManager {
+export default class ListenerManager {
   constructor() {
     this.users = {}
     this.ListenerStore = new Store({ name: 'listeners', path: 'config/listeners.json', defaults: {} });
@@ -60,5 +61,3 @@ class ListenerManager {
   }
 
 }
-
-module.exports = new ListenerManager();

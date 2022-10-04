@@ -1,14 +1,18 @@
-const fs = require('fs');
-const log = require('./logger.js').errorLog;
-const nconf = require('nconf');
+import * as fs from 'fs'
+import {errorLog} from './logger.js'
+const log = errorLog
+import nconf from 'nconf'
 
-const am = require('./AccessManager');
-const fm = require('./FileManager');
-const lm = require('./ListenerManager');
-const vqm = require('./VoiceQueueManager');
-const Store = require('data-store');
+import AccessManager from './AccessManager.js'
+const am = new AccessManager()
+import * as fm from './FileManager.js'
+import ListenerManager from './ListenerManager.js'
+const lm = new ListenerManager()
+import VoiceQueueManager from './VoiceQueueManager.js'
+const vqm = new VoiceQueueManager()
+import Store from 'data-store'
 
-class AdminUtils {
+export default class AdminUtils {
   constructor() {
     this.accessMap = {
       'servermanager': [
@@ -455,5 +459,3 @@ class AdminUtils {
       message.dclient.guilds.cache.map(guild => guild.name).join('\n'));
   }
 }
-
-module.exports = new AdminUtils();

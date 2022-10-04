@@ -1,9 +1,10 @@
-const fs = require('fs');
-const log = require('./logger.js').errorLog;
-const request = require('request');
-const Store = require('data-store');
+import * as fs from 'fs'
+import { errorLog } from './logger.js'
+const log = errorLog;
+import * as request from 'request'
+import Store from 'data-store'
 
-class FileManager {
+export default class FileManager {
   constructor() {
     this.categories = {};
     this.files = {};
@@ -215,5 +216,3 @@ class FileManager {
     return collection[Math.floor(Math.random() * collection.length)];
   }
 }
-
-module.exports = new FileManager();

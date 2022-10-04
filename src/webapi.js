@@ -1,17 +1,20 @@
-const accessLog = require('./logger.js').accessLog;
-const btoa = require('btoa');
-const express = require('express');
-const fetch = require('node-fetch');
-const log = require('./logger.js').errorLog;
-const nconf = require('nconf');
-const { URLSearchParams } = require('url');
+import { accessLog, errorLog } from './logger.js'
+const log = errorLog
 
-const am = require('./AccessManager');
-const discord = require('./DiscordBot.js');
-const fm = require('./FileManager');
-const request = require('request');
+import * as express from 'express'
+import fetch from 'node-fetch'
+
+import * as nconf from 'nconf'
+import { URLSearchParams } from 'url'
+
+import * as am from './AccessManager.js'
+import * as discord from './DiscordBot.js'
+import * as fm from './FileManager.js'
+import * as request from 'request'
 const router = express.Router();
-const vqm = require('./VoiceQueueManager');
+
+import VoiceQueueManager from './VoiceQueueManager.js'
+const vqm = new VoiceQueueManager()
 
 function getRedirect(req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
@@ -240,4 +243,4 @@ router.get('/clips/random', (req, res) => {
   }
 });
 
-module.exports = router;
+export { router };

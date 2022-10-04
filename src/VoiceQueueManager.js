@@ -1,7 +1,8 @@
-const log = require('./logger.js').errorLog;
-const VoiceQueue = require('./VoiceQueue.js');
+import { errorLog } from './logger.js'
+const log = errorLog;
+import VoiceQueue from './VoiceQueue.js'
 
-class VoiceQueueManager {
+export default class VoiceQueueManager {
   constructor() {
     this.queues = {};
   }
@@ -10,6 +11,7 @@ class VoiceQueueManager {
       // TODO: This will misbehave, need to throw?
       return null;
     }
+    
     if (!this.queues[voiceChannel.id]) {
       this.queues[voiceChannel.id] = new VoiceQueue(voiceChannel);
       log.info(`New voice queue created: ${voiceChannel.id}`);
@@ -57,5 +59,3 @@ class VoiceQueueManager {
   }
 
 }
-
-module.exports = new VoiceQueueManager();

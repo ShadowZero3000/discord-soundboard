@@ -1,5 +1,5 @@
-const Access = require('./Access.js');
-class AccessGuild {
+import Access from './Access.js'
+export default class AccessGuild {
   constructor(roles=null, globalPlay=true) {
     this.roles = {};
     this.globalPlay = globalPlay;
@@ -52,5 +52,3 @@ class AccessGuild {
     }
   }
 }
-
-module.exports = AccessGuild;

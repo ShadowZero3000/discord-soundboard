@@ -1,8 +1,8 @@
 'use strict';
 // Sourced from: https://github.com/XianhaiC/Voice-Bot
-const fs = require('fs');
-const path = require('path');
-const opus = require('@discordjs/opus');
+import * as fs from 'fs'
+import * as path from 'path'
+import * as OpusEncoder from '@discordjs/opus'
 
 const rate = 48000;
 const frame_size = 1920;
@@ -26,9 +26,9 @@ let getDecodedFrame = (frameString, encoder, filename) => {
   return buffer;
 };
 
-let convertOpusStringToRawPCM = (inputPath, filename, cb) => {
+export let convertOpusStringToRawPCM = (inputPath, filename, cb) => {
   total++;
-  let encoder = new opus.OpusEncoder(rate, channels);
+  let encoder = new OpusEncoder(rate, channels);
   const inputStream = fs.createReadStream(inputPath);
   const outputStream = fs.createWriteStream(path.join(path.dirname(inputPath), `${filename}.raw_pcm`));
   let data = '';
@@ -78,6 +78,4 @@ let convertAllOpusStringToRawPCM = (inputDirectory) => {
 //let inputDirectory = path.join('podcasts', process.argv[2]);
 
 //convertAllOpusStringToRawPCM(inputDirectory);
-module.exports = {
-  convertOpusStringToRawPCM: convertOpusStringToRawPCM
-}
+

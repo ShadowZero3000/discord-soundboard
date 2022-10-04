@@ -1,8 +1,10 @@
-const fm = require('./FileManager');
-const fs = require('fs');
-const log = require('./logger.js').errorLog;
+import FileManager from './FileManager.js'
+const fm = new FileManager()
+import * as fs from 'fs'
+import { errorLog } from './logger.js'
+const log = errorLog;
 
-class VoiceQueue {
+export default class VoiceQueue {
   constructor(channel) {
     this.channel = channel;
     this.playQueue = [];
@@ -107,5 +109,3 @@ class VoiceQueue {
       });
   }
 }
-
-module.exports = VoiceQueue

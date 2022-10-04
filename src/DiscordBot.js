@@ -1,16 +1,45 @@
-const adminUtils = require('./AdminUtils.js');
-const am = require('./AccessManager');
-const Discord = require('discord.js');
-const fm = require('./FileManager');
-const log = require('./logger.js').errorLog;
-const nconf = require('nconf');
-const VoiceQueue = require('./VoiceQueue.js');
-const vqm = require('./VoiceQueueManager');
-const lm = require('./ListenerManager');
+import AdminUtils from './AdminUtils.js'
+const adminUtils = new AdminUtils()
+import AccessManager from './AccessManager.js'
+const am = new AccessManager()
+import * as Discord from 'discord.js'
+import * as fm from './FileManager.js'
+import { errorLog } from './logger.js'
+const log = errorLog
+import nconf from 'nconf'
+import * as VoiceQueue from './VoiceQueue.js'
+import VoiceQueueManager from './VoiceQueueManager.js'
+const vqm = new VoiceQueueManager()
+import ListenerManager from './ListenerManager.js'
+const lm = new ListenerManager()
+export default class DiscordBot {
+    constructor() {
+        throw new Error('Use DiscordBot.getInstance()');
+    }
+    static getInstance() {
+        if (!DiscordBot.instance) {
+            DiscordBot.instance = new PrivateDiscordBot();
+        }
+        return DiscordBot.instance;
+    }
+}
 
-class DiscordBot {
+class PrivateDiscordBot {
   constructor() {
-    this.client = new Discord.Client();
+    this.token = nconf.get('TOKEN');
+    console.log(nconf.get('ADMIN_KEYS'))
+    this.adminWords = nconf.get('ADMIN_KEYS').split(',');
+    this.symbol = nconf.get('KEY_SYMBOL');
+    this.safeSymbol = this.symbol;
+    // Must escape some special regex chars
+    if (['$','^','(','['].indexOf(this.symbol) > -1) {
+      this.safeSymbol = `\\${this.symbol}`;
+    }
+    this.adminWordRegex = new RegExp(`^${this.safeSymbol}(${this.adminWords.join('|')})(.*)$`)
+    this.keyWordRegex = new RegExp(`${this.safeSymbol}([a-z0-9_]+)(.*)`)
+  
+    // Can probably drop the messagecontent in the future if we use slash commands
+    this.client = new Discord.Client({ intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.MessageContent]});
   }
 
   botHelp() {
@@ -30,25 +59,30 @@ class DiscordBot {
       permissions.join(`\`, \`${this.symbol}${this.adminWords[0]} `) + '`';
   }
 
-  configure(token) {
-    this.token = token;
-    this.adminWords = nconf.get('ADMIN_KEYS').split(',');
-    this.symbol = nconf.get('KEY_SYMBOL');
-    this.safeSymbol = this.symbol;
-    // Must escape some special regex chars
-    if (['$','^','(','['].indexOf(this.symbol) > -1) {
-      this.safeSymbol = `\\${this.symbol}`;
-    }
-    this.adminWordRegex = new RegExp(`^${this.safeSymbol}(${this.adminWords.join('|')})(.*)$`)
-    this.keyWordRegex = new RegExp(`([^@]|^)${this.safeSymbol}([a-z0-9_]+)(.*)`)
-  }
-
   connect() {
+    this.client.once('ready', (client) => {
+      console.log('Ready!');
+      nconf.set('startup', {enabled: true, clip: 'sensors'})
+      var startup = nconf.get('startup');
+
+      console.log(startup)
+
+      nconf.set('CLIENT_ID', client.application.id); //Overrides environment variables
+      var startup = nconf.get('startup');
+      client.application.fetch().then(app => {
+        adminUtils._setImmuneUser(app.owner.id);
+        if (startup.enabled) {
+          vqm.getQueueFromChannel(this.getVCFromUserid(app.owner.id))
+             .add(startup.clip);
+        }
+      })
+    });
+
     this.client.on('message', message => {
       this.handleMessage(message);
     });
     this.client.login(this.token).then(session => {
-      this.initialize(session)
+      console.log("Session started")
     }).catch(err => {
       log.debug(`Connection error in DiscordBot: ${err}`)
     });
@@ -94,8 +128,13 @@ class DiscordBot {
     const voiceChannel =
       this.client.guilds.cache.map(guild => guild.voiceStates.cache.get(userId))
         .filter(voiceState => voiceState !== undefined)
-        .map(user => user.guild.channels.cache.get(user.channelID))[0];
-    return voiceChannel;
+    if (voiceChannel.length > 0) {
+      log.debug(`Found voice channel ${voiceChannel[0].channelId}`);
+      return voiceChannel[0];
+    } else {
+      log.debug(`No voice channel located for ${userId}`)
+      return undefined
+    }
   }
 
   getVoiceChannel(message) {
@@ -211,6 +250,7 @@ class DiscordBot {
       }
     } catch(e) {log.debug(`Error handling speech: ${e.message}`)}
   }
+
   initialize(session) {
     //TODO: Make this not choke if you provide an invalid admin_id or aren't in a channel
     var startup = nconf.get('startup');
@@ -236,4 +276,3 @@ class DiscordBot {
   }
 }
 
-module.exports =  new DiscordBot();
