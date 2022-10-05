@@ -114,7 +114,7 @@ class PrivateDiscordBot {
 
     rest.get(Routes.applicationGuildCommands(cid, gid))
       .then((data) => {
-        var command = data.filter(item => item.name == 'update_commands')
+        var command = data.filter(item => item.name == commands[0].name)
         if (command.length == 0) {
           rest.put(Routes.applicationGuildCommands(cid, gid), { body: commands })
             .then((data) => {

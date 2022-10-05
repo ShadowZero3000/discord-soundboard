@@ -8,10 +8,13 @@ const fm = FileManager.getInstance()
 import AdminUtils from '../AdminUtils.js'
 const utils = AdminUtils.getInstance()
 
+import nconf from 'nconf'
+const prefix = nconf.get('COMMAND_PREFIX') || ''
+
 var pendingUploads = {}
 
 export let data = new SlashCommandBuilder()
-    .setName('addclip')
+    .setName(prefix+'addclip')
     .setDescription('Adds a clip to the soundboard')
     .addAttachmentOption(
       new SlashCommandAttachmentOption()
@@ -25,11 +28,11 @@ export async function execute(interaction) {
     return await interaction.reply({content: "You do not have permission to perform this operation", ephemeral: true})
   }
   
-  var requestUUID = uuid.v1()
+  var requestUUID = uuid()
   pendingUploads[requestUUID] = interaction.options.getAttachment('clip')
 
   const modal = new ModalBuilder()
-    .setCustomId(`addclipModal${requestUUID}`)
+    .setCustomId(`${prefix}addclipModal${requestUUID}`)
     .setTitle('Add clip to Soundboard')
   const clipNameInput = new TextInputBuilder()
     .setCustomId('clipNameInput')

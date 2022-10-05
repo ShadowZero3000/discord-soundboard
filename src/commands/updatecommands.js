@@ -6,8 +6,11 @@ const bot = DiscordBot.getInstance()
 import AdminUtils from '../AdminUtils.js'
 const utils = AdminUtils.getInstance()
 
+import nconf from 'nconf'
+const prefix = nconf.get('COMMAND_PREFIX') || ''
+
 export let data = new SlashCommandBuilder()
-  .setName('update_commands')
+  .setName(prefix+'update_commands')
   .setDescription('Administrative command to update commands')
 export async function execute(interaction) {
   if (!utils.check_interaction(interaction, 'administer')) { 

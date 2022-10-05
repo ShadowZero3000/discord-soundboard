@@ -6,8 +6,11 @@ const fm = FileManager.getInstance()
 import AdminUtils from '../AdminUtils.js'
 const utils = AdminUtils.getInstance()
 
+import nconf from 'nconf'
+const prefix = nconf.get('COMMAND_PREFIX') || ''
+
 export let data = new SlashCommandBuilder()
-    .setName('removeclip')
+    .setName(prefix+'removeclip')
     .setDescription('Remove a clip from the soundboard')
     .addStringOption(option => 
       option.setName('clipname')

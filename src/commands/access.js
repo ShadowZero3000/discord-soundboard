@@ -12,8 +12,11 @@ const utils = AdminUtils.getInstance()
 import AccessManager from '../AccessManager.js'
 const am = AccessManager.getInstance()
 
+import nconf from 'nconf'
+const prefix = nconf.get('COMMAND_PREFIX') || ''
+
 export let data = new SlashCommandBuilder()
-    .setName('access')
+    .setName(prefix+'access')
     .setDescription('Control access to soundboard features')
     .addSubcommand(subcommand => 
       subcommand

@@ -9,8 +9,11 @@ const vqm = VoiceQueueManager.getInstance()
 import AdminUtils from '../AdminUtils.js'
 const utils = AdminUtils.getInstance()
 
+import nconf from 'nconf'
+const prefix = nconf.get('COMMAND_PREFIX') || ''
+
 export let data = new SlashCommandBuilder()
-    .setName('play')
+    .setName(prefix+'play')
     .setDescription('Play a clip from the soundboard')
     .addStringOption(option => 
       option.setName('clipname')
@@ -30,8 +33,12 @@ export async function execute(interaction) {
     return await interaction.reply({content: `I don't recognize ${clipName}`, ephemeral: true})
   }
 
-  const voiceQueue = vqm.getQueueFromUser(interaction.user.id);
-  voiceQueue.add(clipName);
+  try {
+    const voiceQueue = vqm.getQueueFromUser(interaction.user.id);
+    voiceQueue.add(clipName);
+  } catch {
+      return await interaction.reply({content: "You don't appear to be in a voice channel", ephemeral: true})
+  }
   return await interaction.reply({content: 'Ok', ephemeral: true})
 }
 

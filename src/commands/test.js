@@ -1,7 +1,10 @@
 import { SlashCommandBuilder } from 'discord.js'
 
+import nconf from 'nconf'
+const prefix = nconf.get('COMMAND_PREFIX') || ''
+
 export let data = new SlashCommandBuilder()
-  .setName('test')
+  .setName(prefix+'test')
   .setDescription('Test a clip to the soundboard')
 export async function execute(interaction) {
   await interaction.reply('Bingo!');
