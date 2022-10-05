@@ -69,7 +69,10 @@ class PrivateDiscordBot {
     // This should only happen once. So we need to check if they already are registered, and update them only when needed I guess
     const commands = []
     const commandsPath = path.join(__dirname, 'commands')
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
+    const commandFiles = fs.readdirSync(commandsPath)
+      .filter(file => file.endsWith('.js'))
+      .filter(file => file != 'updatecommands.js')
+      .filter(file => file != 'phrases.js') // Disable phrases for now
 
     for (const file of commandFiles) {
       const filePath = path.join(commandsPath, file)
@@ -82,7 +85,7 @@ class PrivateDiscordBot {
     var cid = this.client.application.id
     var [gid] = this.client.guilds.cache.keys()
 
-    rest.put(Routes.applicationGuildCommands(cid, gid), { body: commands })
+    rest.put(Routes.applicationCommands(cid), { body: commands })
       .then((data) => log.debug(`Successfully registered ${data.length} application commands.`))
       .catch(log.error)
   }
