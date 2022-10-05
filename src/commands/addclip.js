@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ModalBuilder, TextInputStyle, TextInputBuilder, ActionRowBuilder, SlashCommandAttachmentOption} from 'discord.js'
-import uuid from 'uuid'
+import { v1 as uuid } from 'uuid'
 import { _extend } from 'util'
 
 import FileManager from '../FileManager.js'

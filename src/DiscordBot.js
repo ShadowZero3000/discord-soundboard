@@ -211,8 +211,11 @@ class PrivateDiscordBot {
       client.application.fetch().then(app => {
         adminUtils._setImmuneUser(app.owner.id);
         if (startup.enabled) {
-          vqm.getQueueFromChannel(this.getVCFromUserid(app.owner.id))
-             .add(startup.clip);
+          const vc = this.getVCFromUserid(app.owner.id)
+          if (vc !== undefined) {
+            vqm.getQueueFromChannel(vc)
+               .add(startup.clip);
+          }
         }
       })
 
