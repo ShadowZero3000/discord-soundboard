@@ -1,14 +1,16 @@
 FROM node:18-alpine
 
+# If we do the local speech to text, we need a non-alpine build
+# But that needs to be its own api, not baked into this app
 # libasound2-dev for audio parsing
 # sox for transcoding for speech to text
-RUN apt-get update && apt-get install -y \
-	  git \
-	  ffmpeg \
-	  libasound2-dev \
-	  sox \
- && rm -rf /var/lib/apt/lists/* \
- && mkdir -p /node/stt
+#RUN apt-get update && apt-get install -y \
+#	  git \
+#	  ffmpeg \
+#	  libasound2-dev \
+#	  sox \
+# && rm -rf /var/lib/apt/lists/* \
+# && mkdir -p /node/stt
 
 COPY package.json /node/
 

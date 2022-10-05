@@ -10,8 +10,8 @@ const am = AccessManager.getInstance()
 import FileManager from './FileManager.js'
 const fm = FileManager.getInstance()
 
-import ListenerManager from './ListenerManager.js'
-const lm = new ListenerManager()
+// import ListenerManager from './ListenerManager.js'
+// const lm = new ListenerManager()
 
 import VoiceQueueManager from './VoiceQueueManager.js'
 const vqm = VoiceQueueManager.getInstance()
@@ -314,21 +314,21 @@ class PrivateAdminUtils {
     return message.reply(`I'll be listening.`);
   }
 
-  ignoreme(message, params) {
-    lm.ignore(message.author.id)
-    message.reply('I will no longer listen to what you are saying.')
-  }
+  // ignoreme(message, params) {
+  //   lm.ignore(message.author.id)
+  //   message.reply('I will no longer listen to what you are saying.')
+  // }
 
-  listen(message, params) {
-    lm.listenTo(message.author.id)
-    message.reply(`I will now listen to what you are saying and attempt witty responses.\n`
-      +`Please be aware that by issuing this command you accept that all of your conversations `
-      +`spoken in a channel where I am also present will be recorded, and may be transferred `
-      +`to the Wit AI (https://wit.ai/) for processing.\n`
-      +`I will not permanently record your data (unless I crash, in which case it will be tidied later)`
-      +`, however, Wit may use these recordings to improve itself.\n`
-      +'If you do not agree to these terms, simply tell me: `ignoreme`', {split: true})
-  }
+  // listen(message, params) {
+  //   lm.listenTo(message.author.id)
+  //   message.reply(`I will now listen to what you are saying and attempt witty responses.\n`
+  //     +`Please be aware that by issuing this command you accept that all of your conversations `
+  //     +`spoken in a channel where I am also present will be recorded, and may be transferred `
+  //     +`to the Wit AI (https://wit.ai/) for processing.\n`
+  //     +`I will not permanently record your data (unless I crash, in which case it will be tidied later)`
+  //     +`, however, Wit may use these recordings to improve itself.\n`
+  //     +'If you do not agree to these terms, simply tell me: `ignoreme`', {split: true})
+  // }
 
   listphrases(message, params) {
     if (params[0] == 'help') {

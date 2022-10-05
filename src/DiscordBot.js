@@ -17,8 +17,8 @@ import nconf from 'nconf'
 import VoiceQueueManager from './VoiceQueueManager.js'
 const vqm = VoiceQueueManager.getInstance()
 
-import ListenerManager from './ListenerManager.js'
-const lm = new ListenerManager()
+// import ListenerManager from './ListenerManager.js'
+// const lm = new ListenerManager()
 
 export default class DiscordBot {
   constructor() {
@@ -228,10 +228,10 @@ class PrivateDiscordBot {
     this.client.login(this.token).catch(err => {
       log.debug(`Connection error in DiscordBot: ${err}`)
     });
-    if(nconf.get('LISTEN_ENABLED')){
-      log.debug("Listening enabled")
-      this.client.on('guildMemberSpeaking', this.handleSpeaking.bind(this))
-    }
+    // if(nconf.get('LISTEN_ENABLED')){
+    //   log.debug("Listening enabled")
+    //   this.client.on('guildMemberSpeaking', this.handleSpeaking.bind(this))
+    // }
     return this.client;
   }
 
@@ -373,26 +373,26 @@ class PrivateDiscordBot {
     return this.handleKeywordMessage(message, keyWordMatches[2], keyWordMatches[3]);
   }
 
-  handleSpeaking(member, speaking) {
-    if(!am.checkAccess(member.user, member.guild, 'vocalist') ||
-        !lm.amIListeningTo(member.user.id)
-      ) {
-      return
-    }
+  // handleSpeaking(member, speaking) {
+  //   if(!am.checkAccess(member.user, member.guild, 'vocalist') ||
+  //       !lm.amIListeningTo(member.user.id)
+  //     ) {
+  //     return
+  //   }
 
-    try{
-      var memberVoiceState = member.guild.voiceStates.cache.get(member.id)
-      var voiceChannel = member.guild.channels.cache.get(memberVoiceState.channelID);
-      if(speaking.bitfield) {
-        var currentConnection = this.client.voice.connections.get(memberVoiceState.guild.id)
-        lm.listen(member.user.id, currentConnection)
-      }
-      // Close the writeStream when a member stops speaking
-      if (!speaking.bitfield && voiceChannel) {
-        lm.finish(member.user.id, this.processVoiceRecognition.bind(this, member.id))
-      }
-    } catch(e) {log.debug(`Error handling speech: ${e.message}`)}
-  }
+  //   try{
+  //     var memberVoiceState = member.guild.voiceStates.cache.get(member.id)
+  //     var voiceChannel = member.guild.channels.cache.get(memberVoiceState.channelID);
+  //     if(speaking.bitfield) {
+  //       var currentConnection = this.client.voice.connections.get(memberVoiceState.guild.id)
+  //       lm.listen(member.user.id, currentConnection)
+  //     }
+  //     // Close the writeStream when a member stops speaking
+  //     if (!speaking.bitfield && voiceChannel) {
+  //       lm.finish(member.user.id, this.processVoiceRecognition.bind(this, member.id))
+  //     }
+  //   } catch(e) {log.debug(`Error handling speech: ${e.message}`)}
+  // }
 
   initialize(session) {
     //TODO: Make this not choke if you provide an invalid admin_id or aren't in a channel
