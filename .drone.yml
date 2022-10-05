@@ -42,7 +42,7 @@ steps:
     when:
       event: push
       branch:
-        exclude: [master, release/*]
+        exclude: [master, main, release/*]
   # Dev build. Occurs on non-master/release branches
   - name: docker-build
     image: plugins/docker
@@ -66,6 +66,7 @@ steps:
       branch:
         exclude:
           - master
+          - main
           - release/*
 
   # Semantic release - Updates versions, changelogs, etc..., and pushes another commit with [skip ci]
@@ -90,6 +91,7 @@ steps:
         - push
       branch:
         - master
+        - main
         - release/*
 
   # Prod build - Happens after Semantic release updates changelogs etc...
@@ -143,7 +145,7 @@ steps:
     when:
       event: push
       branch:
-        exclude: [master, release/*]
+        exclude: [master, main, release/*]
 
   # Prod deploy, Occurs on tags
   - name: kube-prod
