@@ -34,8 +34,8 @@ class PrivateVoiceQueueManager {
 
   getQueueFromUser(userId) {
     const voiceChannel = this.getVCFromUserid(userId);
-    if (!voiceChannel) {
-      throw new Error("No queue found")
+    if (voiceChannel === undefined) {
+      throw new Error("No queue found, voice channel not located")
     }
     return this.getQueueFromChannel(voiceChannel);
   }
@@ -66,7 +66,7 @@ class PrivateVoiceQueueManager {
         .filter(channel => channel !== undefined);
     if (!voiceChannels.length > 0) {
       log.debug("Not in a channel")
-      throw new Error(`You don't appear to be in a voice channel in this server`);
+      return undefined
     }
     log.debug(`Found voice channels ${voiceChannels}`);
     return voiceChannels[0];

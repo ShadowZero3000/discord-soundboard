@@ -90,7 +90,7 @@ async function startup_config(interaction) {
   if (clipname !== null) {
     startup['clip'] = clipname
   }
-  utils._saveConfig('startup', startup);
+  utils.saveConfig('startup', startup);
 
   return await interaction.reply({content: `Startup audio set: ${startup['enabled']} - ${startup['clip']}`, ephemeral: true})
 }
