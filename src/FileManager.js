@@ -1,7 +1,7 @@
-import * as fs from 'fs'
+import fs from 'fs'
 import { errorLog } from './logger.js'
 const log = errorLog;
-import * as request from 'request'
+import request from 'request'
 import Store from 'data-store'
 
 export default class FileManager {

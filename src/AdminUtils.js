@@ -1,19 +1,36 @@
 import * as fs from 'fs'
+import nconf from 'nconf'
+
 import {errorLog} from './logger.js'
 const log = errorLog
-import nconf from 'nconf'
 
 import AccessManager from './AccessManager.js'
 const am = AccessManager.getInstance()
+
 import FileManager from './FileManager.js'
 const fm = FileManager.getInstance()
+
 import ListenerManager from './ListenerManager.js'
 const lm = new ListenerManager()
+
 import VoiceQueueManager from './VoiceQueueManager.js'
 const vqm = VoiceQueueManager.getInstance()
+
 import Store from 'data-store'
 
 export default class AdminUtils {
+  constructor() {
+    throw new Error('Use AdminUtils.getInstance()');
+  }
+  static getInstance() {
+    if (!AdminUtils.instance) {
+      AdminUtils.instance = new PrivateAdminUtils();
+    }
+    return AdminUtils.instance;
+  }
+}
+
+class PrivateAdminUtils {
   constructor() {
     this.accessMap = {
       'servermanager': [
@@ -27,7 +44,8 @@ export default class AdminUtils {
         'revoke',
         'revokerole',
         'togglestartup',
-        'whereareyou'
+        'whereareyou',
+        'administer'
       ],
       'clipmanager': [
         'add',
@@ -47,7 +65,7 @@ export default class AdminUtils {
         'silence',
         'unmute'
       ],
-      'play': []
+      'play': [ 'play' ]
     }
     this.reverseAccessMap = {};
     Object.keys(this.accessMap).forEach(group => {
@@ -70,6 +88,10 @@ export default class AdminUtils {
   // Reserved functions
   check(message, access) {
     return (am.checkAccess(message.author, message.guild, this.reverseAccessMap[access]));
+  }
+
+  check_interaction(interaction, access) {
+    return (am.checkAccess(interaction.user, interaction.guild, this.reverseAccessMap[access]));
   }
 
   getUserActions(message) {
@@ -121,94 +143,94 @@ export default class AdminUtils {
   }
 
   // Public functions
-  access(message, params) {
-    if (params[0] == 'help') {
-      return message.reply('access `<username>`: \n' +
-          'Prints what access <username> has.');
-    }
-    if (!this._paramCheck(message, params)){ return; }
+  // access(message, params) {
+  //   if (params[0] == 'help') {
+  //     return message.reply('access `<username>`: \n' +
+  //         'Prints what access <username> has.');
+  //   }
+  //   if (!this._paramCheck(message, params)){ return; }
 
-    const username = params[0];
-    const discordUser = this._getDiscordUser(message, username);
-    // No need to keep the requested message visible
-    message.delete();
-    if (discordUser) {
-      const userAccess = am.getUserAccess(discordUser.user);
-      return this._printUserAccess(message, username, userAccess);
-    } else {
-      return message.reply(`${username} does not presently have any admin permissions`)
-    }
-  }
+  //   const username = params[0];
+  //   const discordUser = this._getDiscordUser(message, username);
+  //   // No need to keep the requested message visible
+  //   message.delete();
+  //   if (discordUser) {
+  //     const userAccess = am.getUserAccess(discordUser.user);
+  //     return this._printUserAccess(message, username, userAccess);
+  //   } else {
+  //     return message.reply(`${username} does not presently have any admin permissions`)
+  //   }
+  // }
 
-  accessrole(message, params) {
-    var response = `\`accessrole\`\nCurrent role access:`;
-    am.getRoleAccess(message.guild)
-      .sort((a,b) => (a.name > b.name) ? 1 : 0)
-      .forEach(role => {
-        response += `\n${role.name} - ${role.access.sort().join(', ')}`;
-      });
-    // No need to keep the requested message visible
-    message.delete();
-    return message.reply(response, {split: true});
-  }
+  // accessrole(message, params) {
+  //   var response = `\`accessrole\`\nCurrent role access:`;
+  //   am.getRoleAccess(message.guild)
+  //     .sort((a,b) => (a.name > b.name) ? 1 : 0)
+  //     .forEach(role => {
+  //       response += `\n${role.name} - ${role.access.sort().join(', ')}`;
+  //     });
+  //   // No need to keep the requested message visible
+  //   message.delete();
+  //   return message.reply(response, {split: true});
+  // }
 
-  add(message, params) {
-    if (params[0] == 'help') {
-      return message.reply('add `<clip>` `[category]` `[subcategory]` (with attachment): \n' +
-          'Adds a sound effect with <clip> as its shortcut.\n' +
-          'If provided, will assign to [category] and [subcategory]. Defaults to "misc".');
-    }
-    if (!this._paramCheck(message, params)){ return; }
+  // add(message, params) {
+  //   if (params[0] == 'help') {
+  //     return message.reply('add `<clip>` `[category]` `[subcategory]` (with attachment): \n' +
+  //         'Adds a sound effect with <clip> as its shortcut.\n' +
+  //         'If provided, will assign to [category] and [subcategory]. Defaults to "misc".');
+  //   }
+  //   if (!this._paramCheck(message, params)){ return; }
 
-    const clipName = params[0];
-    const category = params[1] || 'misc';
-    const subcategory = params[2] || 'misc';
-    if (!clipName.match(/^[a-z0-9_]+$/)) {
-      return message.reply(`${clipName} is a bad short name`);
-    }
-    if (!category.match(/^[a-z0-9_]+$/)) {
-      return message.reply(`${category} is a bad category name`);
-    }
-    if (!subcategory.match(/^[a-z0-9_]+$/)) {
-      return message.reply(`${subcategory} is a bad subcategory name`);
-    }
-    if (fm.inLibrary(clipName)) {
-      return message.reply("That sound effect already exists");
-    }
-    if (message.attachments.first()) {
-      // Only check the first attachment
-      fm.create(clipName, category, subcategory, message.attachments.first());
-      return message.reply(`${nconf.get('KEY_SYMBOL')}${clipName} is now available`);
-    } else {
-      return message.reply(`You need to attach a file`);
-    }
-  }
+  //   const clipName = params[0];
+  //   const category = params[1] || 'misc';
+  //   const subcategory = params[2] || 'misc';
+  //   if (!clipName.match(/^[a-z0-9_]+$/)) {
+  //     return message.reply(`${clipName} is a bad short name`);
+  //   }
+  //   if (!category.match(/^[a-z0-9_]+$/)) {
+  //     return message.reply(`${category} is a bad category name`);
+  //   }
+  //   if (!subcategory.match(/^[a-z0-9_]+$/)) {
+  //     return message.reply(`${subcategory} is a bad subcategory name`);
+  //   }
+  //   if (fm.inLibrary(clipName)) {
+  //     return message.reply("That sound effect already exists");
+  //   }
+  //   if (message.attachments.first()) {
+  //     // Only check the first attachment
+  //     fm.create(clipName, category, subcategory, message.attachments.first());
+  //     return message.reply(`${nconf.get('KEY_SYMBOL')}${clipName} is now available`);
+  //   } else {
+  //     return message.reply(`You need to attach a file`);
+  //   }
+  // }
 
-  categorize(message, params) {
-    if (params[0] == 'help') {
-      return message.reply('categorize `<new category>` `<new subcategory>` `<clip>` [`<clip>` ...]: \n' +
-        'Updates the category/subcategory for any sound(s) (space separated).\n'+
-        'Remember that categories should use `_` for spaces.');
-    }
-    if (!this._paramCheck(message, params, 3)){ return; }
-    const category = params.shift();
-    if (!category.match(/^[a-z0-9_]+$/)) {
-      return message.reply(`${category} is a bad category name`);
-    }
-    const subcategory = params.shift();
-    if (!subcategory.match(/^[a-z0-9_]+$/)) {
-      return message.reply(`${subcategory} is a bad subcategory name`);
-    }
-    params.forEach(clip => {
-      if(fm.inLibrary(clip)) {
-        fm.rename(clip, clip, category, subcategory);
-        message.reply(`${clip}'s category is now: ${category} - ${subcategory}`);
-      } else {
-        message.reply(`I don't recognize ${clip}`)
-      }
-    });
-    return true;
-  }
+  // categorize(message, params) {
+  //   if (params[0] == 'help') {
+  //     return message.reply('categorize `<new category>` `<new subcategory>` `<clip>` [`<clip>` ...]: \n' +
+  //       'Updates the category/subcategory for any sound(s) (space separated).\n'+
+  //       'Remember that categories should use `_` for spaces.');
+  //   }
+  //   if (!this._paramCheck(message, params, 3)){ return; }
+  //   const category = params.shift();
+  //   if (!category.match(/^[a-z0-9_]+$/)) {
+  //     return message.reply(`${category} is a bad category name`);
+  //   }
+  //   const subcategory = params.shift();
+  //   if (!subcategory.match(/^[a-z0-9_]+$/)) {
+  //     return message.reply(`${subcategory} is a bad subcategory name`);
+  //   }
+  //   params.forEach(clip => {
+  //     if(fm.inLibrary(clip)) {
+  //       fm.rename(clip, clip, category, subcategory);
+  //       message.reply(`${clip}'s category is now: ${category} - ${subcategory}`);
+  //     } else {
+  //       message.reply(`I don't recognize ${clip}`)
+  //     }
+  //   });
+  //   return true;
+  // }
 
   forgetphrase(message, params) {
     if (params[0] == 'help') {
@@ -222,53 +244,53 @@ export default class AdminUtils {
     return message.reply(`Removed.`);
   }
 
-  grant(message, params) {
-    const validRoles = Object.keys(this.accessMap).sort().join('|');
-    if (params[0] == 'help') {
-      return message.reply('grant `<username>` `<permission>` [`<permission>` ...]: \n' +
-          'Gives `<username>` access to `<permission>` feature(s).\n' +
-          `Permissions: \`${validRoles}\``);
-    }
-    if (!this._paramCheck(message, params, 2)){ return; }
+  // grant(message, params) {
+  //   const validRoles = Object.keys(this.accessMap).sort().join('|');
+  //   if (params[0] == 'help') {
+  //     return message.reply('grant `<username>` `<permission>` [`<permission>` ...]: \n' +
+  //         'Gives `<username>` access to `<permission>` feature(s).\n' +
+  //         `Permissions: \`${validRoles}\``);
+  //   }
+  //   if (!this._paramCheck(message, params, 2)){ return; }
 
-    const username = params.shift();
-    const discordUser = this._getDiscordUser(message, username);
-    if (discordUser && params) {
-      const access = params.map(operation => operation.trim())
-                           .filter(operation => (operation in this.accessMap));
-      if (access.length == 0){ return; }
+  //   const username = params.shift();
+  //   const discordUser = this._getDiscordUser(message, username);
+  //   if (discordUser && params) {
+  //     const access = params.map(operation => operation.trim())
+  //                          .filter(operation => (operation in this.accessMap));
+  //     if (access.length == 0){ return; }
 
-      const userId = discordUser.user.id;
-      message.delete();
-      // Access manager
-      am.grantUserAccessById(userId, access);
-      this._printUserAccess(message, username, am.getUserAccess(discordUser.user));
-    }
+  //     const userId = discordUser.user.id;
+  //     message.delete();
+  //     // Access manager
+  //     am.grantUserAccessById(userId, access);
+  //     this._printUserAccess(message, username, am.getUserAccess(discordUser.user));
+  //   }
 
-  }
+  // }
 
-  grantrole(message, params) {
-    const validRoles = Object.keys(this.accessMap).sort().join('|');
-    if (params[0] == 'help') {
-      return message.reply(`grantrole \`${validRoles}\` \`<role name>\`: \n` +
-          'Gives `<role name>` access to the named role.');
-    }
-    if (!this._paramCheck(message, params, 2)){ return; }
-    const access = params.shift();
-    const roleName = params.join(' ');
-    if (!access.match("^(" + validRoles + ")$")) {
-      return message.reply('Must select the granted access: `' + validRoles + '`', {split: true})
-    }
+  // grantrole(message, params) {
+  //   const validRoles = Object.keys(this.accessMap).sort().join('|');
+  //   if (params[0] == 'help') {
+  //     return message.reply(`grantrole \`${validRoles}\` \`<role name>\`: \n` +
+  //         'Gives `<role name>` access to the named role.');
+  //   }
+  //   if (!this._paramCheck(message, params, 2)){ return; }
+  //   const access = params.shift();
+  //   const roleName = params.join(' ');
+  //   if (!access.match("^(" + validRoles + ")$")) {
+  //     return message.reply('Must select the granted access: `' + validRoles + '`', {split: true})
+  //   }
 
-    const role = message.guild.roles.cache.find(role => role.name.toLowerCase() === roleName);
-    if (!role) {
-      return message.reply(`Couldn't find that role`);
-    }
-    if (am.grantRoleAccessById(role.id, message.guild.id, access)){
-      return message.reply(`Granted ${access} to '${role.name}'`);
-    }
-    return message.reply(`Something went wrong with that`);
-  }
+  //   const role = message.guild.roles.cache.find(role => role.name.toLowerCase() === roleName);
+  //   if (!role) {
+  //     return message.reply(`Couldn't find that role`);
+  //   }
+  //   if (am.grantRoleAccessById(role.id, message.guild.id, access)){
+  //     return message.reply(`Granted ${access} to '${role.name}'`);
+  //   }
+  //   return message.reply(`Something went wrong with that`);
+  // }
 
   hotphrase(message, params) {
     if (params[0] == 'help') {
@@ -320,40 +342,40 @@ export default class AdminUtils {
     return message.reply("Hot phrases: \n" + result.join('\n'), {split: true})
   }
 
-  remove(message, params) {
-    if (params[0] == 'help') {
-      return message.reply('remove `<clip>`: \n' +
-          'Permanently deletes `<clip>` from the soundboard.');
-    }
-    if (!this._paramCheck(message, params)){ return; }
-    const clipName = params[0];
-    if (!fm.inLibrary(clipName)) {
-      return log.debug(`File not found: ${params}`);
-    }
-    if(fm.delete(clipName)) {
-      message.reply(`${clipName} removed`);
-    }
-  }
+  // remove(message, params) {
+  //   if (params[0] == 'help') {
+  //     return message.reply('remove `<clip>`: \n' +
+  //         'Permanently deletes `<clip>` from the soundboard.');
+  //   }
+  //   if (!this._paramCheck(message, params)){ return; }
+  //   const clipName = params[0];
+  //   if (!fm.inLibrary(clipName)) {
+  //     return log.debug(`File not found: ${params}`);
+  //   }
+  //   if(fm.delete(clipName)) {
+  //     message.reply(`${clipName} removed`);
+  //   }
+  // }
 
-  rename(message, params) {
-    if (params[0] == 'help') {
-      return message.reply('rename `<clip>` `<new clip name>`: \n' +
-          'Renames `<clip>` to `<new clip name>`.');
-    }
-    if (!this._paramCheck(message, params, 2)){ return; }
-    const oldClipName = params[0];
-    const newClipName = params[1];
-    if (!fm.inLibrary(oldClipName)) {
-      message.reply(`Could not find: ${oldClipName}`)
-      return log.debug(`File not found: ${oldClipName}`);
-    }
-    if (!newClipName.match(/^[a-z0-9_]+$/)) {
-      return message.reply(`${newClipName} is a bad short name`);
-    }
-    if(fm.rename(oldClipName, newClipName)) {
-      message.reply(`Rename to ${newClipName} complete.`);
-    }
-  }
+  // rename(message, params) {
+  //   if (params[0] == 'help') {
+  //     return message.reply('rename `<clip>` `<new clip name>`: \n' +
+  //         'Renames `<clip>` to `<new clip name>`.');
+  //   }
+  //   if (!this._paramCheck(message, params, 2)){ return; }
+  //   const oldClipName = params[0];
+  //   const newClipName = params[1];
+  //   if (!fm.inLibrary(oldClipName)) {
+  //     message.reply(`Could not find: ${oldClipName}`)
+  //     return log.debug(`File not found: ${oldClipName}`);
+  //   }
+  //   if (!newClipName.match(/^[a-z0-9_]+$/)) {
+  //     return message.reply(`${newClipName} is a bad short name`);
+  //   }
+  //   if(fm.rename(oldClipName, newClipName)) {
+  //     message.reply(`Rename to ${newClipName} complete.`);
+  //   }
+  // }
 
   request(message, params) {
     if (params[0] == 'help') {
@@ -379,49 +401,49 @@ export default class AdminUtils {
     message.reply(`Here's what we've got requested:\n${result}`, {split: true});
   }
 
-  revoke(message, params) {
-    const validRoles = Object.keys(this.accessMap).sort().join('|');
-    if (params[0] == 'help') {
-      return message.reply('revoke `<username>` `<permission>` [`<permission>` ...]: \n' +
-          'Revokes access for `<username>` to `<permission>` feature(s).\n' +
-          'Permissions: `' + validRoles + '`');
-    }
-    if (!this._paramCheck(message, params, 2)){ return; }
+  // revoke(message, params) {
+  //   const validRoles = Object.keys(this.accessMap).sort().join('|');
+  //   if (params[0] == 'help') {
+  //     return message.reply('revoke `<username>` `<permission>` [`<permission>` ...]: \n' +
+  //         'Revokes access for `<username>` to `<permission>` feature(s).\n' +
+  //         'Permissions: `' + validRoles + '`');
+  //   }
+  //   if (!this._paramCheck(message, params, 2)){ return; }
 
-    const username = params.shift();
-    const discordUser = this._getDiscordUser(message, username);
+  //   const username = params.shift();
+  //   const discordUser = this._getDiscordUser(message, username);
 
-    if (discordUser && params) {
-      if (discordUser.user.id == this.immuneUser) {
-        return message.reply(`${username} is immune to revokes`);
-      }
-      // Access manager
-      am.revokeUserAccessById(discordUser.user.id, params);
-      this._printUserAccess(message, username, am.getUserAccess(discordUser.user));
-    }
-  }
+  //   if (discordUser && params) {
+  //     if (discordUser.user.id == this.immuneUser) {
+  //       return message.reply(`${username} is immune to revokes`);
+  //     }
+  //     // Access manager
+  //     am.revokeUserAccessById(discordUser.user.id, params);
+  //     this._printUserAccess(message, username, am.getUserAccess(discordUser.user));
+  //   }
+  // }
 
-  revokerole(message, params) {
-    const validRoles = Object.keys(this.accessMap).sort().join('|');
-    if (params[0] == 'help') {
-      return message.reply('revokerole `' + validRoles + '` `<role name>`: \n' +
-          'Removes `<role name>` access to the named role.');
-    }
-    if (!this._paramCheck(message, params, 2)){ return; }
-    const access = params.shift();
-    const roleName = params.join(' ');
-    if (!access.match("^(" + validRoles + ")$")) {
-      return message.reply('Must select the revoked access: `' + validRoles + '`')
-    }
-    const role = message.guild.roles.cache.find(role => role.name.toLowerCase() === roleName);
-    if (!role) {
-      return message.reply(`Couldn't find that role`);
-    }
-    if (am.revokeRoleAccessById(role.id, message.guild.id, access)){
-      return message.reply(`Revoked ${access} from '${role.name}'`);
-    }
-    return message.reply(`Something went wrong with that`);
-  }
+  // revokerole(message, params) {
+  //   const validRoles = Object.keys(this.accessMap).sort().join('|');
+  //   if (params[0] == 'help') {
+  //     return message.reply('revokerole `' + validRoles + '` `<role name>`: \n' +
+  //         'Removes `<role name>` access to the named role.');
+  //   }
+  //   if (!this._paramCheck(message, params, 2)){ return; }
+  //   const access = params.shift();
+  //   const roleName = params.join(' ');
+  //   if (!access.match("^(" + validRoles + ")$")) {
+  //     return message.reply('Must select the revoked access: `' + validRoles + '`')
+  //   }
+  //   const role = message.guild.roles.cache.find(role => role.name.toLowerCase() === roleName);
+  //   if (!role) {
+  //     return message.reply(`Couldn't find that role`);
+  //   }
+  //   if (am.revokeRoleAccessById(role.id, message.guild.id, access)){
+  //     return message.reply(`Revoked ${access} from '${role.name}'`);
+  //   }
+  //   return message.reply(`Something went wrong with that`);
+  // }
 
   silence(message, params) {
     try {

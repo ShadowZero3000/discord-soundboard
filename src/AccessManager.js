@@ -1,19 +1,20 @@
 import Access from './Access.js'
-import * as AccessGuild from './AccessGuild.js'
-import { errorLog } from './logger.js'
-const log = errorLog
+import AccessGuild from './AccessGuild.js'
 import Store from 'data-store'
 
+import { errorLog } from './logger.js'
+const log = errorLog
+
 export default class AccessManager {
-    constructor() {
-        throw new Error('Use AccessManager.getInstance()');
+  constructor() {
+    throw new Error('Use AccessManager.getInstance()');
+  }
+  static getInstance() {
+    if (!AccessManager.instance) {
+      AccessManager.instance = new PrivateAccessManager();
     }
-    static getInstance() {
-        if (!AccessManager.instance) {
-            AccessManager.instance = new PrivateAccessManager();
-        }
-        return AccessManager.instance;
-    }
+    return AccessManager.instance;
+  }
 }
 
 class PrivateAccessManager {
@@ -48,6 +49,7 @@ class PrivateAccessManager {
       // If no roles are assigned in a guild, allow play to everyone
       return true;
     }
+
     return userRoles.filter(roleId => {
       return guild.getRole(roleId).can(access);
     }).length > 0;
@@ -78,6 +80,12 @@ class PrivateAccessManager {
     return guildAccess.getRoles().map(role => {
       return {name: guild.roles.cache.get(role).name, access: guildAccess.getRole(role).permissions};
     });
+  }
+
+  getRolePrivileges(role) {
+    if (!role) { return []; }
+    const guildAccess = this.getGuildById(role.guild.id);
+    return guildAccess.getRole(role.id).permissions
   }
 
   getUserAccess(user) {
