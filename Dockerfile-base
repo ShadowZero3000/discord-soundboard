@@ -12,6 +12,8 @@ FROM node:18-alpine
 # && rm -rf /var/lib/apt/lists/* \
 # && mkdir -p /node/stt
 
+RUN apk add --no-cache ffmpeg git
+
 COPY package.json /node/
 
 # node-gyp has to be built in alpine, but not kept for runtime
