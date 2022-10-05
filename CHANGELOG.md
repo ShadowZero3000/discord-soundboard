@@ -1,3 +1,12 @@
+## [1.0.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.0...v1.0.1) (2022-10-05)
+
+
+### Bug Fixes
+
+* **doc:** Fix the documentation as a test of the new main branch ([c0fda1a](https://github.com/ShadowZero3000/discord-soundboard/commit/c0fda1af3f2a76d80d5e058d2779dbf9166f4ba7))
+* **drone:** Add main to the release branches ([e57e2dd](https://github.com/ShadowZero3000/discord-soundboard/commit/e57e2ddf607258b07737ae36e976c4e038cb0e8b))
+* **drone:** Try again ([ac53703](https://github.com/ShadowZero3000/discord-soundboard/commit/ac537036fb6e52da6b1d5ab0ae73158e7413c225))
+
 ## [1.0.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.6...v1.0.0) (2022-10-05)
 
 ### Breaking changes
