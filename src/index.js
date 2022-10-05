@@ -18,8 +18,6 @@ nconf.argv()
     },
     PORT: 3000,
     WEBSERVER_ENABLED: 'true',
-    ADMIN_KEYS: 'sb,soundbot',
-    KEY_SYMBOL: '!',
     LISTEN_ENABLED: false
   });
 

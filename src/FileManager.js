@@ -1,7 +1,6 @@
 import fs from 'fs'
 import { errorLog } from './logger.js'
 const log = errorLog;
-import request from 'request'
 import Store from 'data-store'
 
 export default class FileManager {
