@@ -17,8 +17,6 @@
   "publish": ["@semantic-release/github"],
   "success": [],
   "fail": [],
-  "release": {
-    "branches": ["main"]
-  }
+  "branches": ["main"]
 }
 
