@@ -1,12 +1,16 @@
-const path = require('path');
-const winston = require('winston');
+import * as path from 'path'
+import * as winston from 'winston'
+
+import * as url from 'url';
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 // Set this to whatever, by default the path of the script.
 const logPath = __dirname + '/logs';
 const tsFormat = () => (new Date().toISOString());
 const { combine, timestamp, json } = winston.format;
 
-const accessLog = winston.createLogger({
+export const accessLog = winston.createLogger({
     level: 'verbose',
     transports: [
         new winston.transports.Console(),
@@ -18,7 +22,7 @@ const accessLog = winston.createLogger({
     format: winston.format.combine(timestamp(), json())
 });
 
-const errorLog = winston.createLogger({
+export const errorLog = winston.createLogger({
     level: 'silly',
     transports: [
         new winston.transports.Console(),
@@ -30,7 +34,3 @@ const errorLog = winston.createLogger({
     format: winston.format.combine(timestamp(), json())
 });
 
-module.exports = {
-    errorLog: errorLog,
-    accessLog: accessLog
-};

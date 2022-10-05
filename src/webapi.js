@@ -1,17 +1,30 @@
-const accessLog = require('./logger.js').accessLog;
-const btoa = require('btoa');
-const express = require('express');
-const fetch = require('node-fetch');
-const log = require('./logger.js').errorLog;
-const nconf = require('nconf');
-const { URLSearchParams } = require('url');
+import { accessLog, errorLog } from './logger.js'
+const log = errorLog
 
-const am = require('./AccessManager');
-const discord = require('./DiscordBot.js');
-const fm = require('./FileManager');
-const request = require('request');
+import * as express from 'express'
+import fetch from 'node-fetch'
+
+import nconf from 'nconf'
+import { URLSearchParams } from 'url'
+
+import AccessManager from './AccessManager.js'
+const am = AccessManager.getInstance()
+
+import DiscordBot from './DiscordBot.js'
+
+import FileManager from './FileManager.js'
+const fm = FileManager.getInstance()
+
+import request from 'request'
 const router = express.Router();
-const vqm = require('./VoiceQueueManager');
+
+import VoiceQueueManager from './VoiceQueueManager.js'
+const vqm = VoiceQueueManager.getInstance()
+
+import { REST } from 'discord.js'
+
+// TODO: Move all of the discord session token stuff into memory, instead have a client session between us and the user
+// that we map that session to. We can then automate the refresh of tokens
 
 function getRedirect(req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
@@ -113,58 +126,47 @@ router.get('/discord/callback', async (req, res) => {
   return res.redirect(`/clips`);
 });
 
+import {Routes} from 'discord.js'
 router.get('/play/:clip', async (req, res) => {
   accessLog.info(`Request received via gui to play: ${req.params.clip}`);
   var session_cookie = { 'updated': false }
   const validSession = await refreshSession(req, res, 'play', session_cookie)
   if (!validSession){ return; }
+
   if (fm.inLibrary(req.params.clip)) {
     var accesstoken = req.cookies.discord_session.at;
     if(session_cookie['updated']) {
       accesstoken = session_cookie['value']['at']
     }
-    const headers = {
-      'Authorization': 'Bearer ' + accesstoken
-    }
+
+    // Use a user-token for REST
+    const rest = new REST({ version: '10', authPrefix: 'Bearer'}).setToken(accesstoken)
+
     log.debug(`Got request to play: ${req.params.clip}`);
 
-    request.get('https://discordapp.com/api/users/@me', (err, r, body) => {
-      if (err) {
-        log.debug("Got an error asking for user details")
-        return res.redirect(`/`);
-      }
+    const discord = DiscordBot.getInstance();
 
-      if(r.statusCode != 200) {
-        var msg;
-        try {
-          msg = JSON.parse(body).message;
-        } catch(e) {
-          msg = "Not parsable"
-        }
-        return res.status(500).send("Discord server error: " + msg);
-      }
-      try {
-        const userid = JSON.parse(body).id;
-        const queue = vqm.getQueueFromUser(discord.client, userid);
-        const user = queue.channel.guild.members.cache.get(userid);
-
+    rest.get(Routes.user())
+      .then((data) => {
         if(session_cookie['updated']) {
           res.cookie('discord_session', session_cookie.value, {
             maxAge: 7*24*60*60*1000, httpOnly: true
           })
         }
+        const userid = data.id
+        const queue = vqm.getQueueFromUser(userid);
+        const user = queue.channel.guild.members.cache.get(userid);
+
         if (am.checkAccess(user, queue.channel.guild, 'play')) {
           queue.add(req.params.clip);
           return res.status(200).end();
         } else {
           return res.status(403).send("Play permission not available on your current server.");
         }
-      } catch (e) {
-        log.debug("Error: " + e.message);
-        return res.status(404).send("Couldn't find a voice channel for you where I'm available");
-      }
-    })
-    .auth(null, null, true, accesstoken);
+      })
+      .catch((err) =>{
+        return res.status(400).send(err.message)
+      });
   }
 });
 
@@ -177,46 +179,35 @@ router.get('/random/:clip', async (req, res) => {
     if(session_cookie['updated']) {
       accesstoken = session_cookie['value']['at']
     }
-    const headers = {
-      'Authorization': 'Bearer ' + accesstoken
-    }
+
+    // Use a user-token for REST
+    const rest = new REST({ version: '10', authPrefix: 'Bearer'}).setToken(accesstoken)
 
     log.debug(`Got request to play random: ${req.params.clip}`);
 
-    request.get('https://discordapp.com/api/users/@me', (err, r, body) => {
-      if (err) {
-        return res.redirect(`/`);
-      }
+    const discord = DiscordBot.getInstance();
 
-      if(session_cookie['updated']) {
-        res.cookie('discord_session', session_cookie.value, {
-          maxAge: 7*24*60*60*1000, httpOnly: true
-        })
-      }
-      if(r.statusCode != 200) {
-        var msg;
-        try {
-          msg = JSON.parse(body).message;
-        } catch(e) {
-          msg = "Not parsable"
+    rest.get(Routes.user())
+      .then((data) => {
+        if(session_cookie['updated']) {
+          res.cookie('discord_session', session_cookie.value, {
+            maxAge: 7*24*60*60*1000, httpOnly: true
+          })
         }
-        return res.status(500).send("Server error: " + msg);
-      }
-      try {
-        const userid = JSON.parse(body).id;
-        const queue = vqm.getQueueFromUser(discord.client, userid);
+        const userid = data.id
+        const queue = vqm.getQueueFromUser(userid);
         const user = queue.channel.guild.members.cache.get(userid);
+
         if (am.checkAccess(user, queue.channel.guild, 'play')) {
           queue.add(fm.random(req.params.clip));
           return res.status(200).end();
         } else {
           return res.status(403).send("Play permission not available on your current server.");
         }
-      } catch(e) {
-        return res.status(404).send("Couldn't find a voice channel for you where I'm available");
-      }
-    })
-    .auth(null, null, true, accesstoken);
+      })
+      .catch((err) =>{
+        return res.status(400).send(err.message)
+      });
   }
 });
 
@@ -240,4 +231,4 @@ router.get('/clips/random', (req, res) => {
   }
 });
 
-module.exports = router;
+export { router };

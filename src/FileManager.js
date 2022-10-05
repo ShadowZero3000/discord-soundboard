@@ -1,9 +1,22 @@
-const fs = require('fs');
-const log = require('./logger.js').errorLog;
-const request = require('request');
-const Store = require('data-store');
+import fs from 'fs'
+import { errorLog } from './logger.js'
+const log = errorLog;
+import request from 'request'
+import Store from 'data-store'
 
-class FileManager {
+export default class FileManager {
+    constructor() {
+        throw new Error('Use FileManager.getInstance()');
+    }
+    static getInstance() {
+        if (!FileManager.instance) {
+            FileManager.instance = new PrivateFileManager();
+        }
+        return FileManager.instance;
+    }
+}
+
+class PrivateFileManager {
   constructor() {
     this.categories = {};
     this.files = {};
@@ -215,5 +228,3 @@ class FileManager {
     return collection[Math.floor(Math.random() * collection.length)];
   }
 }
-
-module.exports = new FileManager();

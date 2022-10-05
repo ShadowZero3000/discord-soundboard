@@ -1,12 +1,20 @@
 
-const cookieParser = require('cookie-parser');
-const express = require('express');
-const log = require('./logger.js').errorLog;
-const accessLog = require('./logger.js').accessLog;
-const path = require('path');
-const fm = require('./FileManager');
+import cookieParser from 'cookie-parser'
+import express from 'express'
+import { errorLog, accessLog } from './logger.js'
+const log = errorLog
+import * as path from 'path'
 
-const app = express();
+import FileManager from './FileManager.js'
+const fm = FileManager.getInstance()
+
+import * as webapi from './webapi.js'
+
+import * as url from 'url';
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
+const app = express()
 
 app.use(cookieParser());
 app.set('view engine', 'pug');
@@ -33,7 +41,7 @@ app.use('/css', express.static('public/css', { maxage: oneWeek }));
 app.use('/js', express.static('public/js', { maxage: oneWeek }));
 app.use('/media', express.static('public/media', { maxage: oneMonth }));
 app.use('/logs', express.static('logs'));
-app.use('/api', require('./webapi.js'));
+app.use('/api', webapi.router);
 
 app.get('/version', (req, res) => {
   res.status(200).render(path.join(__dirname, 'public/version.pug'));
@@ -47,4 +55,4 @@ app.get('/clips', (req, res) => {
   });
 });
 
-module.exports = app
+export { app }

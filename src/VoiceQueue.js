@@ -1,14 +1,30 @@
-const fm = require('./FileManager');
-const fs = require('fs');
-const log = require('./logger.js').errorLog;
+import FileManager from './FileManager.js'
+const fm = FileManager.getInstance()
+import * as fs from 'fs'
+import { errorLog } from './logger.js'
+const log = errorLog;
 
-class VoiceQueue {
+import { joinVoiceChannel } from '@discordjs/voice'
+import { createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice'
+
+export default class VoiceQueue {
   constructor(channel) {
     this.channel = channel;
     this.playQueue = [];
     this.playing = false;
     this.silenced = false;
     this.timeout = null;
+    this.dc_after_next = false;
+    this.player = createAudioPlayer();
+
+    // This is what causes the queue to process more requests
+    this.player.on(AudioPlayerStatus.Idle, () => {
+      this.playing=false
+      if(!this.dc_after_next){
+        this.play()
+      }
+    });
+    this.connection = null;
   }
 
   log(message, level='verbose') {
@@ -54,7 +70,9 @@ class VoiceQueue {
     setTimeout(() => {
       try {
         if(this.playQueue.length == 0) {
-          this.channel.leave()
+          clearTimeout(this.timeout)
+          this.connection.destroy()
+          this.dc_after_next = false
         } else {
           this.log(`Was leaving channel, but there were still things to play`)
         }
@@ -85,27 +103,23 @@ class VoiceQueue {
   }
 
   play_clip(keyword, stop_after=false) {
-    this.channel.join()
-      // TODO: send play event to Play Bus
-      .then(conn => {
-        const dispatcher = conn.play(fm.getStream(keyword));
-        dispatcher.on("finish", end => {
-          // TODO: send end event to Play Bus
-          this.log(`Finished with: ${keyword}`);
-          this.playing = false;
-          if(!stop_after){
-            this.play();
-          }
-        });
-      })
-      .catch(err => {
-        this.log(`Error in channel join: ${err}`);
-        this.playing = false;
-        if(!stop_after){
-          this.play();
-        }
-      });
+    this.connection = joinVoiceChannel({
+      channelId: this.channel.id,
+      guildId: this.channel.guild.id,
+      adapterCreator: this.channel.guild.voiceAdapterCreator,
+    });
+
+    const file = fm.get(keyword)
+    if (file !== undefined) {
+      const resource = createAudioResource(file.fileName); //'/home/user/voice/track.mp3');
+      this.connection.subscribe(this.player);
+
+      if(stop_after){
+        this.dc_after_next = true
+      }
+      this.player.play(resource);
+    } else {
+      log.debug(`Request to play invalid file: ${keyword}`)
+    }
   }
 }
-
-module.exports = VoiceQueue
