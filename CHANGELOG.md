@@ -1,3 +1,9 @@
+## [1.0.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.6...v1.0.0) (2022-10-05)
+
+### Breaking changes
+
+* **everything:** This was a manual release to ensure that it's clear that recent changes aren't backwards compatible
+
 ## [0.9.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.5...v0.9.6) (2022-10-05)
 
 
