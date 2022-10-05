@@ -21,30 +21,25 @@ docker run -e TOKEN=<Bot Token> -e CLIENT_SECRET=<Client secret> -p 3000:3000 di
 
 ```
 
-## Enabling speech recognition
+## Enabling speech recognition (Presently fully disabled)
 
 To enable speech recognition (and hotphrases) You will need to:
 
 1. Set the `LISTEN_ENABLED=true` environment variable
 2. Download a model (I.E. [this one](https://github.com/mozilla/DeepSpeech/releases/download/v0.8.1/deepspeech-0.8.1-models.pbmm)) to `/node/stt`
-3. Have the bot listen (I.E. `!sb listen`)
+3. Have the bot listen (I.E. `/admin listen`)
 
 I don't package the model with the Docker container, it's better to do with a permanent disk in kubernetes or something similar, as the model is pretty big.
 
 ## Using the app
 
-You can type `!soundboard help` for some basic guidance at any time.
-
-Administrative tasks are secured by command. Type: `!soundboard permit <username> <command>` to grant permissions. `!soundboard revoke <username> <command>` will do the opposite. Note that the global admin user is immune to changes, and always has all permissions.
-
-Adding new clips will require you to do a media upload with the note `!soundboard add <shortcut>`
-If you want to have a random selection, append a number to the end of the same shortcut, i.e. `wow1` `wow2` `wow3`. That will then let you use `!random wow` to have a random clip of those play.
-
-You can use `!soundboard remove <shortcut>` to purge files as well.
+The bot registers several slash commands on discord servers in which it is operational.
+After changes to those command specifications (new subcommands etc...) or at bootstrap (initial setup) you will need to run:
+`/update_commands` (prefixed if appropriate). This re-reads the commands and re-configures them on Discord's end.
 
 
 ## Warnings
 
-This application is HUGELY open for abuse. Whether from users with admin permissions adding or removing sounds, or from guests spamming. It's intended for mature audiences that know not to drive everyone else insane. (But you do have `!soundboard silence` as a last resort).
+This application is HUGELY open for abuse. Whether from users with admin permissions adding or removing sounds, or from guests spamming. It's intended for mature audiences that know not to drive everyone else insane. (But you do have `/admin silence` as a last resort).
 
 It's also in an incredibly beta state, so things are subject to change, and the code is a mess that grew from 10 lines of a Discord bot test.
