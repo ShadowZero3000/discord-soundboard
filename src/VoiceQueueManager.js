@@ -41,13 +41,13 @@ class PrivateVoiceQueueManager {
   }
 
   getQueueFromMessage(message) {
-    log.debug(`Looking for an active voice channel for ${message.member.id}`);
-    const user = message.guild.voiceStates.cache.get(message.member.id);
-    if (!user) {
+    log.debug(`Looking for an active voice channel for ${message.member.user.id}`);
+    const voiceState = message.guild.voiceStates.cache.get(message.member.user.id);
+    if (!voiceState) {
       return null;
       throw new Error(`You don't appear to be in a voice channel in this server`);
     }
-    const voiceChannel = user.guild.channels.cache.get(user.channelID);
+    const voiceChannel = voiceState.guild.channels.cache.get(voiceState.channelId);
     log.debug(`getQueueFromMessage found voice channel ${voiceChannel}`);
     if(voiceChannel == undefined) {
       throw new Error(`Couldn't find channel`)

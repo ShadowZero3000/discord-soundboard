@@ -79,6 +79,56 @@ export let data = new SlashCommandBuilder()
             .setRequired(true)
         )
     )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('request')
+        .setDescription('Add a request for a sound clip to be made/added')
+        .addStringOption(option =>
+          option
+            .setName('name')
+            .setDescription('What should the clip be called?')
+            .setRequired(true)
+        )
+        .addStringOption(option =>
+          option
+            .setName('description')
+            .setDescription('What would you like to have added?')
+            .setRequired(true)
+        )
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('wanted')
+        .setDescription('See the list of requested clips')
+    )
+
+async function request(interaction) {
+  if (!utils.check_interaction(interaction, 'request')) { 
+    return await interaction.reply({content: "You do not have permission to perform this operation", ephemeral: true})
+  }
+
+  const clip = interaction.options.getString('name')
+  const description = interaction.options.getString('description')
+
+  if (!clip.match(/^[a-z0-9_]+$/)) {
+    return await  interaction.reply({content: `${clip} is a bad clip name`, ephemeral: true})
+  }
+  if(fm.addRequest(clip, description)) {
+    return await interaction.reply({content: `Ok, I'll add it to the list`, ephemeral: true})
+  } else {
+    return await interaction.reply({content: `Already on the list`, ephemeral: true})
+  }
+}
+
+async function wanted(interaction) {
+  if (!utils.check_interaction(interaction, 'reqlist')) { 
+    return await interaction.reply({content: "You do not have permission to perform this operation", ephemeral: true})
+  }
+
+  const requests = fm.getRequests();
+  const result = requests.map(req => `${req.name} - ${req.description}`).join('\n');
+  return await interaction.reply(`Here's what we've got requested:\n${result}`, {split: true});
+}
 
 async function move(interaction) {
   if (!utils.check_interaction(interaction, 'categorize')) { // Permission scheme uses 'categorize', not 'move'
@@ -183,12 +233,11 @@ export async function execute(interaction) {
 
 
   if (subcommand == "move") { return move(interaction) }
-  
   if (subcommand == "rename") { return rename(interaction) }
-  
   if (subcommand == "add") { return add(interaction) }
-  
   if (subcommand == "remove") { return remove(interaction) }
+  if (subcommand == "request") { return request(interaction) }
+  if (subcommand == "wanted") { return wanted(interaction) }
 
   return await interaction.reply({content: 'Invalid subcommand', ephemeral: true})
 }
