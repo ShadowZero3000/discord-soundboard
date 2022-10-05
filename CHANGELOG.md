@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.1...v1.0.2) (2022-10-05)
+
+
+### Bug Fixes
+
+* **uploads:** Fix upload dependency broken ([7fb4a74](https://github.com/ShadowZero3000/discord-soundboard/commit/7fb4a7406a206ab8dc16dde23f89955142fd0e8c))
+
 ## [1.0.1](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.0...v1.0.1) (2022-10-05)
 
 
