@@ -1,3 +1,10 @@
+## [0.9.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.5...v0.9.6) (2022-10-05)
+
+
+### Bug Fixes
+
+* **everything:** Make the bot work again ([b6f357e](https://github.com/ShadowZero3000/discord-soundboard/commit/b6f357e1344a03dbde975bbba65ca4e669426cf0))
+
 ## [0.9.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v0.9.4...v0.9.5) (2020-09-12)
 
 
