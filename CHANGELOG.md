@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.2...v1.0.3) (2022-10-07)
+
+
+### Bug Fixes
+
+* **sessions:** Switch over to secure discord sessions ([84764a4](https://github.com/ShadowZero3000/discord-soundboard/commit/84764a46d4c5c38873a46903a878599a10aa4943))
+
 ## [1.0.2](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.1...v1.0.2) (2022-10-05)
 
 
