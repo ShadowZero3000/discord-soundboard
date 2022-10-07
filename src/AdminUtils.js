@@ -1,5 +1,4 @@
-import nconf from 'nconf'
-
+import Config from './Config.js'
 import {errorLog} from './logger.js'
 const log = errorLog
 
@@ -8,7 +7,6 @@ const am = AccessManager.getInstance()
 
 // import ListenerManager from './ListenerManager.js'
 // const lm = new ListenerManager()
-
 
 import Store from 'data-store'
 
@@ -90,9 +88,9 @@ class PrivateAdminUtils {
 
   saveConfig(key, value) {
     log.debug(`Saving config key: ${key}, value: ${value}`);
-    nconf.set(key, value);
-    const configFile = nconf.stores.file.file;
-    nconf.save(err => {});
+    Config.set(key, value);
+    const configFile = Config.stores.file.file;
+    Config.save(err => {});
   }
 
   setImmuneUser(userId) {

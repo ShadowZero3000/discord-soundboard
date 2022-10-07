@@ -1,26 +1,7 @@
 // Includes
 import DiscordBot from './DiscordBot.js'
-import nconf from 'nconf'
-import path from 'path'
 
-import * as url from 'url';
-const __filename = url.fileURLToPath(import.meta.url);
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
-
-const configFile = path.join(__dirname,'config/config.json');
-nconf.argv()
-  .env()
-  .file({file: configFile})
-  .defaults({
-    startup: {
-      enabled: false,
-      clip: 'sensors'
-    },
-    PORT: 3000,
-    WEBSERVER_ENABLED: 'true',
-    LISTEN_ENABLED: false
-  });
-
+import Config from './Config.js'
 import * as webgui from './webgui.js'
 
 // Var definitions
@@ -34,7 +15,7 @@ const discordBot = DiscordBot.getInstance()
 process.on('SIGINT', () => {
   log.debug("Shutting down from SIGINT");
   discordBot.client.destroy();
-  if (nconf.get('WEBSERVER_ENABLED')) {
+  if (Config.get('WEBSERVER_ENABLED')) {
     server.close();
   }
   process.exit();
@@ -43,7 +24,7 @@ process.on('SIGINT', () => {
 process.on('SIGTERM', () => {
   log.debug("Shutting down from SIGTERM");
   discordBot.client.destroy();
-  if (nconf.get('WEBSERVER_ENABLED')) {
+  if (Config.get('WEBSERVER_ENABLED')) {
     server.close();
   }
   process.exit();
@@ -51,13 +32,12 @@ process.on('SIGTERM', () => {
 
 /////////////////END INITIALIZATION
 
-
 // Start up the discordBot bot
-// discordBot.configure(nconf.get('TOKEN'));
+// discordBot.configure(Config.get('TOKEN'));
 discordBot.connect();
 
-if (nconf.get('WEBSERVER_ENABLED')) {
+if (Config.get('WEBSERVER_ENABLED')) {
   webgui.app.enable('trust proxy');
-  server = webgui.app.listen(nconf.get('PORT'), () => log.debug(`Web UI available on port ${nconf.get('PORT')}!`))
+  server = webgui.app.listen(Config.get('PORT'), () => log.debug(`Web UI available on port ${Config.get('PORT')}!`))
 }
 log.debug("Let the fun begin!");

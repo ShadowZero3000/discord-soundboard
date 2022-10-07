@@ -1,6 +1,5 @@
 import FileManager from './FileManager.js'
 const fm = FileManager.getInstance()
-import * as fs from 'fs'
 import { errorLog } from './logger.js'
 const log = errorLog;
 
