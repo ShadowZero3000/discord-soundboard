@@ -14,7 +14,7 @@ import { Client, Collection, GatewayIntentBits, Routes } from 'discord.js'
 import { errorLog } from './logger.js'
 const log = errorLog
 
-import nconf from 'nconf'
+import Config from './Config.js'
 
 import VoiceQueueManager from './VoiceQueueManager.js'
 const vqm = VoiceQueueManager.getInstance()
@@ -42,7 +42,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 class PrivateDiscordBot {
   constructor() {
-    this.token = nconf.get('TOKEN')
+    this.token = Config.get('TOKEN')
   
     // Can probably drop the messagecontent in the future if we use slash commands
     this.client = new Client({ intents: [
@@ -186,8 +186,8 @@ class PrivateDiscordBot {
 
   connect() {
     this.client.once('ready', (client) => {
-      nconf.set('CLIENT_ID', client.application.id); //Overrides environment variables
-      const startup = nconf.get('startup')
+      Config.set('CLIENT_ID', client.application.id); //Overrides environment variables
+      const startup = Config.get('startup')
       client.application.fetch().then(app => {
         adminUtils.setImmuneUser(app.owner.id)
         if (startup.enabled) {
@@ -211,7 +211,7 @@ class PrivateDiscordBot {
       log.debug(`Connection error in DiscordBot: ${err}`)
     })
 
-    // if(nconf.get('LISTEN_ENABLED')){
+    // if(Config.get('LISTEN_ENABLED')){
     //   log.debug("Listening enabled")
     //   this.client.on('guildMemberSpeaking', this.handleSpeaking.bind(this))
     // }
@@ -270,4 +270,3 @@ class PrivateDiscordBot {
   //   } catch(e) {log.debug(`Error handling speech: ${e.message}`)}
   // }
 }
-

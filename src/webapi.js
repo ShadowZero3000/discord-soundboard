@@ -4,7 +4,7 @@ const log = errorLog
 import * as express from 'express'
 import fetch from 'node-fetch'
 
-import nconf from 'nconf'
+import Config from './Config.js'
 import { URLSearchParams } from 'url'
 
 import AccessManager from './AccessManager.js'
@@ -30,27 +30,29 @@ function getRedirect(req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`);
 }
 
-async function refreshSession(req, res, callback, session_cookie) {
-  if ( !req.cookies.discord_session
-    || !req.cookies.discord_session.at
-    || new Date().getTime() > req.cookies.discord_session.refresh_by ) {
+async function refreshSession(req, res, callback) {
+  if ( !req.session.discord_session
+    || !req.session.discord_session.at
+    || new Date().getTime() > req.session.discord_session.refresh_by ) {
     accessLog.info(`Expired session, attempting refresh`);
-    return await refreshDiscordSession(req, res, callback, session_cookie)
+    return await refreshDiscordSession(req, res, callback)
   }
   return true;
 }
 
-async function refreshDiscordSession(req, res, callback, session_cookie) {
+async function refreshDiscordSession(req, res, callback) {
   var refreshToken
   try {
-    refreshToken = req.cookies.discord_session.rt;
+    refreshToken = req.session.discord_session.rt;
   } catch (e){
+    req.session.destroy()
     res.status(403).send("Session expired, please log back in");
     return false;
   }
+
   const form = new URLSearchParams({
-    'client_id': nconf.get('CLIENT_ID'),
-    'client_secret': nconf.get('CLIENT_SECRET'),
+    'client_id': Config.get('CLIENT_ID'),
+    'client_secret': Config.get('CLIENT_SECRET'),
     'grant_type': 'refresh_token',
     'refresh_token': refreshToken
   });
@@ -60,15 +62,14 @@ async function refreshDiscordSession(req, res, callback, session_cookie) {
     body: form
   }).catch(err => {
     log.debug(`Error from discord: ${err}`);
-    res.cookie('discord_session', {}, {
-      maxAge: 7*24*60*60*1000, httpOnly: true
-    });
+    req.session.destroy()
     res.status(403).send("Session expired, please log back in");
     return false
   });
 
   const json = await response.json();
   if (json.error) {
+    req.session.destroy()
     // Possible this leaks non-user data. Not going to worry right now.
     res.status(400).send(`Error from discord: ${json.error}`)
     return false
@@ -80,15 +81,14 @@ async function refreshDiscordSession(req, res, callback, session_cookie) {
     'refresh_by': new Date().getTime() + 3*24*60*60*1000
   };
 
-  // Expire ours one day sooner than discord's, which is 7 days normally
-  session_cookie['value'] = session
-  session_cookie['updated'] = true
+  req.session.active = true
+  req.session.discord_session = session
   return true
 }
 
 router.get('/discord/login', (req, res) => {
   const redirect = getRedirect(req);
-  res.redirect(`https://discordapp.com/oauth2/authorize?client_id=${nconf.get('CLIENT_ID')}&scope=identify&response_type=code&redirect_uri=${redirect}`);
+  res.redirect(`https://discordapp.com/oauth2/authorize?client_id=${Config.get('CLIENT_ID')}&scope=identify&response_type=code&redirect_uri=${redirect}`);
 });
 
 router.get('/discord/callback', async (req, res) => {
@@ -100,8 +100,8 @@ router.get('/discord/callback', async (req, res) => {
   const code = req.query.code;
 
   const params = new URLSearchParams({
-    'client_id': nconf.get('CLIENT_ID'),
-    'client_secret': nconf.get('CLIENT_SECRET'),
+    'client_id': Config.get('CLIENT_ID'),
+    'client_secret': Config.get('CLIENT_SECRET'),
     'grant_type': 'authorization_code',
     'code': code,
     'redirect_uri': decodeURIComponent(redirect),
@@ -118,10 +118,9 @@ router.get('/discord/callback', async (req, res) => {
     'rt': json.refresh_token,
     'refresh_by': new Date().getTime() + 3*24*60*60*1000
   };
-  // maxAge is milliseconds
-  res.cookie('discord_session', session, {
-    maxAge: 7*24*60*60*1000, httpOnly: true
-  });
+
+  req.session.active = true
+  req.session.discord_session = session
 
   return res.redirect(`/clips`);
 });
@@ -129,18 +128,12 @@ router.get('/discord/callback', async (req, res) => {
 import {Routes} from 'discord.js'
 router.get('/play/:clip', async (req, res) => {
   accessLog.info(`Request received via gui to play: ${req.params.clip}`);
-  var session_cookie = { 'updated': false }
-  const validSession = await refreshSession(req, res, 'play', session_cookie)
+  const validSession = await refreshSession(req, res, 'play')
   if (!validSession){ return; }
 
   if (fm.inLibrary(req.params.clip)) {
-    var accesstoken = req.cookies.discord_session.at;
-    if(session_cookie['updated']) {
-      accesstoken = session_cookie['value']['at']
-    }
-
     // Use a user-token for REST
-    const rest = new REST({ version: '10', authPrefix: 'Bearer'}).setToken(accesstoken)
+    const rest = new REST({ version: '10', authPrefix: 'Bearer'}).setToken(req.session.discord_session.at)
 
     log.debug(`Got request to play: ${req.params.clip}`);
 
@@ -148,11 +141,6 @@ router.get('/play/:clip', async (req, res) => {
 
     rest.get(Routes.user())
       .then((data) => {
-        if(session_cookie['updated']) {
-          res.cookie('discord_session', session_cookie.value, {
-            maxAge: 7*24*60*60*1000, httpOnly: true
-          })
-        }
         const userid = data.id
         const queue = vqm.getQueueFromUser(userid);
         const user = queue.channel.guild.members.cache.get(userid);
@@ -171,17 +159,11 @@ router.get('/play/:clip', async (req, res) => {
 });
 
 router.get('/random/:clip', async (req, res) => {
-  var session_cookie = { 'updated': false }
-  const validSession = await refreshSession(req, res, 'random', session_cookie)
+  const validSession = await refreshSession(req, res, 'random')
   if (!validSession){ return; }
   if (fm.inRandoms(req.params.clip)) {
-    var accesstoken = req.cookies.discord_session.at;
-    if(session_cookie['updated']) {
-      accesstoken = session_cookie['value']['at']
-    }
-
     // Use a user-token for REST
-    const rest = new REST({ version: '10', authPrefix: 'Bearer'}).setToken(accesstoken)
+    const rest = new REST({ version: '10', authPrefix: 'Bearer'}).setToken(req.session.discord_session.at)
 
     log.debug(`Got request to play random: ${req.params.clip}`);
 
@@ -189,11 +171,6 @@ router.get('/random/:clip', async (req, res) => {
 
     rest.get(Routes.user())
       .then((data) => {
-        if(session_cookie['updated']) {
-          res.cookie('discord_session', session_cookie.value, {
-            maxAge: 7*24*60*60*1000, httpOnly: true
-          })
-        }
         const userid = data.id
         const queue = vqm.getQueueFromUser(userid);
         const user = queue.channel.guild.members.cache.get(userid);

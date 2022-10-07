@@ -15,23 +15,34 @@ import * as url from 'url';
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
+import session from 'express-session'
+import sessionStore from 'express-session-rsdb'
 const app = express()
 
+import Config from './Config.js'
+
 app.use(cookieParser());
+app.use(session({
+    secret: Config.get('SESSION_SECRET'),
+    saveUninitialized:true,
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 },
+    resave: false,
+    store: new sessionStore()
+}))
+
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'public'));
 
 app.get('/', (req, res) => {
-  if ( req.cookies.discord_session && req.cookies.discord_session.at) {
-    return res.redirect('/clips');
+  if(req.session.active
+      && new Date().getTime() < req.session.discord_session.refresh_by) {
+    return res.redirect('/clips')
   }
   return res.status(200).render(path.join(__dirname, 'public/index.pug'));
 });
 
 app.get('/logout', (req, res) => {
-  res.cookie('discord_session', {}, {
-    maxAge: 1000, httpOnly: true
-  });
+  req.session.destroy()
   return res.redirect('/');
 });
 
@@ -49,6 +60,10 @@ app.get('/version', (req, res) => {
 });
 
 app.get('/clips', (req, res) => {
+  if(!req.session.active) {
+    return res.redirect('/')
+  }
+  // May need to refresh session shenanigans here
   res.status(200).render("clips", {
     files: fm.getClipList(),
     randoms: fm.getRandomList(),
