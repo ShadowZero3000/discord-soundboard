@@ -183,6 +183,7 @@ router.get('/random/:clip', async (req, res) => {
         }
       })
       .catch((err) =>{
+        log.debug(err.message, err.stack)
         return res.status(400).send(err.message)
       });
   }
