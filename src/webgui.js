@@ -27,7 +27,9 @@ app.use(session({
     saveUninitialized:true,
     cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 },
     resave: false,
-    store: new sessionStore()
+    store: new sessionStore({
+      data_storage_area: "./rsdb"
+    })
 }))
 
 app.set('view engine', 'pug');
