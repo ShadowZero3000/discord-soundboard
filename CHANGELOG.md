@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.3...v1.0.4) (2022-10-08)
+
+
+### Bug Fixes
+
+* **sessions:** Fix some session issues, improve logging ([7b7e671](https://github.com/ShadowZero3000/discord-soundboard/commit/7b7e671a547ec1b6fe95c143fc820501516ff560))
+
 ## [1.0.3](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.2...v1.0.3) (2022-10-07)
 
 
