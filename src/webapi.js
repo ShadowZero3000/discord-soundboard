@@ -66,6 +66,8 @@ async function refreshAllDiscordSessions() {
 
   const resolve = await rsdb.get('session')
   if (resolve.key != null) {
+    log.debug(`Beginning refresh of Discord ${resolve.key.length} sessions`)
+
     resolve.key.forEach((session_id) => {
       ss.get(session_id, (error, session) => {
         backgroundRefresh(session_id, session)
