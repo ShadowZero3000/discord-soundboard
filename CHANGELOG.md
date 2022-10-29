@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.5...v1.0.6) (2022-10-29)
+
+
+### Bug Fixes
+
+* **sessions:** Change timer from 6m to 6h ([b4f523a](https://github.com/ShadowZero3000/discord-soundboard/commit/b4f523a6e9018b65ec1229a41e082ab3a1dc8ec3))
+
 ## [1.0.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.4...v1.0.5) (2022-10-29)
 
 
