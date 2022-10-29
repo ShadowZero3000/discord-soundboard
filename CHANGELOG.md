@@ -1,3 +1,11 @@
+## [1.0.5](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.4...v1.0.5) (2022-10-29)
+
+
+### Bug Fixes
+
+* **channels:** missing channels ([5102bab](https://github.com/ShadowZero3000/discord-soundboard/commit/5102babf3ac035f20433ec9065703adf8962a44a))
+* **messaging:** Notify how many sessions we have ([cc0d8c1](https://github.com/ShadowZero3000/discord-soundboard/commit/cc0d8c1eba5eec836ff5b7ed13285733e1f5f72d))
+
 ## [1.0.4](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.3...v1.0.4) (2022-10-08)
 
 
