@@ -21,6 +21,9 @@ const router = express.Router();
 import VoiceQueueManager from './VoiceQueueManager.js'
 const vqm = VoiceQueueManager.getInstance()
 
+import rsdb from 'rocket-store'
+import SessionStore from './SessionStore.js'
+
 import { REST } from 'discord.js'
 
 // TODO: Move all of the discord session token stuff into memory, instead have a client session between us and the user
@@ -40,49 +43,104 @@ async function refreshSession(req, res, callback) {
   return true;
 }
 
-async function refreshDiscordSession(req, res, callback) {
-  var refreshToken
-  try {
-    refreshToken = req.session.discord_session.rt;
-  } catch (e){
-    req.session.destroy()
-    res.status(403).send("Session expired, please log back in");
-    return false;
+async function backgroundRefresh(session_id, session) {
+  const current_time = new Date().getTime()
+  if ( session.discord_session
+    && session.discord_session.at
+    && current_time > session.discord_session.refresh_by
+    && current_time < new Date(session.cookie.expires).getTime()
+    ) {
+
+    log.debug("Session renewal needed")
+    await refreshDiscordSession({session: session})
+    return session
   }
+  return null
+}
 
-  const form = new URLSearchParams({
-    'client_id': Config.get('CLIENT_ID'),
-    'client_secret': Config.get('CLIENT_SECRET'),
-    'grant_type': 'refresh_token',
-    'refresh_token': refreshToken
-  });
+// This loops through all the discord sessions we have
+// and renews them if they can be renewed
+async function refreshAllDiscordSessions() {
+  var ss = SessionStore.getInstance()
+  rsdb.options({data_storage_area: "./rsdb"})
 
-  const response = await fetch(`https://discordapp.com/api/oauth2/token?redirect_uri=${getRedirect(req)}`, {
-    method: 'POST',
-    body: form
-  }).catch(err => {
-    log.debug(`Error from discord: ${err}`);
-    req.session.destroy()
-    res.status(403).send("Session expired, please log back in");
-    return false
-  });
-
-  const json = await response.json();
-  if (json.error) {
-    req.session.destroy()
-    // Possible this leaks non-user data. Not going to worry right now.
-    res.status(400).send(`Error from discord: ${json.error}`)
-    return false
+  const resolve = await rsdb.get('session')
+  if (resolve.key != null) {
+    resolve.key.forEach((session_id) => {
+      ss.get(session_id, (error, session) => {
+        backgroundRefresh(session_id, session)
+          .then((result) => {
+            if (result != null) {
+              ss.set(session_id, result)
+            }
+          })
+      })
+    })
   }
+}
 
+function updateSessionData(req, data) {
   const session = {
-    'at': json.access_token,
-    'rt': json.refresh_token,
+    'at': data.access_token,
+    'rt': data.refresh_token,
     'refresh_by': new Date().getTime() + 3*24*60*60*1000
   };
 
   req.session.active = true
   req.session.discord_session = session
+}
+
+function generateRefreshForm(refreshToken) {
+  return new URLSearchParams({
+    'client_id': Config.get('CLIENT_ID'),
+    'client_secret': Config.get('CLIENT_SECRET'),
+    'grant_type': 'refresh_token',
+    'refresh_token': refreshToken
+  });
+}
+
+async function refreshDiscordSession(req, res, callback) {
+  var refreshToken
+  try {
+    refreshToken = req.session.discord_session.rt;
+  } catch (e){
+    log.debug("Session truly expired")
+    if(res!==undefined){
+      req.session.destroy()
+      res.status(403).send("Session expired, please log back in")
+    }
+    return false;
+  }
+
+  const response = await fetch(`https://discord.com/api/oauth2/token`, { // ?redirect_uri=${getRedirect(req)}`, {
+    method: 'POST',
+    body: generateRefreshForm(refreshToken)
+  }).catch(err => {
+    log.debug(`Error from discord during refresh api call: ${err}`);
+    if(res!==undefined){
+      req.session.destroy()
+      res.status(403).send("Session expired, please log back in")
+    } else {
+      log.debug(`Error during background refresh: ${res.body}`)
+    }
+    return false
+  });
+
+  const json = await response.json();
+  if (json.error) {
+    if(res!==undefined){
+      log.debug(`Error from discord during parsing of results of refresh call: ${json.error}`)
+      req.session.destroy()
+      // Possible this leaks non-user data. Not going to worry right now.
+      res.status(400).send(`Error from discord during parsing resuls of refresh call: ${json.error}`)
+    } else {
+      log.debug(`Error from discord during background refresh: ${json.error}`)
+    }
+    return false
+  }
+
+  updateSessionData(req, json)
+  log.debug(`Session successfully refreshed`)
   return true
 }
 
@@ -208,5 +266,10 @@ router.get('/clips/random', (req, res) => {
     return res.status(404).send("Failure"+e)
   }
 });
+
+// Renew Discord sessions in the background every 6 hours
+// This prevents us from ever having a user's discord session expire
+// Though their session with us may
+setInterval(refreshAllDiscordSessions, 1000 * 60 * 6)
 
 export { router };

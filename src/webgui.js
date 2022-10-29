@@ -20,6 +20,7 @@ import sessionStore from 'express-session-rsdb'
 const app = express()
 
 import Config from './Config.js'
+import SessionStore from './SessionStore.js'
 
 app.use(cookieParser());
 app.use(session({
@@ -27,9 +28,7 @@ app.use(session({
     saveUninitialized:true,
     cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 },
     resave: false,
-    store: new sessionStore({
-      data_storage_area: "./rsdb"
-    })
+    store: SessionStore.getInstance()
 }))
 
 app.set('view engine', 'pug');
