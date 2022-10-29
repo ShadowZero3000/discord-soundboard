@@ -272,6 +272,6 @@ router.get('/clips/random', (req, res) => {
 // Renew Discord sessions in the background every 6 hours
 // This prevents us from ever having a user's discord session expire
 // Though their session with us may
-setInterval(refreshAllDiscordSessions, 1000 * 60 * 6)
+setInterval(refreshAllDiscordSessions, 1000 * 60 * 60 * 6)
 
 export { router };
