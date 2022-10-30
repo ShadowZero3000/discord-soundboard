@@ -63,7 +63,7 @@ class PrivateVoiceQueueManager {
         .map(guild => guild.voiceStates.cache.get(userId))
         .filter(voiceState => voiceState !== undefined)
         .map(voiceState => voiceState.channel)
-        .filter(channel => channel !== undefined);
+        .filter(channel => channel != undefined)
     if (!voiceChannels.length > 0 || voiceChannels == "") {
       log.debug("Not in a channel")
       discord.guilds.fetch() // Trigger a pull to refresh
