@@ -1,3 +1,10 @@
+## [1.0.7](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.6...v1.0.7) (2022-10-30)
+
+
+### Bug Fixes
+
+* **channels:** Eliminate null-ish responses ([bed5922](https://github.com/ShadowZero3000/discord-soundboard/commit/bed5922d124f36d436d92a49fcd145b76e9173c1))
+
 ## [1.0.6](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.5...v1.0.6) (2022-10-29)
 
 
