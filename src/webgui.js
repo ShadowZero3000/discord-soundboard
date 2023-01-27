@@ -28,6 +28,7 @@ app.use(session({
     saveUninitialized:true,
     cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 },
     resave: false,
+    rolling: true,
     store: SessionStore.getInstance()
 }))
 
