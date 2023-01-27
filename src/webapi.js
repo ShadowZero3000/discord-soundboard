@@ -60,6 +60,7 @@ async function backgroundRefresh(session_id, session) {
 
 // This loops through all the discord sessions we have
 // and renews them if they can be renewed
+// This code didn't work as intended though, so I'm not calling it
 async function refreshAllDiscordSessions() {
   var ss = SessionStore.getInstance()
   rsdb.options({data_storage_area: "./rsdb"})
@@ -272,6 +273,7 @@ router.get('/clips/random', (req, res) => {
 // Renew Discord sessions in the background every 6 hours
 // This prevents us from ever having a user's discord session expire
 // Though their session with us may
-setInterval(refreshAllDiscordSessions, 1000 * 60 * 60 * 6)
+// This didn't work.....I'm not sure why, but I am dropping it
+// setInterval(refreshAllDiscordSessions, 1000 * 60 * 60 * 6)
 
 export { router };
