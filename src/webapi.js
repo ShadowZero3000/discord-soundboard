@@ -82,12 +82,19 @@ async function refreshAllDiscordSessions() {
   }
 }
 
+function generateRefreshByDate(expires_in_seconds) {
+  return new.Date().getTime() + (expires_in_seconds * 1000) - (15 * 60 * 1000)
+}
+
 function updateSessionData(req, data) {
   const session = {
     'at': data.access_token,
     'rt': data.refresh_token,
-    'refresh_by': new Date().getTime() + 3*24*60*60*1000
+    'refresh_by': generateRefreshByDate(data.expires_in)
+    //new Date().getTime() + 3*24*60*60*1000
   };
+
+  log.debug(`Updating session data. Should renew by: ${session.refresh_by}`)
 
   req.session.active = true
   req.session.discord_session = session
@@ -177,8 +184,11 @@ router.get('/discord/callback', async (req, res) => {
   const session = {
     'at': json.access_token,
     'rt': json.refresh_token,
-    'refresh_by': new Date().getTime() + 3*24*60*60*1000
+    'refresh_by': generateRefreshByDate(json.expires_in)
+    //new Date().getTime() + 3*24*60*60*1000
   };
+
+  log.debug(`Generating session data. Should renew by: ${session.refresh_by}`)
 
   req.session.active = true
   req.session.discord_session = session
