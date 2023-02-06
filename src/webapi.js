@@ -83,7 +83,7 @@ async function refreshAllDiscordSessions() {
 }
 
 function generateRefreshByDate(expires_in_seconds) {
-  return new.Date().getTime() + (expires_in_seconds * 1000) - (15 * 60 * 1000)
+  return new Date().getTime() + (expires_in_seconds * 1000) - (15 * 60 * 1000)
 }
 
 function updateSessionData(req, data) {
