@@ -1,3 +1,10 @@
+## [1.0.11](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.10...v1.0.11) (2023-04-20)
+
+
+### Bug Fixes
+
+* **bail:** Bail if stuck playing ([33f2ff9](https://github.com/ShadowZero3000/discord-soundboard/commit/33f2ff948674b3bd88a4e42c3cae2428a9e46daa))
+
 ## [1.0.10](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.9...v1.0.10) (2023-04-20)
 
 
