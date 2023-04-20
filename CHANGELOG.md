@@ -1,3 +1,10 @@
+## [1.0.9](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.8...v1.0.9) (2023-04-20)
+
+
+### Bug Fixes
+
+* **debug:** Add debugging for no connect issue ([23ad863](https://github.com/ShadowZero3000/discord-soundboard/commit/23ad863a21f46342c217adb1747c03f0a161e9e3))
+
 ## [1.0.8](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.7...v1.0.8) (2023-04-20)
 
 
