@@ -13,6 +13,7 @@ export default class VoiceQueue {
     this.playing = false;
     this.silenced = false;
     this.timeout = null;
+    this.bailtimeout = null;
     this.dc_after_next = false;
     this.player = createAudioPlayer();
 
@@ -87,7 +88,12 @@ export default class VoiceQueue {
       clearTimeout(this.timeout);
     }
     if (this.playing) {
+      this.log("Still playing a previous clip.")
+      this.bailtimeout = setTimeout(() => {this.playing = false}, 15*1000); // Bail on playing if we're still playing the same clip after 15s
       return;
+    }
+    if(this.bailtimeout) {
+      clearTimeout(this.bailtimeout);
     }
 
     this.playing = true;
