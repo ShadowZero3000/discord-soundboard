@@ -1,3 +1,11 @@
+## [1.0.12](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.11...v1.0.12) (2023-04-20)
+
+
+### Bug Fixes
+
+* **bugs:** Listen to more events ([4327d9a](https://github.com/ShadowZero3000/discord-soundboard/commit/4327d9a9bf122d80353fd36c71cd8181c2ae005f))
+* **dependencies:** Clean up messaging, update dependencies ([d89cfe8](https://github.com/ShadowZero3000/discord-soundboard/commit/d89cfe86f6a2fb7e46359c56a63b38ee1f440d6b))
+
 ## [1.0.11](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.10...v1.0.11) (2023-04-20)
 
 
