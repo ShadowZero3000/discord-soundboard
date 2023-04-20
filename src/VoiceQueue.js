@@ -18,6 +18,18 @@ export default class VoiceQueue {
     this.player = createAudioPlayer();
 
     // This is what causes the queue to process more requests
+    this.player.on(AudioPlayerStatus.Playing, ()=>{
+      this.log(`I'm presently playing. Queue length: ${this.playQueue.length}`)
+    })
+    this.player.on(AudioPlayerStatus.AutoPaused, ()=>{
+      this.log(`I'm presently AutoPaused. Queue length: ${this.playQueue.length}`)
+    })
+    this.player.on(AudioPlayerStatus.Buffering , ()=>{
+      this.log(`I'm presently Buffering . Queue length: ${this.playQueue.length}`)
+    })
+    this.player.on(AudioPlayerStatus.Paused , ()=>{
+      this.log(`I'm presently Paused . Queue length: ${this.playQueue.length}`)
+    })
     this.player.on(AudioPlayerStatus.Idle, () => {
       this.playing=false
       this.log(`Finished playing a clip, queue length now: ${this.playQueue.length}`)
