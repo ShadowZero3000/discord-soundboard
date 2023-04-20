@@ -19,6 +19,7 @@ export default class VoiceQueue {
     // This is what causes the queue to process more requests
     this.player.on(AudioPlayerStatus.Idle, () => {
       this.playing=false
+      this.log(`Finished playing a clip, queue length now: ${this.playQueue.length}`)
       if(!this.dc_after_next){
         this.play()
       }
@@ -95,7 +96,7 @@ export default class VoiceQueue {
     if (!keyword) {
       this.log("Queue empty");
       this.playing = false;
-      this.timeout = setTimeout(() => this.disconnect(), 15*60*1000); // 15m unless he moves
+      this.timeout = setTimeout(() => {this.playing = false; this.disconnect()}, 15*60*1000); // 15m unless he moves
       return;
     }
     this.play_clip(keyword)

@@ -26,8 +26,9 @@ app.use(cookieParser());
 app.use(session({
     secret: Config.get('SESSION_SECRET'),
     saveUninitialized:true,
-    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 },
+    cookie: { maxAge: 14 * 24 * 60 * 60 * 1000 },
     resave: false,
+    rolling: true,
     store: SessionStore.getInstance()
 }))
 
