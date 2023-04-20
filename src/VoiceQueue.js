@@ -17,10 +17,27 @@ export default class VoiceQueue {
     this.dc_after_next = false;
     this.player = createAudioPlayer();
 
+    // These were used to debug an issue where we would never return to the idle event
+    // https://github.com/discordjs/discord.js/issues/9185
+    // Solved by updating the voice dependency
+    // this.player.on(AudioPlayerStatus.Playing, ()=>{
+    //   this.log(`I'm presently playing. Queue length: ${this.playQueue.length}`)
+    // })
+    // this.player.on(AudioPlayerStatus.AutoPaused, ()=>{
+    //   this.log(`I'm presently AutoPaused. Queue length: ${this.playQueue.length}`)
+    // })
+    // this.player.on(AudioPlayerStatus.Buffering , ()=>{
+    //   this.log(`I'm presently Buffering . Queue length: ${this.playQueue.length}`)
+    // })
+    // this.player.on(AudioPlayerStatus.Paused , ()=>{
+    //   this.log(`I'm presently Paused . Queue length: ${this.playQueue.length}`)
+    // })
+
     // This is what causes the queue to process more requests
     this.player.on(AudioPlayerStatus.Idle, () => {
+      // this.log(`I'm presently Idle . Queue length: ${this.playQueue.length}`)
       this.playing=false
-      this.log(`Finished playing a clip, queue length now: ${this.playQueue.length}`)
+      // this.log(`Finished playing a clip, queue length now: ${this.playQueue.length}`)
       if(!this.dc_after_next){
         this.play()
       }
@@ -60,7 +77,7 @@ export default class VoiceQueue {
 
   disconnect(force = false) {
     if (this.playing && !force) {
-      this.log("Still playing");
+      this.log("Still playing during disconnect request");
       return;
     }
 
@@ -88,10 +105,11 @@ export default class VoiceQueue {
       clearTimeout(this.timeout);
     }
     if (this.playing) {
-      this.log("Still playing a previous clip.")
+      this.log("Request to play, but still playing a previous clip.")
       this.bailtimeout = setTimeout(() => {this.playing = false}, 15*1000); // Bail on playing if we're still playing the same clip after 15s
       return;
     }
+    // The bail timeout may not be necessary, but it can fix runaway queues
     if(this.bailtimeout) {
       clearTimeout(this.bailtimeout);
     }
