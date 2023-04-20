@@ -218,6 +218,7 @@ router.get('/play/:clip', async (req, res) => {
 
         if (am.checkAccess(user, queue.channel.guild, 'play')) {
           queue.add(req.params.clip);
+          log.debug(`request to play ${req.params.clip} processed. ${userid} - ${queue}`)
           return res.status(200).end();
         } else {
           return res.status(403).send("Play permission not available on your current server.");

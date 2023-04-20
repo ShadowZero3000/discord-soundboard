@@ -20,6 +20,7 @@ class PrivateVoiceQueueManager {
     this.queues = {};
   }
   getQueueFromChannel(voiceChannel) {
+    this.log(`Asked to get queue from channel id: ${voiceChannel.id}`)
     if (!voiceChannel) {
       // TODO: This will misbehave, need to throw?
       return null;
