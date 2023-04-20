@@ -1,3 +1,12 @@
+## [1.0.8](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.7...v1.0.8) (2023-04-20)
+
+
+### Bug Fixes
+
+* **bot:** Add some messaging ([64f13d9](https://github.com/ShadowZero3000/discord-soundboard/commit/64f13d9e8a314f2dcc1d39f47e80cf1cb299926c))
+* **dates:** Fix some date stuff ([dc0988a](https://github.com/ShadowZero3000/discord-soundboard/commit/dc0988aaf9db71ff21f96c408299d8fdc4577bbf))
+* **sessions:** Drop the auto-refresh, just refresh when it expires ([b1935d3](https://github.com/ShadowZero3000/discord-soundboard/commit/b1935d3a590e70e35178701074da99980e546097))
+
 ## [1.0.7](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.6...v1.0.7) (2022-10-30)
 
 
