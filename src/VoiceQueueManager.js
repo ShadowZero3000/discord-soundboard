@@ -30,6 +30,7 @@ class PrivateVoiceQueueManager {
       this.queues[voiceChannel.id] = new VoiceQueue(voiceChannel);
       log.info(`New voice queue created: ${voiceChannel.id}`);
     }
+    log.debug(`This is the queue I found`)
     return this.queues[voiceChannel.id];
   }
 
