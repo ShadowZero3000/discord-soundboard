@@ -16,7 +16,7 @@ const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 import session from 'express-session'
-import sessionStore from 'express-session-rsdb'
+// import sessionStore from 'express-session-rsdb'
 const app = express()
 
 import Config from './Config.js'

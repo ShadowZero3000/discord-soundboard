@@ -1,54 +1,57 @@
 import AdminUtils from './AdminUtils.js'
-const adminUtils = AdminUtils.getInstance()
 
 // Used in commented out hotphrase code
 // import AccessManager from './AccessManager.js'
 // const am = AccessManager.getInstance()
 
-import { Client, Collection, GatewayIntentBits, Routes } from 'discord.js'
+import { Client, Collection, GatewayIntentBits, Routes, Events, MessageFlags } from 'discord.js'
 
 // Used in commented out hotphrase code
 // import FileManager from './FileManager.js'
 // const fm = FileManager.getInstance()
 
 import { errorLog } from './logger.js'
-const log = errorLog
 
 import Config from './Config.js'
 
 import VoiceQueueManager from './VoiceQueueManager.js'
+
+import path from 'path'
+import fs from 'fs'
+import * as url from 'url'
+const adminUtils = AdminUtils.getInstance()
+const log = errorLog
 const vqm = VoiceQueueManager.getInstance()
 
 // import ListenerManager from './ListenerManager.js'
 // const lm = new ListenerManager()
 
 export default class DiscordBot {
-  constructor() {
+  constructor () {
     throw new Error('Use DiscordBot.getInstance()')
   }
-  static getInstance() {
+
+  static getInstance () {
     if (!DiscordBot.instance) {
       DiscordBot.instance = new PrivateDiscordBot()
     }
     return DiscordBot.instance
   }
 }
-
-import path from 'path'
-import fs from 'fs'
-import * as url from 'url'
 const __filename = url.fileURLToPath(import.meta.url)
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 class PrivateDiscordBot {
-  constructor() {
+  constructor () {
     this.token = Config.get('TOKEN')
-  
+
     // Can probably drop the messagecontent in the future if we use slash commands
-    this.client = new Client({ intents: [
-      GatewayIntentBits.Guilds, //GatewayIntentBits.MessageContent,
-      GatewayIntentBits.GuildVoiceStates
-      ]})
+    this.client = new Client({
+      intents: [
+        GatewayIntentBits.Guilds, // GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates
+      ]
+    })
 
     this.client.commands = new Collection()
 
@@ -57,15 +60,20 @@ class PrivateDiscordBot {
 
     for (const file of commandFiles) {
       const filePath = path.join(commandsPath, file)
-      import(filePath).then(command =>{
-        // Set a new item in the Collection
-        // With the key as the command name and the value as the exported module
-        this.client.commands.set(command.data.name, command)
+
+      import(filePath).then(command => {
+        if ('data' in command && 'execute' in command) {
+          // Set a new item in the Collection
+          // With the key as the command name and the value as the exported module
+          this.client.commands.set(command.data.name, command)
+        } else {
+          log.error(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+        }
       })
     }
   }
 
-  async register_commands() {
+  async register_commands () {
     // This should only happen once. So we need to check if they already are registered, and update them only when needed I guess
     const commands = []
     const commandsPath = path.join(__dirname, 'commands')
@@ -82,15 +90,17 @@ class PrivateDiscordBot {
     }
 
     const rest = this.client.rest
-    var cid = this.client.application.id
-    var [gid] = this.client.guilds.cache.keys()
+    const cid = this.client.application.id
+    const [gid] = this.client.guilds.cache.keys()
 
     rest.put(Routes.applicationCommands(cid), { body: commands })
-      .then((data) => log.debug(`Successfully registered ${data.length} application commands.`))
-      .catch(log.error)
+      .then((data) => {
+        log.debug(`Successfully registered ${data.length} application commands.`)
+      })
+      .catch((err) => {log.error(`Failed to register command: ${err}`)})
   }
 
-  async register_self_update() {
+  async register_self_update () {
     // This should only happen once, if the self-updating command isn't registered.
     // Basically this lets us bootstrap on the fly, and only update our commands when we want to
     // On initial bootstrap, this will add the 'update_commands' command.
@@ -106,26 +116,28 @@ class PrivateDiscordBot {
     }
 
     const rest = this.client.rest
-    var cid = this.client.application.id
-    var [gid] = this.client.guilds.cache.keys()
+    const cid = this.client.application.id
+    const [gid] = this.client.guilds.cache.keys()
 
     rest.get(Routes.applicationGuildCommands(cid, gid))
       .then((data) => {
-        var command = data.filter(item => item.name == commands[0].name)
+        const command = data.filter(item => item.name == commands[0].name)
         if (command.length == 0) {
           rest.put(Routes.applicationGuildCommands(cid, gid), { body: commands })
             .then((data) => {
               log.debug(`Successfully registered ${data.length} application commands.`)
-              log.debug(`You will need to run 'update_commands' to add commands to the server`)
+              log.debug('You will need to run \'update_commands\' to add commands to the server')
             })
             .catch(log.error)
         }
       })
   }
 
-  listen_to_commands() {
-    this.client.on('interactionCreate', async interaction => {
+  listen_to_commands () {
+    this.client.on(Events.InteractionCreate, async interaction => {
       if (!interaction.isChatInputCommand()) return
+
+      console.log("I got an interaction via chat")
 
       const command = interaction.client.commands.get(interaction.commandName)
 
@@ -135,11 +147,11 @@ class PrivateDiscordBot {
         await command.execute(interaction)
       } catch (error) {
         log.error(error.message)
-        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true })
+        await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral})
       }
     })
 
-    this.client.on('interactionCreate', async interaction => {
+    this.client.on(Events.InteractionCreate, async interaction => {
       if (!interaction.isModalSubmit()) return
 
       const commandName = interaction.customId.split('Modal')[0]
@@ -151,12 +163,13 @@ class PrivateDiscordBot {
         await command.handleModal(interaction)
       } catch (error) {
         log.error(error.message)
-        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true })
+        await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral})
       }
     })
 
-    this.client.on('interactionCreate', async interaction => {
-      if (!interaction.isSelectMenu()) return
+    this.client.on(Events.InteractionCreate, async interaction => {
+      if (!interaction.isStringSelectMenu()) return
+
       const commandName = interaction.customId.split('SelectMenu')[0]
       const command = interaction.client.commands.get(commandName)
 
@@ -166,11 +179,11 @@ class PrivateDiscordBot {
         await command.handleSubmission(interaction)
       } catch (error) {
         log.error(error.message)
-        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true })
+        await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral})
       }
     })
 
-    this.client.on('interactionCreate', async interaction => {
+    this.client.on(Events.InteractionCreate, async interaction => {
       if (!interaction.isAutocomplete()) return
 
       const command = interaction.client.commands.get(interaction.commandName)
@@ -184,22 +197,22 @@ class PrivateDiscordBot {
     })
   }
 
-  connect() {
+  async connect () {
     this.client.once('ready', (client) => {
-      Config.set('CLIENT_ID', client.application.id); //Overrides environment variables
+      Config.set('CLIENT_ID', client.application.id) // Overrides environment variables
       const startup = Config.get('startup')
       client.application.fetch().then(app => {
         adminUtils.setImmuneUser(app.owner.id)
         if (startup.enabled) {
-          try {
-            const vc = vqm.getVCFromUserid(app.owner.id)
+          vqm.getVCFromUserid(app.owner.id).then(vc => {
             if (vc !== undefined) {
+              log.info("In startup...")
               vqm.getQueueFromChannel(vc)
-                 .add(startup.clip)
+                .add(startup.clip)
             }
-          } catch(e) {
-            log.debug(e.message)
-          }
+          }).catch((e) => {
+            log.debug(`Error on connect: ${e.message}`)
+          })
         }
       })
 

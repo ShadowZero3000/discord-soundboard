@@ -1,52 +1,52 @@
-import { SlashCommandBuilder } from 'discord.js'
+import { SlashCommandBuilder, MessageFlags } from 'discord.js'
 
 import FileManager from '../FileManager.js'
-const fm = FileManager.getInstance()
 
 import VoiceQueueManager from '../VoiceQueueManager.js'
-const vqm = VoiceQueueManager.getInstance()
 
 import AdminUtils from '../AdminUtils.js'
-const utils = AdminUtils.getInstance()
 
 import nconf from 'nconf'
+const fm = FileManager.getInstance()
+const vqm = VoiceQueueManager.getInstance()
+const utils = AdminUtils.getInstance()
 const prefix = nconf.get('COMMAND_PREFIX') || ''
 
-export let data = new SlashCommandBuilder()
-    .setName(prefix+'play')
-    .setDescription('Play a clip from the soundboard')
-    .addStringOption(option => 
-      option.setName('clipname')
-        .setDescription('Name of the clip to play')
-        .setRequired(true)
-        .setAutocomplete(true)
-    )
+export const data = new SlashCommandBuilder()
+  .setName(prefix + 'play')
+  .setDescription('Play a clip from the soundboard')
+  .addStringOption(option =>
+    option.setName('clipname')
+      .setDescription('Name of the clip to play')
+      .setRequired(true)
+      .setAutocomplete(true)
+  )
 
-export async function execute(interaction) {
-  if (!utils.check_interaction(interaction, 'play')) { 
-    return await interaction.reply({content: "You do not have permission to perform this operation", ephemeral: true})
+export async function execute (interaction) {
+  if (!utils.check_interaction(interaction, 'play')) {
+    return await interaction.reply({ content: 'You do not have permission to perform this operation', flags: MessageFlags.Ephemeral })
   }
   const clipName = interaction.options.getString('clipname')
 
-
   if (!fm.inLibrary(clipName)) {
-    return await interaction.reply({content: `I don't recognize ${clipName}`, ephemeral: true})
+    return await interaction.reply({ content: `I don't recognize ${clipName}`, flags: MessageFlags.Ephemeral })
   }
 
   try {
-    const voiceQueue = vqm.getQueueFromUser(interaction.user.id);
-    voiceQueue.add(clipName);
-  } catch {
-      return await interaction.reply({content: "You don't appear to be in a voice channel", ephemeral: true})
+    const voiceQueue = await vqm.getQueueFromUser(interaction.user.id)
+    voiceQueue.add(clipName)
+  } catch (error) {
+    console.log(error)
+    return await interaction.reply({ content: 'You don\'t appear to be in a voice channel', flags: MessageFlags.Ephemeral })
   }
-  return await interaction.reply({content: 'Ok', ephemeral: true})
+  return await interaction.reply({ content: 'Ok', flags: MessageFlags.Ephemeral })
 }
 
-export async function handleAutocomplete(interaction) {
-  const focusedValue = interaction.options.getFocused();
+export async function handleAutocomplete (interaction) {
+  const focusedValue = interaction.options.getFocused()
   const choices = Object.keys(fm.getAll())
-  const filtered = choices.filter(choice => choice.startsWith(focusedValue));
+  const filtered = choices.filter(choice => choice.startsWith(focusedValue))
   await interaction.respond(
-    filtered.map(choice => ({ name: choice, value: choice })),
-  );
+    filtered.map(choice => ({ name: choice, value: choice }))
+  )
 }
