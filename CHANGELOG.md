@@ -1,3 +1,10 @@
+## [1.0.13](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.12...v1.0.13) (2025-07-29)
+
+
+### Bug Fixes
+
+* **upgrade:** Refactor and upgrade BREAKING CHANGE ([d6aa8e1](https://github.com/ShadowZero3000/discord-soundboard/commit/d6aa8e13f17365b7de7bea290f872ea7c3904139))
+
 ## [1.0.12](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.11...v1.0.12) (2023-04-20)
 
 
