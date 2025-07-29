@@ -26,7 +26,7 @@
 // export async function execute(interaction) {
 //     // TODO: Add the access check here
 //     if (!utils.check_interaction(interaction, 'remove')) { // Permission scheme uses 'remove', not 'removeclip'
-//         return await interaction.reply({content: "You do not have permission to perform this operation", ephemeral: true})
+//         return await interaction.reply({content: "You do not have permission to perform this operation", flags: MessageFlags.Ephemeral})
 //     }
 //     return
 
@@ -56,24 +56,24 @@
 
 //     const clipName = submission.values[0]
 //     console.log(`Removing: ${clipName}`)
-//     return await submission.reply({content: `${clipName} has been removed`, ephemeral: true})
+//     return await submission.reply({content: `${clipName} has been removed`, flags: MessageFlags.Ephemeral})
 //     return null
 //     if (!clipName.match(/^[a-z0-9_]+$/)) {
-//         return await modalSubmission.reply({content: `${clipName} is a bad short name`, ephemeral: true})
+//         return await modalSubmission.reply({content: `${clipName} is a bad short name`, flags: MessageFlags.Ephemeral})
 //     }
 //     if (!category.match(/^[a-z0-9_]+$/)) {
-//         return await modalSubmission.reply({content: `${category} is a bad category name`, ephemeral: true})
+//         return await modalSubmission.reply({content: `${category} is a bad category name`, flags: MessageFlags.Ephemeral})
 //     }
 //     if (!subcategory.match(/^[a-z0-9_]+$/)) {
-//         return await modalSubmission.reply({content: `${subcategory} is a bad subcategory name`, ephemeral: true})
+//         return await modalSubmission.reply({content: `${subcategory} is a bad subcategory name`, flags: MessageFlags.Ephemeral})
 //     }
 //     if (fm.inLibrary(clipName)) {
-//         return await modalSubmission.reply({content: "That sound effect already exists", ephemeral: true})
+//         return await modalSubmission.reply({content: "That sound effect already exists", flags: MessageFlags.Ephemeral})
 //     }
 //     if (!upload) {
-//         return await modalSubmission.reply({content: "Could not find upload", ephemeral: true})
+//         return await modalSubmission.reply({content: "Could not find upload", flags: MessageFlags.Ephemeral})
 //     }
 
 //     fm.create(clipName, category, subcategory, upload);
-//     return await modalSubmission.reply({content: `${clipName} is now available`, ephemeral: true})
+//     return await modalSubmission.reply({content: `${clipName} is now available`, flags: MessageFlags.Ephemeral})
 // }

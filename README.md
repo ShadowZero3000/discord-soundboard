@@ -43,3 +43,5 @@ After changes to those command specifications (new subcommands etc...) or at boo
 This application is HUGELY open for abuse. Whether from users with admin permissions adding or removing sounds, or from guests spamming. It's intended for mature audiences that know not to drive everyone else insane. (But you do have `/admin silence` as a last resort).
 
 It's also in an incredibly beta state, so things are subject to change, and the code is a mess that grew from 10 lines of a Discord bot test.
+
+I need to add in the timeout stuff to prevent spamming
