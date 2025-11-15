@@ -32,7 +32,8 @@ jobs:
         with:
           # Required for semantic-release to push tags back to the repo
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in token
+          # token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in token
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
@@ -42,8 +43,8 @@ jobs:
       - name: 📝 Run Semantic Release
         id: semantic-release
         uses: cycjimmy/semantic-release-action@v4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used by semantic-release for pushing
+        # env:
+        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used by semantic-release for pushing
         with:
           extra_plugins: |
             @semantic-release/changelog
