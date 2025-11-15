@@ -1,3 +1,10 @@
+## [1.0.14](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.13...v1.0.14) (2025-11-15)
+
+
+### Bug Fixes
+
+* package-lock ([3f85db0](https://github.com/ShadowZero3000/discord-soundboard/commit/3f85db0a0a4d3aff21a29382fe69b6665d11b18f))
+
 ## [1.0.13](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.12...v1.0.13) (2025-07-29)
 
 
