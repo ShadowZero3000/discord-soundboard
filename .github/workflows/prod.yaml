@@ -70,17 +70,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Determine tags
-        id: gen_tags
-        run: |
-          TAGS="registry.codethat.rocks/soundboard/soundboard:latest"
-          TAGS="${TAGS},registry.codethat.rocks/soundboard/soundboard:dev-${{ github.run_number }}"
-          TAGS="${TAGS},registry.codethat.rocks/soundboard/soundboard:v${{ needs.semantic-release.outputs.new_release_version }}"
-          # # For repo tags/releases, add the official tag
-          # if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-          #   TAGS="${TAGS},registry.codethat.rocks/soundboard/soundboard:${{ github.ref_name }}"
-          # fi
-          echo '::set-output name=tags::'$TAGS
       - name: Log into Docker Registry
         # Note: Secret is set on the repo itself
         uses: docker/login-action@v3
@@ -94,7 +83,10 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.gen_tags.outputs.tags }}
+          tags: |
+            registry.codethat.rocks/soundboard/soundboard:latest,
+            registry.codethat.rocks/soundboard/soundboard:dev-${{ github.run_number }},
+            registry.codethat.rocks/soundboard/soundboard:v${{ needs.semantic-release.outputs.new_release_version }}
           # registry.codethat.rocks/soundboard/soundboard:dev-${{ github.run_number }}
           cache-from: type=registry,ref=registry.codethat.rocks/soundboard/soundboard:buildcache
           cache-to: type=registry,ref=registry.codethat.rocks/soundboard/soundboard:buildcache,mode=max
