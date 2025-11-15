@@ -1,0 +1,115 @@
+name: Semantic release
+# Controls when the workflow will run
+on:
+  push:
+    branches:
+      - 'master'
+      - 'main'
+      - 'release/**'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # The 'Release' job handles semantic-release and subsequent production build/deploy
+  semantic-release:
+    outputs:
+      new_release_published: ${{ steps.semantic-release.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic-release.outputs.new_release_version }}
+    runs-on: soundboard-k8s-runner
+
+    # This job only runs on master/main or release branches
+    # And shouldn't trigger itself (as it commits)
+    if: |
+      !startsWith(github.event.head_commit.message, 'chore') &&
+      github.event_name == 'push' && (
+        github.ref == 'refs/heads/master' ||
+        github.ref == 'refs/heads/main' ||
+        startsWith(github.ref, 'refs/heads/release/')
+      )
+
+    steps:
+      - name: ⚙️ Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Required for semantic-release to push tags back to the repo
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in token
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📝 Run Semantic Release
+        id: semantic-release
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used by semantic-release for pushing
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/commit-analyzer
+            @semantic-release/exec
+            @semantic-release/git
+            @semantic-release/github
+            @semantic-release/npm
+            @semantic-release/release-notes-generator
+
+  # The 'Build' job handles caching, building, and pushing the Docker image
+  build:
+    if: needs.semantic-release.outputs.new_release_published == 'true'
+    needs: semantic-release
+    runs-on: soundboard-k8s-runner
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: ⚙️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log into Docker Registry
+        # Note: Secret is set on the repo itself
+        uses: docker/login-action@v3
+        with:
+          registry: registry.codethat.rocks
+          username: drone
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and Push Dev Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            registry.codethat.rocks/soundboard/soundboard:latest,
+            registry.codethat.rocks/soundboard/soundboard:dev-${{ github.run_number }},
+            registry.codethat.rocks/soundboard/soundboard:v${{ needs.semantic-release.outputs.new_release_version }}
+          # registry.codethat.rocks/soundboard/soundboard:dev-${{ github.run_number }}
+          cache-from: type=registry,ref=registry.codethat.rocks/soundboard/soundboard:buildcache
+          cache-to: type=registry,ref=registry.codethat.rocks/soundboard/soundboard:buildcache,mode=max
+
+  deploy-dev:
+    runs-on: soundboard-k8s-runner
+    defaults:
+      run:
+        shell: bash
+    needs: [build, semantic-release]
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+      - name: Update Dev Deployment image
+        run: kubectl set image deployment/dev-soundboard soundboard=registry.codethat.rocks/soundboard/soundboard:v${{ needs.semantic-release.outputs.new_release_version }} -n soundboard
+
+  # The 'Production' job only runs when a tag is created by 'semantic-release' or manually
+  deploy-prod:
+    runs-on: soundboard-k8s-runner
+    needs: [build, semantic-release]
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+      - name: Update Prod Deployment image
+        if: github.event_name == 'push'
+        run: kubectl set image deployment/prod-soundboard soundboard=registry.codethat.rocks/soundboard/soundboard:v${{ needs.semantic-release.outputs.new_release_version }} -n soundboard

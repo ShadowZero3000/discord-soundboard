@@ -1,0 +1,21 @@
+branches:
+  - main
+
+plugins:
+  - '@semantic-release/commit-analyzer'
+  - '@semantic-release/release-notes-generator'
+  - '@semantic-release/changelog'
+  - '@semantic-release/git'
+  - - '@semantic-release/npm'
+    - npmPublish: false
+  - - '@semantic-release/changelog'
+    - changelogFile: 'CHANGELOG.md'
+  - - '@semantic-release/exec'
+    - prepareCmd: echo ${nextRelease.version} > public/version.pug
+  - - '@semantic-release/git'
+    - assets:
+        - CHANGELOG.md
+        - package.json
+        - public/version.pug
+    - message: 'chore(release): ${nextRelease.version} [skip semver]\n\n${nextRelease.notes}'
+  - '@semantic-release/github'
