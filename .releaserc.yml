@@ -14,8 +14,8 @@ plugins:
     - prepareCmd: echo ${nextRelease.version} > public/version.pug
   - - '@semantic-release/git'
     - assets:
-        - CHANGELOG.md
-        - package.json
-        - public/version.pug
-    - message: 'chore(release): ${nextRelease.version} [skip semver]\n\n${nextRelease.notes}'
+      - CHANGELOG.md
+      - package.json
+      - public/version.pug
+      message: 'chore(release): ${nextRelease.version} [skip semver]\n\n${nextRelease.notes}'
   - '@semantic-release/github'
