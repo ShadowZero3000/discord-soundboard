@@ -33,6 +33,7 @@ jobs:
           # Required for semantic-release to push tags back to the repo
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }} # Use the built-in token
+          persist-credentials: false
 
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
