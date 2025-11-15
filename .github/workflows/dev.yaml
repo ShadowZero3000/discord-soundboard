@@ -44,6 +44,9 @@ jobs:
     needs: build
     runs-on: soundboard-k8s-runner
     steps:
+      - name: ⚙️ Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
