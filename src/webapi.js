@@ -12,8 +12,6 @@ import DiscordBot from './DiscordBot.js'
 
 import FileManager from './FileManager.js'
 
-import request from 'request'
-
 import VoiceQueueManager from './VoiceQueueManager.js'
 
 // import rsdb from 'rocket-store'

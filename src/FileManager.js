@@ -2,7 +2,8 @@ import fs from 'fs'
 import { errorLog } from './logger.js'
 const log = errorLog;
 import Store from 'data-store'
-import request from 'request'
+import fetch from 'node-fetch'
+import { pipeline } from 'stream/promises'
 
 export default class FileManager {
     constructor() {
@@ -131,21 +132,11 @@ class PrivateFileManager {
         fs.mkdirSync(directory, {recursive: true});
     }
     try {
-      await new Promise((resolve, reject) => {
-        const stream = request(file.url)
-          .on('error', (err) => {
-            log.error(`Download failed for ${file.url}: ${err.message}`);
-            reject(err);
-          })
-          .pipe(fs.createWriteStream(destination))
-          .on('error', (err) => {
-            log.error(`Write failed for ${destination}: ${err.message}`);
-            reject(err);
-          })
-          .on('finish', () => {
-            resolve();
-          });
-      });
+      const response = await fetch(file.url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      await pipeline(response.body, fs.createWriteStream(destination));
       return this.register(`${keyword}--${file.name}`, category, subcategory);
     } catch (err) {
       log.error(`Failed to create file ${keyword}: ${err.message}`);
