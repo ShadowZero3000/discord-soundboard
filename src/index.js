@@ -7,7 +7,7 @@ import * as webgui from './webgui.js'
 // Var definitions
 import { errorLog } from './logger.js'
 const log = errorLog
-var server = null;
+let server = null;
 
 const discordBot = DiscordBot.getInstance()
 

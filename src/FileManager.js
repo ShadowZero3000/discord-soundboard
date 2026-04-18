@@ -27,10 +27,10 @@ class PrivateFileManager {
     const cats = fs.readdirSync(this.home, {withFileTypes: true});
     cats.forEach(category => {
       if (category.isDirectory()) {
-        var subcats = fs.readdirSync(`${this.home}/${category.name}`, {withFileTypes: true});
+        const subcats = fs.readdirSync(`${this.home}/${category.name}`, {withFileTypes: true});
         subcats.forEach(subcategory => {
           if (subcategory.isDirectory()) {
-            var sounds = fs.readdirSync(`${this.home}/${category.name}/${subcategory.name}`, {withFileTypes: true});
+            const sounds = fs.readdirSync(`${this.home}/${category.name}/${subcategory.name}`, {withFileTypes: true});
             sounds.forEach(sound => {
               this.register(sound, category.name, subcategory.name);
             });
@@ -54,7 +54,7 @@ class PrivateFileManager {
   }
 
   getRequests() {
-    var requestList = [];
+    let requestList = [];
     const requests = this.requestStore.clone();
     Object.keys(requests).sort().forEach(function(key) {
       requestList.push(requests[key]);
@@ -69,7 +69,7 @@ class PrivateFileManager {
   }
 
   register(file, category, subcategory) {
-    var matches;
+    let matches;
     if (file instanceof(fs.Dirent)) {
       if(!file.isFile()) { return false; }
       matches = file.name.match(/^([^-]+)--(.*)$/);
@@ -99,7 +99,7 @@ class PrivateFileManager {
   }
 
   sortCategories() {
-    var result = {};
+    let result = {};
     Object.keys(this.categories).sort().forEach(category => {
       result[category] = {}
       Object.keys(this.categories[category]).sort().forEach(subcategory => {
@@ -125,8 +125,8 @@ class PrivateFileManager {
   }
 
   async create(keyword, category, subcategory, file) {
-    var directory = `${this.home}/${category.toLowerCase()}/${subcategory.toLowerCase()}`;
-    var destination = `${directory}/${keyword}--${file.name}`;
+    const directory = `${this.home}/${category.toLowerCase()}/${subcategory.toLowerCase()}`;
+    const destination = `${directory}/${keyword}--${file.name}`;
     log.debug(`Writing attachment to file: ${destination}`);
     if (!fs.existsSync(directory)){
         fs.mkdirSync(directory, {recursive: true});
