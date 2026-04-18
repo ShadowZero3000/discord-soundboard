@@ -123,15 +123,38 @@ class PrivateFileManager {
     delete this.files[file.name];
   }
 
-  create(keyword, category, subcategory, file) {
+  async create(keyword, category, subcategory, file) {
     var directory = `${this.home}/${category.toLowerCase()}/${subcategory.toLowerCase()}`;
     var destination = `${directory}/${keyword}--${file.name}`;
     log.debug(`Writing attachment to file: ${destination}`);
     if (!fs.existsSync(directory)){
         fs.mkdirSync(directory, {recursive: true});
     }
-    request(file.url).pipe(fs.createWriteStream(destination));
-    return this.register(`${keyword}--${file.name}`, category, subcategory);
+    try {
+      await new Promise((resolve, reject) => {
+        const stream = request(file.url)
+          .on('error', (err) => {
+            log.error(`Download failed for ${file.url}: ${err.message}`);
+            reject(err);
+          })
+          .pipe(fs.createWriteStream(destination))
+          .on('error', (err) => {
+            log.error(`Write failed for ${destination}: ${err.message}`);
+            reject(err);
+          })
+          .on('finish', () => {
+            resolve();
+          });
+      });
+      return this.register(`${keyword}--${file.name}`, category, subcategory);
+    } catch (err) {
+      log.error(`Failed to create file ${keyword}: ${err.message}`);
+      // Clean up partial file if exists
+      if (fs.existsSync(destination)) {
+        fs.unlinkSync(destination);
+      }
+      return false;
+    }
   }
 
   delete(keyword) {

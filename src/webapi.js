@@ -187,7 +187,10 @@ router.get('/discord/callback', async (req, res) => {
 })
 router.get('/play/:clip', async (req, res) => {
   accessLog.info(`Request received via gui to play: ${req.params.clip}`)
-  const validSession = await refreshSession(req, res, 'play')
+  if (!req.params.clip.match(/^[a-z0-9_]+$/)) {
+    return res.status(400).send('Invalid clip name')
+  }
+  const validSession = await refreshSession(req)
   if (!validSession) { return }
 
   if (fm.inLibrary(req.params.clip)) {
@@ -219,7 +222,10 @@ router.get('/play/:clip', async (req, res) => {
 })
 
 router.get('/random/:clip', async (req, res) => {
-  const validSession = await refreshSession(req, res, 'random')
+  if (!req.params.clip.match(/^[a-z0-9_]+$/)) {
+    return res.status(400).send('Invalid clip name')
+  }
+  const validSession = await refreshSession(req)
   if (!validSession) { return }
   if (fm.inRandoms(req.params.clip)) {
     // Use a user-token for REST
