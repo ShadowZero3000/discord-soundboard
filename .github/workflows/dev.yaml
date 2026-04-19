@@ -51,6 +51,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # This step shouldn't be necessary once we move to @discordjs/voice instead of opus
+      # Or if we pinned to a version that doesn't need to native install deps
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3
       - run: npm ci
       - run: npm run build --if-present
       - run: npm test
