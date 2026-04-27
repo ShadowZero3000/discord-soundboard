@@ -42,7 +42,7 @@ class PrivateVoiceQueueManager {
       throw new Error('No queue found, voice channel not located')
     }
     log.info(`Looking for queue from user: ${userId}. Voice Channel: ${voiceChannel}`)
-    var res = this.getQueueFromChannel(voiceChannel)
+    const res = this.getQueueFromChannel(voiceChannel)
     if (res === null) {
       throw new Error('No queue found, voice channel not located')
     }

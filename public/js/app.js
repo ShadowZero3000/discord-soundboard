@@ -12,7 +12,7 @@ function random(clip) {
     .catch(parseFailure)
 }
 
-var titleCaseMixin = {
+const titleCaseMixin = {
   methods: {
     toTitleCase(str) {
       return str.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
@@ -22,18 +22,18 @@ var titleCaseMixin = {
   }
 }
 
-var findClipMixin = {
+const findClipMixin = {
   methods: {
     findClip: function(needle, haystack) {
-      var searchString = needle
+      const searchString = needle
                             .replace(' ','[_-]*')
                             .replace(/[^A-z0-9_\-\*]/g,'')
-      var clipList = []
-      var regex = new RegExp(`.*${searchString}.*`, 'i')
+      let clipList = []
+      const regex = new RegExp(`.*${searchString}.*`, 'i')
       Object.keys(haystack).forEach(function(category) {
-        var cat = haystack[category];
+        const cat = haystack[category];
         Object.keys(cat).forEach(function(subcategory) {
-          var subcat = cat[subcategory];
+          const subcat = cat[subcategory];
           Object.keys(subcat).forEach(function(clip) {
             if(clip.match(regex)) {
               clipList.push({"name": clip, "subcategory": subcategory, "category": category})
@@ -76,7 +76,7 @@ Vue.component('heart', {
     }
   },
   mounted: function() {
-    var heart = this
+    const heart = this
     this.$root.$on('initialFavoriteState', function(favoriteState){
       if(favoriteState.indexOf(heart.clip.name) > -1) {
         heart.favorited = true
@@ -143,7 +143,7 @@ Vue.component('search-box', {
     }
   }
 })
-var vm = new Vue({
+const vm = new Vue({
   el: '#vuewrapper',
   data () {
     return {
@@ -178,7 +178,7 @@ var vm = new Vue({
         if(val == undefined) {
           idbKeyval.set(collapseId, isJustShown)
         } else {
-          var synced = collapseId in this.syncedCollapses
+          const synced = collapseId in this.syncedCollapses
           if(!synced && val != isJustShown) {
 
             if (this.buttons['btn_'+collapseId] != null) {
@@ -193,7 +193,7 @@ var vm = new Vue({
       })
     });
 
-    var favorites = this.favorites
+    const favorites = this.favorites
     idbKeyval.get("favorites").then(val => {
       if(val == undefined) {
         // Fresh set of favorites, so set it blank

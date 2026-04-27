@@ -12,8 +12,6 @@ import DiscordBot from './DiscordBot.js'
 
 import FileManager from './FileManager.js'
 
-import request from 'request'
-
 import VoiceQueueManager from './VoiceQueueManager.js'
 
 // import rsdb from 'rocket-store'
@@ -35,12 +33,12 @@ function getRedirect (req) {
   return encodeURIComponent(`${req.protocol}://${req.headers.host}/api/discord/callback`)
 }
 
-async function refreshSession (req, res, callback) {
+export async function refreshSession (req) {
   if (!req.session.discord_session ||
      !req.session.discord_session.at ||
      new Date().getTime() > req.session.discord_session.refresh_by) {
     accessLog.info('Expired session, attempting refresh')
-    return await refreshDiscordSession(req, res, callback)
+    return await refreshDiscordSession(req)
   }
   return true
 }
@@ -53,7 +51,8 @@ async function backgroundRefresh (session_id, session) {
     current_time < new Date(session.cookie.expires).getTime()
   ) {
     log.debug('Session renewal needed')
-    await refreshDiscordSession({ session })
+    const req = { session }
+    await refreshDiscordSession(req)
     return session
   }
   return null
@@ -110,16 +109,13 @@ function generateRefreshForm (refreshToken) {
   })
 }
 
-async function refreshDiscordSession (req, res, callback) {
+async function refreshDiscordSession (req) {
   let refreshToken
   try {
     refreshToken = req.session.discord_session.rt
   } catch (e) {
     log.debug('Session truly expired')
-    if (res !== undefined) {
-      req.session.destroy()
-      res.status(403).send('Session expired, please log back in')
-    }
+    req.session.destroy()
     return false
   }
 
@@ -128,25 +124,14 @@ async function refreshDiscordSession (req, res, callback) {
     body: generateRefreshForm(refreshToken)
   }).catch(err => {
     log.debug(`Error from discord during refresh api call: ${err}`)
-    if (res !== undefined) {
-      req.session.destroy()
-      res.status(403).send('Session expired, please log back in')
-    } else {
-      log.debug(`Error during background refresh: ${res.body}`)
-    }
+    req.session.destroy()
     return false
   })
 
   const json = await response.json()
   if (json.error) {
-    if (res !== undefined) {
-      log.debug(`Error from discord during parsing of results of refresh call: ${json.error}`)
-      req.session.destroy()
-      // Possible this leaks non-user data. Not going to worry right now.
-      res.status(400).send(`Error from discord during parsing resuls of refresh call: ${json.error}`)
-    } else {
-      log.debug(`Error from discord during background refresh: ${json.error}`)
-    }
+    log.debug(`Error from discord during parsing of results of refresh call: ${json.error}`)
+    req.session.destroy()
     return false
   }
 
@@ -194,11 +179,16 @@ router.get('/discord/callback', async (req, res) => {
   req.session.active = true
   req.session.discord_session = session
 
-  return res.redirect('/clips')
+  req.session.save(() => {
+    return res.redirect('/clips')
+  })
 })
 router.get('/play/:clip', async (req, res) => {
   accessLog.info(`Request received via gui to play: ${req.params.clip}`)
-  const validSession = await refreshSession(req, res, 'play')
+  if (!req.params.clip.match(/^[a-z0-9_]+$/)) {
+    return res.status(400).send('Invalid clip name')
+  }
+  const validSession = await refreshSession(req)
   if (!validSession) { return }
 
   if (fm.inLibrary(req.params.clip)) {
@@ -230,7 +220,10 @@ router.get('/play/:clip', async (req, res) => {
 })
 
 router.get('/random/:clip', async (req, res) => {
-  const validSession = await refreshSession(req, res, 'random')
+  if (!req.params.clip.match(/^[a-z0-9_]+$/)) {
+    return res.status(400).send('Invalid clip name')
+  }
+  const validSession = await refreshSession(req)
   if (!validSession) { return }
   if (fm.inRandoms(req.params.clip)) {
     // Use a user-token for REST

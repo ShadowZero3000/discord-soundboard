@@ -266,7 +266,10 @@ export async function handleModal (modalSubmission) {
     return await modalSubmission.reply({ content: 'Could not find upload', flags: MessageFlags.Ephemeral })
   }
 
-  fm.create(clipName, category, subcategory, upload)
+  const success = await fm.create(clipName, category, subcategory, upload)
+  if (!success) {
+    return await modalSubmission.reply({ content: 'Failed to upload the clip. Please try again.', flags: MessageFlags.Ephemeral })
+  }
   return await modalSubmission.reply({ content: `${clipName} is now available`, flags: MessageFlags.Ephemeral })
 }
 

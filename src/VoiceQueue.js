@@ -132,19 +132,20 @@ export default class VoiceQueue {
   }
 
   play_clip (keyword, stopAfter = false) {
-    // Connect to the server and channel
-    this.connection = joinVoiceChannel({
-      channelId: this.channel.id,
-      guildId: this.channel.guild.id,
-      adapterCreator: this.channel.guild.voiceAdapterCreator
-    })
+    // Connect to the server and channel if not already connected
+    if (!this.connection) {
+      this.connection = joinVoiceChannel({
+        channelId: this.channel.id,
+        guildId: this.channel.guild.id,
+        adapterCreator: this.channel.guild.voiceAdapterCreator
+      })
+      this.connection.subscribe(this.player)
+    }
 
     // Get the file from the file manager
     const file = fm.get(keyword)
     if (file !== undefined) {
       const resource = createAudioResource(file.fileName)
-      this.connection.subscribe(this.player)
-
       if (stopAfter) {
         this.dc_after_next = true
       }

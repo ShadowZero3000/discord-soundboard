@@ -10,6 +10,7 @@ import FileManager from './FileManager.js'
 const fm = FileManager.getInstance()
 
 import * as webapi from './webapi.js'
+import { refreshSession } from './webapi.js'
 
 import * as url from 'url';
 const __filename = url.fileURLToPath(import.meta.url);
@@ -35,9 +36,9 @@ app.use(session({
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'public'));
 
-app.get('/', (req, res) => {
-  if(req.session.active
-      && new Date().getTime() < req.session.discord_session.refresh_by) {
+app.get('/', async (req, res) => {
+  await refreshSession(req)
+  if(req.session.active) {
     return res.redirect('/clips')
   }
   return res.status(200).render(path.join(__dirname, 'public/index.pug'));
@@ -61,7 +62,8 @@ app.get('/version', (req, res) => {
   res.status(200).render(path.join(__dirname, 'public/version.pug'));
 });
 
-app.get('/clips', (req, res) => {
+app.get('/clips', async (req, res) => {
+  await refreshSession(req)
   if(!req.session.active) {
     return res.redirect('/')
   }
