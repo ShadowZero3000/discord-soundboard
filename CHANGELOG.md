@@ -9,6 +9,17 @@
 * Sessions ([4a805d6](https://github.com/ShadowZero3000/discord-soundboard/commit/4a805d67bb5f84cdf95914a3850eb74157e37c62))
 * Standardize on const/let ([dc0c22b](https://github.com/ShadowZero3000/discord-soundboard/commit/dc0c22b67aad59270b4a8c15a5fce765736a3ca0))
 
+## [1.0.15](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.14...v1.0.15) (2026-04-27)
+
+
+### Bug Fixes
+
+* Issue with getting stuck connected ([206cf22](https://github.com/ShadowZero3000/discord-soundboard/commit/206cf22a582856a04c13fe7fad3c4b155e712118))
+* More package simplification ([26ba98b](https://github.com/ShadowZero3000/discord-soundboard/commit/26ba98b70a4266c0bb383e690c49f0c0fc8225c4))
+* Remove request lib ([5ab9278](https://github.com/ShadowZero3000/discord-soundboard/commit/5ab9278f226a4cec5818a720b6013f31670401cc))
+* Sessions ([4a805d6](https://github.com/ShadowZero3000/discord-soundboard/commit/4a805d67bb5f84cdf95914a3850eb74157e37c62))
+* Standardize on const/let ([dc0c22b](https://github.com/ShadowZero3000/discord-soundboard/commit/dc0c22b67aad59270b4a8c15a5fce765736a3ca0))
+
 ## [1.0.14](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.13...v1.0.14) (2025-11-15)
 
 
