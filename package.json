@@ -1,6 +1,6 @@
 {
   "name": "discord_bot",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "SparrowBot for Discord",
   "main": "index.js",
   "scripts": {

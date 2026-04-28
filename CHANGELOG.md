@@ -5,6 +5,13 @@
 
 * Attempt to fix logins ([da42293](https://github.com/ShadowZero3000/discord-soundboard/commit/da422936b25237af2357104825f85d05e073921c))
 
+## [1.0.17](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.16...v1.0.17) (2026-04-28)
+
+
+### Bug Fixes
+
+* Attempt to fix logins ([da42293](https://github.com/ShadowZero3000/discord-soundboard/commit/da422936b25237af2357104825f85d05e073921c))
+
 ## [1.0.16](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.15...v1.0.16) (2026-04-28)
 
 
