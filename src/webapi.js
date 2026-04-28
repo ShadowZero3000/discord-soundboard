@@ -115,7 +115,7 @@ async function refreshDiscordSession (req) {
     refreshToken = req.session.discord_session.rt
   } catch (e) {
     log.debug('Session truly expired')
-    req.session.destroy()
+    await req.session.destroy()
     return false
   }
 
@@ -124,14 +124,14 @@ async function refreshDiscordSession (req) {
     body: generateRefreshForm(refreshToken)
   }).catch(err => {
     log.debug(`Error from discord during refresh api call: ${err}`)
-    req.session.destroy()
+    await req.session.destroy()
     return false
   })
 
   const json = await response.json()
   if (json.error) {
     log.debug(`Error from discord during parsing of results of refresh call: ${json.error}`)
-    req.session.destroy()
+    await req.session.destroy()
     return false
   }
 
