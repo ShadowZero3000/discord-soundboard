@@ -1,3 +1,10 @@
+## [1.0.16](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.15...v1.0.16) (2026-04-28)
+
+
+### Bug Fixes
+
+* potentially unset session ([f38cb4f](https://github.com/ShadowZero3000/discord-soundboard/commit/f38cb4fbdad1a04fd3f7a3a1d432e6b86ff46e3c))
+
 ## [1.0.15](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.14...v1.0.15) (2026-04-27)
 
 
