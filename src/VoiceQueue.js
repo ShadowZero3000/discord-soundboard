@@ -19,24 +19,24 @@ export default class VoiceQueue {
     // These were used to debug an issue where we would never return to the idle event
     // https://github.com/discordjs/discord.js/issues/9185
     // Solved by updating the voice dependency
-    // this.player.on(AudioPlayerStatus.Playing, ()=>{
-    //   this.log(`I'm presently playing. Queue length: ${this.playQueue.length}`)
-    // })
-    // this.player.on(AudioPlayerStatus.AutoPaused, ()=>{
-    //   this.log(`I'm presently AutoPaused. Queue length: ${this.playQueue.length}`)
-    // })
-    // this.player.on(AudioPlayerStatus.Buffering , ()=>{
-    //   this.log(`I'm presently Buffering . Queue length: ${this.playQueue.length}`)
-    // })
-    // this.player.on(AudioPlayerStatus.Paused , ()=>{
-    //   this.log(`I'm presently Paused . Queue length: ${this.playQueue.length}`)
-    // })
+    this.player.on(AudioPlayerStatus.Playing, ()=>{
+      this.log(`I'm presently playing. Queue length: ${this.playQueue.length}`)
+    })
+    this.player.on(AudioPlayerStatus.AutoPaused, ()=>{
+      this.log(`I'm presently AutoPaused. Queue length: ${this.playQueue.length}`)
+    })
+    this.player.on(AudioPlayerStatus.Buffering , ()=>{
+      this.log(`I'm presently Buffering . Queue length: ${this.playQueue.length}`)
+    })
+    this.player.on(AudioPlayerStatus.Paused , ()=>{
+      this.log(`I'm presently Paused . Queue length: ${this.playQueue.length}`)
+    })
 
     // This is what causes the queue to process more requests
     this.player.on(AudioPlayerStatus.Idle, () => {
-      // this.log(`I'm presently Idle . Queue length: ${this.playQueue.length}`)
+      this.log(`I'm presently Idle . Queue length: ${this.playQueue.length}`)
       this.playing = false
-      // this.log(`Finished playing a clip, queue length now: ${this.playQueue.length}`)
+      this.log(`Finished playing a clip, queue length now: ${this.playQueue.length}`)
       if (!this.dc_after_next) {
         this.play()
       }
