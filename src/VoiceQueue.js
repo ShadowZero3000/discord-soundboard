@@ -139,6 +139,7 @@ export default class VoiceQueue {
         guildId: this.channel.guild.id,
         adapterCreator: this.channel.guild.voiceAdapterCreator
       })
+      log.debug(`Joining voice channel: ${this.channel.name} in guild: ${this.channel.guild.name}`)
       this.connection.subscribe(this.player)
     }
 
@@ -149,6 +150,7 @@ export default class VoiceQueue {
       if (stopAfter) {
         this.dc_after_next = true
       }
+      log.debug(`Playing clip: ${keyword} for channel: ${this.channel.name} in guild: ${this.channel.guild.name}`)
       this.player.play(resource)
     } else {
       log.debug(`Request to play invalid file: ${keyword}`)
