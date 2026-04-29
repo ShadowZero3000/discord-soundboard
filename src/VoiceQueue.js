@@ -152,6 +152,8 @@ export default class VoiceQueue {
       }
       log.debug(`Playing clip: ${keyword} for channel: ${this.channel.name} in guild: ${this.channel.guild.name}`)
       this.player.play(resource)
+      this.connection.subscribe(this.player) // Docs kinda imply you subscribe after playing
+      // I think it's wrong
     } else {
       log.debug(`Request to play invalid file: ${keyword}`)
     }

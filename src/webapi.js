@@ -217,7 +217,7 @@ router.get('/play/:clip', async (req, res) => {
     return res.status(400).send('Invalid clip name')
   }
   const validSession = await refreshSession(req)
-  if (!validSession) { return }
+  if (!validSession) { return res.status(401).send('Session expired, please log in again') }
 
   if (fm.inLibrary(req.params.clip)) {
     // Use a user-token for REST
