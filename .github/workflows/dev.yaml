@@ -39,7 +39,7 @@ jobs:
           tags: registry.codethat.rocks/soundboard/soundboard:dev-${{ github.run_number }}
           # registry.codethat.rocks/soundboard/soundboard:dev-${{ github.run_number }}
           cache-from: type=registry,ref=registry.codethat.rocks/soundboard/soundboard:buildcache
-          cache-to: type=registry,ref=registry.codethat.rocks/soundboard/soundboard:buildcache,mode=max
+          cache-to: type=registry,ref=registry.codethat.rocks/soundboard/soundboard:buildcache,mode=min
   test:
     needs: build
     runs-on: soundboard-k8s-runner
