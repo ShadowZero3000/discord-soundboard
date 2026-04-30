@@ -1,7 +1,7 @@
 import FileManager from './FileManager.js'
 import { errorLog } from './logger.js'
 
-import { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice'
+import { getVoiceConnection, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice'
 const fm = FileManager.getInstance()
 const log = errorLog
 
@@ -19,18 +19,18 @@ export default class VoiceQueue {
     // These were used to debug an issue where we would never return to the idle event
     // https://github.com/discordjs/discord.js/issues/9185
     // Solved by updating the voice dependency
-    this.player.on(AudioPlayerStatus.Playing, ()=>{
-      this.log(`I'm presently playing. Queue length: ${this.playQueue.length}`)
-    })
-    this.player.on(AudioPlayerStatus.AutoPaused, ()=>{
-      this.log(`I'm presently AutoPaused. Queue length: ${this.playQueue.length}`)
-    })
-    this.player.on(AudioPlayerStatus.Buffering , ()=>{
-      this.log(`I'm presently Buffering . Queue length: ${this.playQueue.length}`)
-    })
-    this.player.on(AudioPlayerStatus.Paused , ()=>{
-      this.log(`I'm presently Paused . Queue length: ${this.playQueue.length}`)
-    })
+    // this.player.on(AudioPlayerStatus.Playing, ()=>{
+    //   this.log(`I'm presently playing. Queue length: ${this.playQueue.length}`)
+    // })
+    // this.player.on(AudioPlayerStatus.AutoPaused, ()=>{
+    //   this.log(`I'm presently AutoPaused. Queue length: ${this.playQueue.length}`)
+    // })
+    // this.player.on(AudioPlayerStatus.Buffering , ()=>{
+    //   this.log(`I'm presently Buffering . Queue length: ${this.playQueue.length}`)
+    // })
+    // this.player.on(AudioPlayerStatus.Paused , ()=>{
+    //   this.log(`I'm presently Paused . Queue length: ${this.playQueue.length}`)
+    // })
 
     // This is what causes the queue to process more requests
     this.player.on(AudioPlayerStatus.Idle, () => {
@@ -132,17 +132,27 @@ export default class VoiceQueue {
   }
 
   play_clip (keyword, stopAfter = false) {
+    this.connection = getVoiceConnection(this.channel.guild.id);
     // Connect to the server and channel if not already connected
     if (!this.connection) {
+      log.debug(`Joining voice channel: ${this.channel.name} in guild: ${this.channel.guild.name} for the first time`)
       this.connection = joinVoiceChannel({
         channelId: this.channel.id,
         guildId: this.channel.guild.id,
         adapterCreator: this.channel.guild.voiceAdapterCreator
       })
-      log.debug(`Joining voice channel: ${this.channel.name} in guild: ${this.channel.guild.name}`)
-      this.connection.subscribe(this.player)
+      log.debug('Not connected to a voice channel, or not to the right one, connecting now')
+      this.connection = getVoiceConnection(this.channel.guild.id) 
     }
 
+    log.verbose(`Ensuring we're in the right channel`)  
+    this.connection.rejoin({
+        channelId: this.channel.id,
+        guildId: this.channel.guild.id,
+        adapterCreator: this.channel.guild.voiceAdapterCreator
+    })
+    this.connection.subscribe(this.player)
+    
     // Get the file from the file manager
     const file = fm.get(keyword)
     if (file !== undefined) {
@@ -151,9 +161,8 @@ export default class VoiceQueue {
         this.dc_after_next = true
       }
       log.debug(`Playing clip: ${keyword} for channel: ${this.channel.name} in guild: ${this.channel.guild.name}`)
-      this.player.play(resource)
-      this.connection.subscribe(this.player) // Docs kinda imply you subscribe after playing
-      // I think it's wrong
+      // This will take over audio playback
+      this.player.play(resource) 
     } else {
       log.debug(`Request to play invalid file: ${keyword}`)
     }
