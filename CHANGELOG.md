@@ -1,3 +1,15 @@
+## [1.0.18](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.17...v1.0.18) (2026-05-01)
+
+
+### Bug Fixes
+
+* Build apparently can't omit optionals ([aec473d](https://github.com/ShadowZero3000/discord-soundboard/commit/aec473d33241a2fa2474b24826a93f31938bebd6))
+* Infinite login loop ([6fb66c4](https://github.com/ShadowZero3000/discord-soundboard/commit/6fb66c42820b9b6294647ae18ee55ac022df85b0))
+* Make the player... play ([ea0cedc](https://github.com/ShadowZero3000/discord-soundboard/commit/ea0cedc4e337aecabff49b4c6447e6c320a89104))
+* Try more stuff ([45d8445](https://github.com/ShadowZero3000/discord-soundboard/commit/45d8445fa657995f9a2ba876c22222d93a71a8ea))
+* Update all those deps ([5ccf068](https://github.com/ShadowZero3000/discord-soundboard/commit/5ccf068b67c2fd91f79cb7be924416a14b42a7e8))
+* Wrap the destroys better ([b15fdc7](https://github.com/ShadowZero3000/discord-soundboard/commit/b15fdc7fbef17abb52e9a891dbe064694f10a6f7))
+
 ## [1.0.17](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.16...v1.0.17) (2026-04-28)
 
 
