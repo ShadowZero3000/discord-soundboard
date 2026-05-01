@@ -1,7 +1,7 @@
 import FileManager from './FileManager.js'
 import { errorLog } from './logger.js'
 
-import { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice'
+import { getVoiceConnection, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice'
 const fm = FileManager.getInstance()
 const log = errorLog
 
@@ -34,9 +34,9 @@ export default class VoiceQueue {
 
     // This is what causes the queue to process more requests
     this.player.on(AudioPlayerStatus.Idle, () => {
-      // this.log(`I'm presently Idle . Queue length: ${this.playQueue.length}`)
+      this.log(`I'm presently Idle . Queue length: ${this.playQueue.length}`)
       this.playing = false
-      // this.log(`Finished playing a clip, queue length now: ${this.playQueue.length}`)
+      this.log(`Finished playing a clip, queue length now: ${this.playQueue.length}`)
       if (!this.dc_after_next) {
         this.play()
       }
@@ -132,16 +132,27 @@ export default class VoiceQueue {
   }
 
   play_clip (keyword, stopAfter = false) {
+    this.connection = getVoiceConnection(this.channel.guild.id);
     // Connect to the server and channel if not already connected
     if (!this.connection) {
+      log.debug(`Joining voice channel: ${this.channel.name} in guild: ${this.channel.guild.name} for the first time`)
       this.connection = joinVoiceChannel({
         channelId: this.channel.id,
         guildId: this.channel.guild.id,
         adapterCreator: this.channel.guild.voiceAdapterCreator
       })
-      this.connection.subscribe(this.player)
+      log.debug('Not connected to a voice channel, or not to the right one, connecting now')
+      this.connection = getVoiceConnection(this.channel.guild.id) 
     }
 
+    log.verbose(`Ensuring we're in the right channel`)  
+    this.connection.rejoin({
+        channelId: this.channel.id,
+        guildId: this.channel.guild.id,
+        adapterCreator: this.channel.guild.voiceAdapterCreator
+    })
+    this.connection.subscribe(this.player)
+    
     // Get the file from the file manager
     const file = fm.get(keyword)
     if (file !== undefined) {
@@ -149,7 +160,9 @@ export default class VoiceQueue {
       if (stopAfter) {
         this.dc_after_next = true
       }
-      this.player.play(resource)
+      log.debug(`Playing clip: ${keyword} for channel: ${this.channel.name} in guild: ${this.channel.guild.name}`)
+      // This will take over audio playback
+      this.player.play(resource) 
     } else {
       log.debug(`Request to play invalid file: ${keyword}`)
     }

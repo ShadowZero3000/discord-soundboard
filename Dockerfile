@@ -2,7 +2,7 @@ FROM registry.codethat.rocks/soundboard/base
 
 COPY package.json /node/
 
-RUN cd /node && npm install --no-optional
+RUN cd /node && npm install
 
 COPY config/ /node/config/
 COPY src/ /node/

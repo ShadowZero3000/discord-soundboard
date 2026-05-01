@@ -39,6 +39,7 @@ app.set('views', path.join(__dirname, 'public'));
 app.get('/', async (req, res) => {
   await refreshSession(req)
   if(req.session !== undefined && req.session.active) {
+    log.debug(`Active session found: ${req.session.id}, redirecting to clips`)
     return res.redirect('/clips')
   }
   return res.status(200).render(path.join(__dirname, 'public/index.pug'));
@@ -64,7 +65,7 @@ app.get('/version', (req, res) => {
 
 app.get('/clips', async (req, res) => {
   await refreshSession(req)
-  if(req.session !== undefined && req.session.active) {
+  if(req.session === undefined || !req.session.active) {
     return res.redirect('/')
   }
   // May need to refresh session shenanigans here

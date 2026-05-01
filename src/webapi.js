@@ -115,23 +115,51 @@ async function refreshDiscordSession (req) {
     refreshToken = req.session.discord_session.rt
   } catch (e) {
     log.debug('Session truly expired')
-    await req.session.destroy()
+    await new Promise((resolve) => {
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) log.error(`Session destroy error: ${destroyErr}`);
+        resolve(); 
+      });
+    });
     return false
   }
 
-  const response = await fetch('https://discord.com/api/oauth2/token', { // ?redirect_uri=${getRedirect(req)}`, {
-    method: 'POST',
-    body: generateRefreshForm(refreshToken)
-  }).catch(err => {
-    log.debug(`Error from discord during refresh api call: ${err}`)
-    await req.session.destroy()
-    return false
-  })
+  try {
+    const response = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      body: generateRefreshForm(refreshToken)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Discord API status: ${response.status}`);
+    }
+
+    // Handle successful response here
+    return await response.json();
+
+  } catch (err) {
+    log.debug(`Error from discord during refresh api call: ${err}`);
+
+    // Wrap the callback-based destroy in a Promise and await it
+    await new Promise((resolve) => {
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) log.error(`Session destroy error: ${destroyErr}`);
+        resolve(); 
+      });
+    });
+
+    return false;
+  }
 
   const json = await response.json()
   if (json.error) {
     log.debug(`Error from discord during parsing of results of refresh call: ${json.error}`)
-    await req.session.destroy()
+    await new Promise((resolve) => {
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) log.error(`Session destroy error: ${destroyErr}`);
+        resolve(); 
+      });
+    });
     return false
   }
 
@@ -189,7 +217,7 @@ router.get('/play/:clip', async (req, res) => {
     return res.status(400).send('Invalid clip name')
   }
   const validSession = await refreshSession(req)
-  if (!validSession) { return }
+  if (!validSession) { return res.status(401).send('Session expired, please log in again') }
 
   if (fm.inLibrary(req.params.clip)) {
     // Use a user-token for REST
