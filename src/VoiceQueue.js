@@ -1,8 +1,10 @@
 import FileManager from './FileManager.js'
+import Loudness from './Loudness.js'
 import { errorLog } from './logger.js'
 
-import { getVoiceConnection, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice'
+import { getVoiceConnection, joinVoiceChannel, createAudioPlayer, AudioPlayerStatus } from '@discordjs/voice'
 const fm = FileManager.getInstance()
+const loudness = Loudness.getInstance()
 const log = errorLog
 
 export default class VoiceQueue {
@@ -15,6 +17,10 @@ export default class VoiceQueue {
     this.bailtimeout = null
     this.dc_after_next = false
     this.player = createAudioPlayer()
+    // Without a listener, a failed transcode would throw and take the bot down
+    this.player.on('error', err => {
+      this.log(`Error playing clip: ${err.message}`, 'error')
+    })
 
     // These were used to debug an issue where we would never return to the idle event
     // https://github.com/discordjs/discord.js/issues/9185
@@ -156,7 +162,7 @@ export default class VoiceQueue {
     // Get the file from the file manager
     const file = fm.get(keyword)
     if (file !== undefined) {
-      const resource = createAudioResource(file.fileName)
+      const resource = loudness.createResource(file.fileName)
       if (stopAfter) {
         this.dc_after_next = true
       }

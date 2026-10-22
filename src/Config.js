@@ -16,7 +16,10 @@ function Config(){
     },
     PORT: 3000,
     WEBSERVER_ENABLED: 'true',
-    LISTEN_ENABLED: false
+    LISTEN_ENABLED: false,
+    NORMALIZE_VOLUME: 'true',
+    LOUDNESS_TARGET: -18,
+    LOUDNESS_MAX_BOOST: 12
   })
   .required(['SESSION_SECRET'])
 }
