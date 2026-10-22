@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ModalBuilder, TextInputStyle, TextInputBuilder, ActionRowBuilder, SlashCommandAttachmentOption, MessageFlags } from 'discord.js'
-import { v1 as uuid } from 'uuid'
+import { randomUUID } from 'crypto'
 
 import FileManager from '../FileManager.js'
 
@@ -176,7 +176,7 @@ async function add (interaction) {
     return await interaction.reply({ content: 'You do not have permission to perform this operation', flags: MessageFlags.Ephemeral })
   }
 
-  const requestUUID = uuid()
+  const requestUUID = randomUUID()
   pendingUploads[requestUUID] = interaction.options.getAttachment('clip')
 
   const modal = new ModalBuilder()
