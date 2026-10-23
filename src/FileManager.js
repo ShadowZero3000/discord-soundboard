@@ -1,5 +1,6 @@
 import fs from 'fs'
 import { errorLog } from './logger.js'
+import Loudness from './Loudness.js'
 const log = errorLog;
 import Store from 'data-store'
 import fetch from 'node-fetch'
@@ -88,6 +89,7 @@ class PrivateFileManager {
         fileName: `${this.home}/${category || ''}/${subcategory || ''}/${matches[0]}`.replace('//','/'),
       }
       this.files[obj.name] = obj;
+      Loudness.getInstance().enqueue(obj.fileName);
       this.categories[realCategory] = this.categories[realCategory] || {};
       this.categories[realCategory][realSubCategory] = this.categories[realCategory][realSubCategory] || {};
       this.categories[realCategory][realSubCategory][obj.name] = obj;
@@ -152,6 +154,7 @@ class PrivateFileManager {
     if (!this.inLibrary(keyword)) { return false; }
     log.debug(`Deleting: ${keyword}`);
     fs.unlinkSync(this.files[keyword].fileName);
+    Loudness.getInstance().forget(this.files[keyword].fileName);
     this.deregister(this.get(keyword));
     log.debug("Deleted successfully");
     return true;
@@ -229,6 +232,7 @@ class PrivateFileManager {
         fs.mkdirSync(newDirectory, {recursive: true});
     }
     fs.renameSync(oldFile.fileName, newFilePath);
+    Loudness.getInstance().move(oldFile.fileName, newFilePath);
     this.deregister(oldFile);
     this.register(newFileName, newCategory, newSubCategory);
     return true;

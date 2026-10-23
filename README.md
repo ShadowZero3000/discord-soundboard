@@ -21,6 +21,18 @@ docker run -e TOKEN=<Bot Token> -e CLIENT_SECRET=<Client secret> -p 3000:3000 di
 
 ```
 
+## Volume balancing
+
+Clips are played back at roughly the same loudness, no matter how loud they were recorded. Each clip is measured once in the background (at startup, or when it's added) and the result is cached in `config/loudness.json`. A clip that hasn't been measured yet plays at its original volume the first time.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `NORMALIZE_VOLUME` | `true` | Set to `false` to play clips as-is |
+| `LOUDNESS_TARGET` | `-18` | Target loudness in LUFS. Higher (e.g. `-14`) is louder |
+| `LOUDNESS_MAX_BOOST` | `12` | Most dB a quiet clip will be turned up, so near-silent clips don't become a wall of noise |
+
+Clips that get turned up pass through a limiter, so they can't clip.
+
 ## Enabling speech recognition (Presently fully disabled)
 
 To enable speech recognition (and hotphrases) You will need to:
