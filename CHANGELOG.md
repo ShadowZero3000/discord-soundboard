@@ -10,6 +10,18 @@
 
 * Balance clip volume on playback ([be9792c](https://github.com/ShadowZero3000/discord-soundboard/commit/be9792c2adb94277032b92c30dd6db2e7ae13175))
 
+# [1.1.0](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.18...v1.1.0) (2026-10-23)
+
+
+### Bug Fixes
+
+* Patch vulnerable dependencies ([2f8b3df](https://github.com/ShadowZero3000/discord-soundboard/commit/2f8b3df1412746f7d7aec66bd4594234a02d5d4f))
+
+
+### Features
+
+* Balance clip volume on playback ([be9792c](https://github.com/ShadowZero3000/discord-soundboard/commit/be9792c2adb94277032b92c30dd6db2e7ae13175))
+
 ## [1.0.18](https://github.com/ShadowZero3000/discord-soundboard/compare/v1.0.17...v1.0.18) (2026-05-01)
 
 
